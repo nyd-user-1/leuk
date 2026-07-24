@@ -62,13 +62,22 @@ export function DictionaryViews({
           </span>
         ))}
       </div>
-      {view === "registry" && <DataDictionary groups={groups} />}
+      {/* Registry is prose/tables — capped for readability. Map/Draft are
+          canvases that want every pixel of available width, so the cap
+          (and the mx-auto that centers it) applies only here, not at the
+          page level — otherwise collapsing the sidebar frees real width
+          that the canvases below could use but wouldn't. */}
+      {view === "registry" && (
+        <div className="mx-auto w-full max-w-[1400px]">
+          <DataDictionary groups={groups} />
+        </div>
+      )}
       {view === "map" && (
         <div className="flex h-[72vh] min-h-[480px] flex-col">
           <SchemaCanvas schema={schema} meta={meta} />
         </div>
       )}
-      {view === "draft" && <SchemaDraftClient schema={schema} initialDrafts={initialDrafts} />}
+      {view === "draft" && <SchemaDraftClient schema={schema} meta={meta} initialDrafts={initialDrafts} />}
     </div>
   );
 }

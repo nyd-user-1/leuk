@@ -33,7 +33,7 @@ export default async function WorkspaceDataDictionaryPage() {
   }
 
   return (
-    <div className="mx-auto flex min-w-0 max-w-[1400px] flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-6">
       <BoardTabs />
       <DictionaryViews groups={inventory.groups} schema={schema} meta={meta} initialDrafts={drafts} />
     </div>

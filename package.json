@@ -12,6 +12,7 @@
     "@ai-sdk/react": "^4.0.37",
     "@anthropic-ai/sdk": "^0.111.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1092.0",
+    "@dagrejs/dagre": "^3.0.0",
     "@neondatabase/serverless": "^1.1.0",
     "@photonhealth/elements": "^0.23.10",
     "@stripe/connect-js": "^3.4.6",

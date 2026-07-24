@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { forkFromLiveSchema, type SchemaDraftDoc, type SchemaDraftMeta } from "@/lib/schema-draft";
 import type { SchemaGraph } from "@/lib/repos/schema-map";
+import type { SchemaTableMeta } from "@/components/maps/schema-canvas";
 
 // The Data dictionary's "Draft" tab shell — owns which saved draft is open,
 // its name, and the save/load/delete/fork loop against /api/schema-drafts.
@@ -27,7 +28,15 @@ const SchemaDraftCanvas = dynamic(
   },
 );
 
-export function SchemaDraftClient({ schema, initialDrafts }: { schema: SchemaGraph; initialDrafts: SchemaDraftMeta[] }) {
+export function SchemaDraftClient({
+  schema,
+  meta,
+  initialDrafts,
+}: {
+  schema: SchemaGraph;
+  meta: Record<string, SchemaTableMeta>;
+  initialDrafts: SchemaDraftMeta[];
+}) {
   const [drafts, setDrafts] = useState<SchemaDraftMeta[]>(initialDrafts);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -103,7 +112,9 @@ export function SchemaDraftClient({ schema, initialDrafts }: { schema: SchemaGra
   };
 
   const forkDraft = () => {
-    const doc = forkFromLiveSchema(schema);
+    const groupOf: Record<string, string> = {};
+    for (const [table, m] of Object.entries(meta)) groupOf[table] = m.group;
+    const doc = forkFromLiveSchema(schema, groupOf);
     setCurrentId(null);
     setName("Fork of live schema");
     setLoadedDoc(doc);
