@@ -11,6 +11,7 @@ const ITEMS = [
   { key: "analytics", label: "Analytics", href: "/analytics" },
   { key: "dashboard", label: "Dashboard", href: "/dashboard" },
   { key: "data-dictionary", label: "Data dictionary", href: "/workspace/data-dictionary" },
+  { key: "schema", label: "Schema", href: "/workspace/schema" },
   { key: "docs", label: "Docs", href: "/workspace/docs" },
 ];
 

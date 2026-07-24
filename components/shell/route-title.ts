@@ -7,6 +7,7 @@ import type { IconName } from "@/components/ui/icons";
 // Longest-prefix wins: order specific → general.
 const ROUTE_TITLES: Array<[prefix: string, icon: IconName, title: string]> = [
   ["/workspace/data-dictionary", "grid", "Data dictionary"],
+  ["/workspace/schema", "grid", "Schema"],
   ["/workspace/docs", "file-text", "Docs"],
   ["/workspace", "grid", "Workspace"],
   ["/analytics", "columns-3", "Analytics"],

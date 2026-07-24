@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode, UIEvent } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { TopBarBell } from "@/components/shell/topbar-bell";
@@ -22,10 +22,8 @@ import { Icon, type IconName } from "@/components/ui/icons";
 // (ruling 2026-07-23). Page actions portal in via TopBarActions; index pages
 // instead put their "+ New" at the right end of the tab rail (IndexHeader).
 //
-// The row is fixed to the top of the panel; content scrolls in the region below
-// and slides beneath it. Once anything under the row has scrolled, the row
-// casts a small bottom shadow (scroll events are watched in the capture phase
-// so inner scroll owners — the /chat thread, full-height tables — count too).
+// The row is fixed to the top of the panel; content scrolls in the region
+// below and slides beneath it.
 
 // Jump-to destinations for the switcher menu — the main app areas.
 const SWITCH_DESTINATIONS: Array<{ label: string; href: string; icon: IconName }> = [
@@ -67,31 +65,9 @@ export function ContentSurface({
   const showBell =
     variant === "workspace" && BELL_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  // Shadow once content is under the row. Scroll doesn't bubble, but capture
-  // listeners on the content wrapper still see every inner scroller (the /chat
-  // thread on a full-height page). Only scrollers whose top edge sits at the
-  // header's bottom count — an embedded scroll region further down the page
-  // (a table body) never moves content beneath the row, so it neither earns
-  // nor clears the shadow. Horizontal-only scrollers are ignored too.
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => setScrolled(false), [pathname]);
-  const onScrollCapture = (e: UIEvent<HTMLDivElement>) => {
-    const t = e.target as HTMLElement | null;
-    if (!t || t.scrollHeight <= t.clientHeight + 1) return;
-    if (t !== e.currentTarget) {
-      const dy = t.getBoundingClientRect().top - e.currentTarget.getBoundingClientRect().top;
-      if (dy > 80) return;
-    }
-    setScrolled(t.scrollTop > 0);
-  };
-
   return (
     <>
-      <header
-        className={`relative z-20 flex h-14 shrink-0 items-center gap-2 px-4 transition-shadow duration-200 md:h-16 md:gap-3 md:px-6 ${
-          scrolled ? "shadow-[0_8px_16px_-10px_rgba(28,36,64,0.45)]" : ""
-        }`}
-      >
+      <header className="relative z-20 flex h-14 shrink-0 items-center gap-2 px-4 md:h-16 md:gap-3 md:px-6">
         {leading}
         <ContextSwitcher section={section} />
         {/* The switcher pill is the visible page identity; this keeps the
@@ -104,10 +80,7 @@ export function ContentSurface({
           {showBell && <TopBarBell />}
         </div>
       </header>
-      <div
-        onScrollCapture={onScrollCapture}
-        className="min-h-0 flex-1 overflow-y-auto p-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] [scrollbar-width:none] md:p-6 md:pb-6 [&::-webkit-scrollbar]:hidden"
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] [scrollbar-width:none] md:p-6 md:pb-6 [&::-webkit-scrollbar]:hidden">
         {children}
       </div>
     </>

@@ -2,19 +2,23 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { TopBarActions } from "@/components/shell/topbar-slot";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
 import { Spinner } from "@/components/ui/spinner";
 import { forkFromLiveSchema, type SchemaDraftDoc, type SchemaDraftMeta } from "@/lib/schema-draft";
 import type { SchemaGraph } from "@/lib/repos/schema-map";
 import type { SchemaTableMeta } from "@/components/maps/schema-canvas";
+import type { SchemaView } from "@/components/maps/schema-view-switcher";
 
-// The Data dictionary's "Draft" tab shell — owns which saved draft is open,
-// its name, and the save/load/delete/fork loop against /api/schema-drafts.
-// Mirrors app/(app)/maps/maps-client.tsx exactly: the canvas owns nodes/
-// edges, this owns the DOCUMENT, and remounts the canvas (key) whenever a
-// different doc loads so React Flow state never leaks between drafts.
+// The Draft tab's document shell — owns which saved draft is open, its name,
+// and the save/load/delete/fork loop against /api/schema-drafts. Mirrors
+// app/(app)/maps/maps-client.tsx: the canvas owns nodes/edges, this owns the
+// DOCUMENT, and remounts the canvas (key) whenever a different doc loads.
+//
+// The drafts menu / name field / Save button render INSIDE the canvas now (a
+// `toolbar` slot passed to SchemaDraftCanvas, top-right Panel) instead of the
+// page's TopBarActions strip — org-map keeps its own controls in-canvas too,
+// and Draft no longer shares a page with anything that needs that strip.
 
 const SchemaDraftCanvas = dynamic(
   () => import("@/components/maps/schema-draft-canvas").then((m) => m.SchemaDraftCanvas),
@@ -32,10 +36,14 @@ export function SchemaDraftClient({
   schema,
   meta,
   initialDrafts,
+  view,
+  onViewChange,
 }: {
   schema: SchemaGraph;
   meta: Record<string, SchemaTableMeta>;
   initialDrafts: SchemaDraftMeta[];
+  view: SchemaView;
+  onViewChange: (v: SchemaView) => void;
 }) {
   const [drafts, setDrafts] = useState<SchemaDraftMeta[]>(initialDrafts);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -132,30 +140,38 @@ export function SchemaDraftClient({
     }
   };
 
-  return (
-    <div className="flex h-[72vh] min-h-[480px] flex-col">
-      <TopBarActions>
-        <DraftsMenu
-          drafts={drafts}
-          currentId={currentId}
-          onLoad={(id) => void load(id)}
-          onNew={newDraft}
-          onFork={forkDraft}
-          onDelete={currentId ? () => void del() : undefined}
-        />
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Untitled draft"
-          aria-label="Draft name"
-          className="h-9 w-44 rounded-field bg-black/[0.04] px-3 text-[14px] text-text outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/30"
-        />
-        <Button size="sm" onClick={() => void save()} disabled={saving || loading}>
-          {saving ? "Saving…" : "Save"}
-        </Button>
-      </TopBarActions>
-      <SchemaDraftCanvas key={canvasKey} initialDoc={loadedDoc} onDocChange={onDocChange} />
+  const toolbar = (
+    <div className="flex items-center gap-1.5">
+      <DraftsMenu
+        drafts={drafts}
+        currentId={currentId}
+        onLoad={(id) => void load(id)}
+        onNew={newDraft}
+        onFork={forkDraft}
+        onDelete={currentId ? () => void del() : undefined}
+      />
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Untitled draft"
+        aria-label="Draft name"
+        className="h-9 w-44 rounded-field border border-border bg-surface px-3 text-[14px] text-text shadow-card outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/30"
+      />
+      <Button size="sm" onClick={() => void save()} disabled={saving || loading}>
+        {saving ? "Saving…" : "Save"}
+      </Button>
     </div>
+  );
+
+  return (
+    <SchemaDraftCanvas
+      key={canvasKey}
+      initialDoc={loadedDoc}
+      onDocChange={onDocChange}
+      view={view}
+      onViewChange={onViewChange}
+      toolbar={toolbar}
+    />
   );
 }
 
@@ -182,7 +198,7 @@ function DraftsMenu({
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as globalThis.Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -208,7 +224,7 @@ function DraftsMenu({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`flex h-9 items-center gap-1.5 rounded-field bg-black/[0.04] pl-3 pr-2 text-[14px] transition-colors ${
+        className={`flex h-9 items-center gap-1.5 rounded-field border border-border bg-surface pl-3 pr-2 text-[14px] shadow-card transition-colors ${
           open ? "text-primary" : "text-text-body hover:text-primary"
         }`}
       >

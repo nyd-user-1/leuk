@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   applyEdgeChanges,
   applyNodeChanges,
@@ -26,6 +27,13 @@ import {
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 import { Icon } from "@/components/ui/icons";
+import { MAIN_PANEL_ID } from "@/components/shell/main-panel";
+import { ExpandToggle } from "./expand-toggle";
+import { SchemaViewSwitcher, type SchemaView } from "./schema-view-switcher";
+import { GroupBandNode, GROUP_PAD, GROUP_HEADER_H, groupBoxRect, type GroupNodeData } from "./group-band-node";
+import { colorForGroup, PALETTE } from "./group-color";
+import { visibleRows } from "./table-rows";
+import { CardMenu, type CardMenuItem } from "./card-menu";
 import {
   SCHEMA_DRAFT_MAX_COLUMNS,
   SCHEMA_DRAFT_MAX_TABLES,
@@ -42,8 +50,8 @@ import {
 // to invent — rename/add/drop tables and columns, draw FK or matview-"feeds"
 // edges by hand. Nothing here ever touches the live database; a saved draft
 // is read back later (by a person, or by an agent) to hand-write an actual
-// migration. Fourth @xyflow/react importer, still code-split behind
-// next/dynamic (components/maps/* is the allowed set).
+// migration. Fifth @xyflow/react importer (with org-map and the other two
+// components/maps/* files), still code-split behind next/dynamic.
 //
 // Node deletion never rides the keyboard — onNodesChange strips "remove"
 // changes so a stray Backspace while renaming a column can't take the whole
@@ -56,17 +64,22 @@ const NODE_W = 300;
 const ROW_H = 28;
 const HEADER_H = 42;
 const GROUP_ROW_H = 20;
-const GROUP_PAD = 28;
-const GROUP_HEADER_H = 34;
-const GROUP_COLLAPSED_W = 220;
+const COL_CAP = 8;
 
 // Unlike the read-only schema map (whose handles are pure edge anchors —
 // nodesConnectable is false there, so nothing ever grabs one), THIS canvas
 // needs handles a user can actually see and drag from. A 1px invisible dot
 // (the read-only view's `anchor`) is a real bug here, not a style choice —
-// it makes the "drag a handle" hint text true in code but false in practice.
+// it makes dragging a handle possible in code but not in practice.
+//
+// !transform-none cancels xyflow's own stylesheet, which nudges every handle
+// translate(4px, -4px) off its edge — meant for the common case of a node
+// with no overflow clipping. Our card wrapper is `overflow-hidden` (for the
+// rounded corners), so that nudge pushed the handle mostly outside the
+// clipped box: only a sliver of it was ever paintable/clickable. Cancelling
+// the nudge keeps the dot flush on the edge, fully inside the clip.
 const HANDLE =
-  "!h-2 !w-2 !rounded-full !border !border-text-muted/50 !bg-surface hover:!scale-125 hover:!border-primary hover:!bg-primary transition-transform";
+  "!h-2 !w-2 !rounded-full !border !border-text-muted/50 !bg-surface hover:!scale-125 hover:!border-primary hover:!bg-primary transition-transform !transform-none";
 
 const FK_STYLE = { stroke: "#b9bec9", strokeOpacity: 0.6, strokeWidth: 1 };
 const FEED_STYLE = { stroke: TEAL, strokeOpacity: 0.65, strokeWidth: 1.5, strokeDasharray: "6 4" };
@@ -88,6 +101,9 @@ type DraftNodeActions = {
   onAddIndex: (id: string) => void;
   onIndexChange: (id: string, indexId: string, patch: Partial<DraftIndex>) => void;
   onRemoveIndex: (id: string, indexId: string) => void;
+  onToggleExpand: (id: string) => void;
+  onToggleMinimize: (id: string) => void;
+  onSetGroupColor: (group: string, paletteIndex: number) => void;
 };
 
 type DraftNodeData = {
@@ -96,44 +112,89 @@ type DraftNodeData = {
   columns: DraftColumn[];
   indexes: DraftIndex[];
   group: string;
+  /** Which of THIS table's own columns are keep-visible-when-collapsed
+   *  because an edge lands on them — derived from `edges` at display time,
+   *  never persisted (see the doc/display split below). */
+  keep: Set<string>;
+  /** Collapsed-vs-expanded, minimized, and the group color override are all
+   *  session-local UI state (see collapsedGroups' comment) — merged in at
+   *  display time, never part of the saved doc. */
+  expanded: boolean;
+  minimized: boolean;
+  color: { text: string; bg: string; dot: string };
 } & DraftNodeActions;
 
 function DraftTableNode(props: NodeProps) {
   const d = props.data as unknown as DraftNodeData;
+  const { rows, moreCount } = visibleRows(d.columns, d.keep, d.expanded, COL_CAP);
+
+  const menuItems: CardMenuItem[] = [
+    {
+      label: d.expanded ? "Collapse columns" : "Expand columns",
+      icon: "chevron-down",
+      onClick: () => d.onToggleExpand(props.id),
+    },
+    {
+      label: d.minimized ? "Restore card" : "Minimize card",
+      icon: d.minimized ? "eye" : "eye-off",
+      onClick: () => d.onToggleMinimize(props.id),
+    },
+    { label: "Delete table", icon: "trash", onClick: () => d.onDeleteTable(props.id), destructive: true },
+  ];
+  const swatches = (
+    <div className="flex items-center gap-1.5">
+      {PALETTE.map((c, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => d.onSetGroupColor(d.group, i)}
+          aria-label={`Set group color ${i + 1}`}
+          className={`h-5 w-5 shrink-0 rounded-full border transition-transform hover:scale-110 ${
+            c.dot === d.color.dot ? "border-text" : "border-border/60"
+          }`}
+          style={{ background: c.dot }}
+        />
+      ))}
+    </div>
+  );
+
+  const header = (
+    <div
+      className={`relative flex items-center gap-1.5 border-b border-border px-2.5 ${d.color.bg}`}
+      style={{ height: HEADER_H }}
+    >
+      <input
+        value={d.name}
+        onChange={(e) => d.onRename(props.id, e.target.value)}
+        placeholder="table_name"
+        aria-label="Table name"
+        className="nodrag nopan min-w-0 flex-1 truncate bg-transparent font-mono text-[12.5px] font-semibold text-text outline-none placeholder:text-text-muted"
+      />
+      <button
+        type="button"
+        onClick={() => d.onToggleKind(props.id)}
+        title="Toggle table / materialized view"
+        className="nodrag shrink-0 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[9.5px] font-semibold uppercase text-text-muted transition-colors hover:bg-black/[0.1]"
+      >
+        {d.kind === "matview" ? "mv" : "tbl"}
+      </button>
+      <CardMenu items={menuItems} extra={swatches} />
+      <Handle type="target" position={Position.Left} id="t" className={HANDLE} />
+      <Handle type="source" position={Position.Right} id="t" className={HANDLE} />
+    </div>
+  );
+
+  if (d.minimized) {
+    return (
+      <div className="overflow-hidden rounded-field border border-border bg-surface shadow-card" style={{ width: NODE_W }}>
+        {header}
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-field border border-border bg-surface shadow-card" style={{ width: NODE_W }}>
-      <div
-        className={`relative flex items-center gap-1.5 border-b border-border px-2.5 ${
-          d.kind === "matview" ? "bg-primary-wash" : "bg-canvas/60"
-        }`}
-        style={{ height: HEADER_H }}
-      >
-        <button
-          type="button"
-          onClick={() => d.onToggleKind(props.id)}
-          title="Toggle table / materialized view"
-          className="nodrag shrink-0 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[9.5px] font-semibold uppercase text-text-muted transition-colors hover:bg-black/[0.1]"
-        >
-          {d.kind === "matview" ? "mv" : "tbl"}
-        </button>
-        <input
-          value={d.name}
-          onChange={(e) => d.onRename(props.id, e.target.value)}
-          placeholder="table_name"
-          aria-label="Table name"
-          className="nodrag nopan min-w-0 flex-1 truncate bg-transparent font-mono text-[12.5px] font-semibold text-text outline-none placeholder:text-text-muted"
-        />
-        <button
-          type="button"
-          onClick={() => d.onDeleteTable(props.id)}
-          aria-label="Delete table"
-          className="nodrag flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-danger-tint hover:text-danger"
-        >
-          <Icon name="trash" size={13} />
-        </button>
-        <Handle type="target" position={Position.Left} id="t" className={HANDLE} />
-        <Handle type="source" position={Position.Right} id="t" className={HANDLE} />
-      </div>
+      {header}
       <div className="flex items-center border-b border-border/70 bg-black/[0.015] px-2.5" style={{ height: GROUP_ROW_H }}>
         <Icon name="grid" size={10} className="mr-1 shrink-0 text-text-muted/70" />
         <input
@@ -146,7 +207,7 @@ function DraftTableNode(props: NodeProps) {
         />
       </div>
       <div className="py-1">
-        {d.columns.map((c) => (
+        {rows.map((c) => (
           <div key={c.id} className="relative flex items-center gap-1.5 px-2.5" style={{ height: ROW_H }}>
             <input
               value={c.name}
@@ -184,15 +245,27 @@ function DraftTableNode(props: NodeProps) {
             <Handle type="source" position={Position.Right} id={`c:${c.id}`} className={HANDLE} />
           </div>
         ))}
-        <button
-          type="button"
-          onClick={() => d.onAddColumn(props.id)}
-          disabled={d.columns.length >= SCHEMA_DRAFT_MAX_COLUMNS}
-          className="nodrag flex w-full items-center gap-1.5 px-2.5 text-[10.5px] text-text-muted transition-colors hover:text-primary disabled:opacity-40"
-          style={{ height: ROW_H }}
-        >
-          <Icon name="plus" size={11} /> Add column
-        </button>
+        {moreCount > 0 && (
+          <button
+            type="button"
+            onClick={() => d.onToggleExpand(props.id)}
+            className="nodrag flex w-full items-center px-2.5 text-[10.5px] italic text-text-muted transition-colors hover:text-primary"
+            style={{ height: ROW_H }}
+          >
+            +{moreCount} more column{moreCount === 1 ? "" : "s"}
+          </button>
+        )}
+        {moreCount === 0 && (
+          <button
+            type="button"
+            onClick={() => d.onAddColumn(props.id)}
+            disabled={d.columns.length >= SCHEMA_DRAFT_MAX_COLUMNS}
+            className="nodrag flex w-full items-center gap-1.5 px-2.5 text-[10.5px] text-text-muted transition-colors hover:text-primary disabled:opacity-40"
+            style={{ height: ROW_H }}
+          >
+            <Icon name="plus" size={11} /> Add column
+          </button>
+        )}
       </div>
       <div className="border-t border-border py-1">
         {d.indexes.map((idx) => (
@@ -237,35 +310,6 @@ function DraftTableNode(props: NodeProps) {
   );
 }
 
-// The band a group of tables sits in — purely a derived visual container
-// (bounding box of its current members, recomputed every render), NOT a
-// React Flow parent node: no parentId/extent coupling, so dragging a table
-// stays simple and a band can never "lose" a member to a coordinate-system
-// edge case. It just always encloses wherever its tagged tables currently
-// are. Collapsing hides the members (filtered out of the rendered node
-// list) and shrinks this to a header-only strip — group membership itself
-// lives on each table's own `group` field, edited there, not by dragging
-// in or out of a band.
-type GroupNodeData = { name: string; count: number; collapsed: boolean; onToggle: () => void };
-
-function GroupBandNode(props: NodeProps) {
-  const d = props.data as unknown as GroupNodeData;
-  return (
-    <div className="h-full w-full rounded-2xl border-2 border-dashed border-field-border/70 bg-black/[0.012]">
-      <button
-        type="button"
-        onClick={d.onToggle}
-        className="nodrag pointer-events-auto flex items-center gap-1.5 rounded-t-2xl rounded-br-lg border-b-2 border-dashed border-field-border/70 bg-surface px-3 text-[12.5px] font-semibold text-text-body shadow-card"
-        style={{ height: GROUP_HEADER_H }}
-      >
-        <Icon name="chevron-down" size={13} className={`text-text-muted transition-transform ${d.collapsed ? "-rotate-90" : ""}`} />
-        {d.name}
-        <span className="font-normal text-text-muted">({d.count})</span>
-      </button>
-    </div>
-  );
-}
-
 const nodeTypes: NodeTypes = { draft: DraftTableNode, group: GroupBandNode };
 
 // ── doc ↔ canvas ─────────────────────────────────────────────────────────────
@@ -285,19 +329,26 @@ function edgeFromDraft(e: DraftEdge): Edge {
 }
 
 function fromDraftDoc(doc: SchemaDraftDoc | null, actions: DraftNodeActions): { nodes: Node[]; edges: Edge[] } {
-  const nodes: Node[] = (doc?.tables ?? []).map((t) => ({
-    id: t.id,
-    type: "draft",
-    position: { x: t.x, y: t.y },
-    data: {
-      name: t.name,
-      kind: t.kind,
-      columns: t.columns,
-      indexes: t.indexes,
-      group: t.group ?? "Other", // older saved drafts predate this field
-      ...actions,
-    } satisfies DraftNodeData,
-  }));
+  const nodes: Node[] = (doc?.tables ?? []).map((t) => {
+    const group = t.group ?? "Other"; // older saved drafts predate this field
+    return {
+      id: t.id,
+      type: "draft",
+      position: { x: t.x, y: t.y },
+      data: {
+        name: t.name,
+        kind: t.kind,
+        columns: t.columns,
+        indexes: t.indexes,
+        group,
+        keep: new Set<string>(),
+        expanded: false,
+        minimized: false,
+        color: colorForGroup(group),
+        ...actions,
+      } satisfies DraftNodeData,
+    };
+  });
   const edges: Edge[] = (doc?.edges ?? []).map(edgeFromDraft);
   return { nodes, edges };
 }
@@ -365,8 +416,12 @@ function blankTable(index: number): DraftTable {
 // 90-table hairball. Cross-group edges still draw fine afterward; React Flow
 // doesn't require same-parent nodes to connect, they just cross between
 // bands on the canvas instead of staying inside one.
-const nodeHeightFor = (t: { columns: unknown[]; indexes: unknown[] }) =>
-  HEADER_H + GROUP_ROW_H + (t.columns.length + 1) * ROW_H + (t.indexes.length + 1) * ROW_H;
+function nodeHeightFor(d: { columns: unknown[]; indexes: unknown[]; expanded?: boolean; minimized?: boolean }): number {
+  if (d.minimized) return HEADER_H;
+  const shown = d.expanded ? d.columns.length : Math.min(d.columns.length, COL_CAP);
+  const more = d.expanded ? 0 : d.columns.length - shown > 0 ? 1 : 0;
+  return HEADER_H + GROUP_ROW_H + (shown + more + 1) * ROW_H + (d.indexes.length + 1) * ROW_H;
+}
 
 function layoutGrouped(nodes: Node[], edges: Edge[]): Node[] {
   const byGroup = new Map<string, Node[]>();
@@ -401,15 +456,85 @@ function layoutGrouped(nodes: Node[], edges: Edge[]): Node[] {
     for (const n of members) {
       const pos = g.node(n.id);
       // Dagre positions are node CENTERS; React Flow positions are top-left.
-      result.push(
-        pos
-          ? { ...n, position: { x: xOffset + pos.x - pos.width / 2, y: pos.y - pos.height / 2 } }
-          : n,
-      );
+      result.push(pos ? { ...n, position: { x: xOffset + pos.x - pos.width / 2, y: pos.y - pos.height / 2 } } : n);
     }
     xOffset += bandWidth + GROUP_PAD * 3; // gap between bands
   }
   return result;
+}
+
+// ── controls menu (Add table / Arrange) ─────────────────────────────────────
+// Folded into one compact dropdown rather than two permanently-visible
+// buttons — same click-outside/Escape pattern already used by the My-drafts
+// switcher, the CodeSwitcher, etc. Leaves room to add more actions later
+// without the top-left corner growing a new button per feature.
+function ControlsMenu({ onAddTable, onArrange }: { onAddTable: () => void; onArrange: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as globalThis.Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const pick = (fn: () => void) => {
+    setOpen(false);
+    fn();
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Canvas controls"
+        title="Canvas controls"
+        className={`flex h-9 w-9 items-center justify-center rounded-field border border-border bg-surface shadow-card transition-colors ${
+          open ? "text-primary" : "text-text-body hover:text-primary"
+        }`}
+      >
+        <Icon name="menu" size={16} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-card border border-border bg-surface p-1.5 shadow-menu"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => pick(onAddTable)}
+            className="flex w-full items-center gap-2.5 rounded-field px-2.5 py-2 text-left text-[14px] font-medium text-text-body transition-colors hover:bg-[rgba(0,0,0,0.05)] hover:text-text"
+          >
+            <Icon name="plus" size={16} className="text-text-muted" />
+            Add table
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => pick(onArrange)}
+            className="flex w-full items-center gap-2.5 rounded-field px-2.5 py-2 text-left text-[14px] font-medium text-text-body transition-colors hover:bg-[rgba(0,0,0,0.05)] hover:text-text"
+          >
+            <Icon name="grid" size={16} className="text-text-muted" />
+            Arrange
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── The draft canvas ─────────────────────────────────────────────────────────
@@ -417,9 +542,19 @@ function layoutGrouped(nodes: Node[], edges: Edge[]): Node[] {
 function DraftCanvasInner({
   initialDoc,
   onDocChange,
+  view,
+  onViewChange,
+  expanded,
+  onToggleExpanded,
+  toolbar,
 }: {
   initialDoc: SchemaDraftDoc | null;
   onDocChange: (doc: SchemaDraftDoc) => void;
+  view: SchemaView;
+  onViewChange: (v: SchemaView) => void;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  toolbar: ReactNode;
 }) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -507,6 +642,32 @@ function DraftCanvasInner({
     );
   }, []);
 
+  // Card collapse/expand, minimize, and per-group color overrides are all
+  // session-local (like collapsedGroups below), not part of the saved doc —
+  // how you're looking at a design isn't the design.
+  const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
+  const toggleExpandTable = useCallback((id: string) => {
+    setExpandedTables((ts) => {
+      const next = new Set(ts);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const [minimizedTables, setMinimizedTables] = useState<Set<string>>(new Set());
+  const toggleMinimizeTable = useCallback((id: string) => {
+    setMinimizedTables((ts) => {
+      const next = new Set(ts);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const [groupColorOverrides, setGroupColorOverrides] = useState<Record<string, number>>({});
+  const setGroupColor = useCallback((group: string, paletteIndex: number) => {
+    setGroupColorOverrides((o) => ({ ...o, [group]: paletteIndex }));
+  }, []);
+
   const actions = useMemo<DraftNodeActions>(
     () => ({
       onRename: renameTable,
@@ -519,6 +680,9 @@ function DraftCanvasInner({
       onAddIndex: addIndex,
       onIndexChange: indexChange,
       onRemoveIndex: removeIndex,
+      onToggleExpand: toggleExpandTable,
+      onToggleMinimize: toggleMinimizeTable,
+      onSetGroupColor: setGroupColor,
     }),
     [
       renameTable,
@@ -531,6 +695,9 @@ function DraftCanvasInner({
       addIndex,
       indexChange,
       removeIndex,
+      toggleExpandTable,
+      toggleMinimizeTable,
+      setGroupColor,
     ],
   );
 
@@ -590,11 +757,6 @@ function DraftCanvasInner({
     onDocChange(toDraftDoc(nodes, edges));
   }, [nodes, edges, onDocChange]);
 
-  // Bands + collapse — purely derived from current node positions/groups
-  // (see layoutGrouped's header comment for why bands aren't React Flow
-  // parent nodes). Collapse state is session-local UI state, not saved to
-  // the draft doc — same call this codebase already made for hover/selection
-  // state elsewhere: how you're LOOKING at a design isn't part of the design.
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const toggleGroup = useCallback((group: string) => {
     setCollapsedGroups((gs) => {
@@ -605,6 +767,26 @@ function DraftCanvasInner({
     });
   }, []);
 
+  // Column ids that carry an edge — kept visible even when a card is
+  // collapsed, so an edge never appears to land on nothing.
+  const keepByTable = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    const add = (table: string, handle: string | null | undefined) => {
+      if (!handle || handle === "t" || !handle.startsWith("c:")) return;
+      const set = m.get(table) ?? new Set<string>();
+      set.add(handle.slice(2));
+      m.set(table, set);
+    };
+    for (const e of edges) {
+      add(e.source, e.sourceHandle);
+      add(e.target, e.targetHandle);
+    }
+    return m;
+  }, [edges]);
+
+  // Bands + collapse + per-card expand + edge-derived `keep` are all merged
+  // in at DISPLAY time, never mutated into `nodes` state directly — the same
+  // "how you're looking isn't the design" split as the read-only map.
   const { bandNodes, visibleNodes } = useMemo(() => {
     const byGroup = new Map<string, Node[]>();
     for (const n of nodes) {
@@ -617,40 +799,52 @@ function DraftCanvasInner({
     const visibleNodes: Node[] = [];
     for (const [group, members] of byGroup) {
       const collapsed = collapsedGroups.has(group);
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const n of members) {
-        const h = nodeHeightFor(n.data as unknown as DraftNodeData);
-        minX = Math.min(minX, n.position.x);
-        minY = Math.min(minY, n.position.y);
-        maxX = Math.max(maxX, n.position.x + NODE_W);
-        maxY = Math.max(maxY, n.position.y + h);
-      }
-      const data = { name: group, count: members.length, collapsed, onToggle: () => toggleGroup(group) } satisfies GroupNodeData;
-      const bandW = collapsed ? GROUP_COLLAPSED_W : maxX - minX + GROUP_PAD * 2;
-      const bandH = collapsed ? GROUP_HEADER_H : maxY - minY + GROUP_PAD * 2 + GROUP_HEADER_H;
+      const rects = members.map((n) => {
+        const d = n.data as unknown as DraftNodeData;
+        return {
+          x: n.position.x,
+          y: n.position.y,
+          w: NODE_W,
+          h: nodeHeightFor({
+            columns: d.columns,
+            indexes: d.indexes,
+            expanded: expandedTables.has(n.id),
+            minimized: minimizedTables.has(n.id),
+          }),
+        };
+      });
+      const rect = groupBoxRect(rects, collapsed);
+      const data: GroupNodeData = { name: group, count: members.length, collapsed, onToggle: () => toggleGroup(group) };
       bandNodes.push({
         id: `band:${group}`,
         type: "group",
-        position: { x: minX - GROUP_PAD, y: minY - GROUP_PAD - GROUP_HEADER_H },
-        // React Flow needs width/height set directly on the node (not just
-        // in `style`) to know its size up front — without them it treats the
-        // node as unmeasured and renders it `visibility: hidden` (and, it
-        // turns out, unclickable) until a measurement pass resolves it.
-        width: bandW,
-        height: bandH,
-        style: { width: bandW, height: bandH },
+        position: { x: rect.x, y: rect.y },
+        width: rect.width,
+        height: rect.height,
+        style: { width: rect.width, height: rect.height },
         draggable: false,
         selectable: false,
-        zIndex: -1,
+        zIndex: 1,
         data,
       });
-      if (!collapsed) visibleNodes.push(...members);
+      if (!collapsed) {
+        for (const n of members) {
+          const d = n.data as unknown as DraftNodeData;
+          visibleNodes.push({
+            ...n,
+            data: {
+              ...d,
+              keep: keepByTable.get(n.id) ?? new Set<string>(),
+              expanded: expandedTables.has(n.id),
+              minimized: minimizedTables.has(n.id),
+              color: colorForGroup(group, groupColorOverrides),
+            },
+          });
+        }
+      }
     }
     return { bandNodes, visibleNodes };
-  }, [nodes, collapsedGroups, toggleGroup]);
+  }, [nodes, collapsedGroups, toggleGroup, keepByTable, expandedTables, minimizedTables, groupColorOverrides]);
 
   return (
     <ReactFlow
@@ -667,31 +861,12 @@ function DraftCanvasInner({
       minZoom={0.1}
       maxZoom={1.5}
     >
-      <Panel position="top-left" className="flex flex-col gap-1.5">
-        <button
-          type="button"
-          onClick={addTable}
-          disabled={nodes.length >= SCHEMA_DRAFT_MAX_TABLES}
-          className="flex w-40 items-center gap-2 rounded-field border border-dashed border-field-border bg-surface px-3 py-2 text-[13px] font-medium text-text-body shadow-card transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
-        >
-          <Icon name="plus" size={15} className="text-text-muted" />
-          Add table
-        </button>
-        <button
-          type="button"
-          onClick={arrange}
-          disabled={nodes.length === 0}
-          title="Auto-arrange into bands by group, FK/feeds topology within each (Dagre)"
-          className="flex w-40 items-center gap-2 rounded-field border border-border bg-surface px-3 py-2 text-[13px] font-medium text-text-body shadow-card transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
-        >
-          <Icon name="grid" size={15} className="text-text-muted" />
-          Arrange
-        </button>
-        <p className="mt-0.5 w-44 text-[11.5px] leading-snug text-text-muted">
-          Drag a handle to another column for a foreign key; drag a table's edge handle to another table's for a
-          matview feed.
-        </p>
+      <Panel position="top-left" className="flex items-center gap-1.5">
+        <ExpandToggle expanded={expanded} onToggle={onToggleExpanded} />
+        <SchemaViewSwitcher view={view} onChange={onViewChange} />
+        <ControlsMenu onAddTable={addTable} onArrange={arrange} />
       </Panel>
+      <Panel position="top-right">{toolbar}</Panel>
       <Panel
         position="bottom-right"
         className="flex items-center gap-3 rounded-field border border-border bg-surface px-3 py-1.5 text-[11.5px] text-text-muted shadow-card"
@@ -712,12 +887,34 @@ function DraftCanvasInner({
 export function SchemaDraftCanvas(props: {
   initialDoc: SchemaDraftDoc | null;
   onDocChange: (doc: SchemaDraftDoc) => void;
+  view: SchemaView;
+  onViewChange: (v: SchemaView) => void;
+  toolbar: ReactNode;
 }) {
-  return (
-    <div className="min-h-0 flex-1 overflow-hidden rounded-card border border-border bg-[#FAFAFA]">
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [expanded]);
+
+  const canvas = (
+    <div
+      className={
+        expanded
+          ? "absolute inset-0 z-40 bg-[#FAFAFA]"
+          : "min-h-0 flex-1 overflow-hidden rounded-card border border-border bg-[#FAFAFA]"
+      }
+    >
       <ReactFlowProvider>
-        <DraftCanvasInner {...props} />
+        <DraftCanvasInner {...props} expanded={expanded} onToggleExpanded={() => setExpanded((e) => !e)} />
       </ReactFlowProvider>
     </div>
   );
+
+  const host = expanded && typeof document !== "undefined" ? document.getElementById(MAIN_PANEL_ID) : null;
+  return host ? createPortal(canvas, host) : canvas;
 }

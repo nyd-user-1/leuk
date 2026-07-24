@@ -226,9 +226,13 @@ export async function setUserPassword(userId: string, password: string): Promise
   if (u) mockStore().users.set(userId, { ...u, passwordHash: hash, updatedAt: new Date().toISOString() });
 }
 
-/** Session user from the request cookie, or null. */
-export async function getUser(): Promise<SessionUser | null> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+/**
+ * Session user for a bearer token, or null. Split out from `getUser()` so
+ * middleware (which reads the cookie off `NextRequest`, not `next/headers`)
+ * can run the identical idle/absolute-expiry check before any page renders,
+ * instead of racing the (app) layout's own redirect — see middleware.ts.
+ */
+export async function getUserByToken(token: string | undefined): Promise<SessionUser | null> {
   if (!token) return null;
   const idleMs = SESSION_IDLE_MINUTES * 60 * 1000;
   const absoluteMs = SESSION_ABSOLUTE_HOURS * 60 * 60 * 1000;
@@ -262,6 +266,12 @@ export async function getUser(): Promise<SessionUser | null> {
   if (!u || u.deletedAt) return null;
   mockStore().sessions.set(token, { ...session, expiresAt: new Date(now + idleMs).toISOString() });
   return toSessionUser(u);
+}
+
+/** Session user from the request cookie, or null. */
+export async function getUser(): Promise<SessionUser | null> {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  return getUserByToken(token);
 }
 
 /** Guard: signed-in user or 401. Call at the top of every API route/page loader. */
