@@ -8,6 +8,7 @@
     "start": "next start -p 3010"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^5.0.50",
     "@ai-sdk/anthropic": "^4.0.18",
     "@ai-sdk/react": "^4.0.37",
     "@anthropic-ai/sdk": "^0.111.0",

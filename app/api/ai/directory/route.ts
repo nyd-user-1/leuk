@@ -1,4 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
@@ -12,6 +12,7 @@ import {
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { AuthError, requireUser } from "@/lib/auth";
+import { bedrockCredentials } from "@/lib/ai/bedrock";
 import {
   DIRECTORY_SYSTEM,
   runDirectoryFacets,
@@ -31,16 +32,70 @@ import {
 // API tokens, so it is not an anonymous endpoint. Making it truly public later
 // means adding rate limiting + a spend cap, not removing requireUser lightly.
 //
+// On Bedrock (2026-08-09), same AWS credentials as lib/ai/clinical.ts's
+// Bedrock path — this route has no PHI to protect, but there's no reason to
+// run two separate model accounts when the inference credit is on AWS, not
+// Anthropic direct. NOT gated through clinicalConfigured()/bedrockConfigured()
+// (lib/ai/bedrock.ts) — those require LEUK_BEDROCK_MODEL_ID, which is the
+// CLINICAL note-drafting model; this route picks its own model per request.
+//
 // Speed levers in play: true streaming (first tool call visible in ~2s),
 // prompt caching on the stable system+tools prefix (cache_control below),
-// thinking left OFF (Opus 4.8 runs without thinking when the param is omitted),
+// thinking left OFF (Opus runs without thinking when the param is omitted),
 // and a model picker — Sonnet/Haiku answer materially faster than Opus.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const MODELS = new Set(["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"]);
-const DEFAULT_MODEL = process.env.LIMINAL_DIRECTORY_AI_MODEL ?? "claude-haiku-4-5";
+// The client (components/directory/chat-input.tsx) now sends real Bedrock
+// inference-profile ids directly — no friendly-id translation layer. Every id
+// in MODELS was verified directly against this AWS account's granted model
+// access (2026-08-10): Bedrock lists far more inference profiles per region
+// than an account is actually granted, and the failure is a plain
+// AccessDeniedException at call time, not something discoverable up front.
+// Keep this Set and chat-input.tsx's MODEL_OPTIONS in lockstep — an id here
+// with no matching picker entry is unreachable; a picker entry not here 503s.
+const MODELS = new Set([
+  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "us.anthropic.claude-sonnet-4-6",
+  "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "us.anthropic.claude-opus-4-6-v1",
+  "us.anthropic.claude-opus-4-5-20251101-v1:0",
+  "mistral.mistral-large-3-675b-instruct",
+  "us.amazon.nova-pro-v1:0",
+  "moonshotai.kimi-k2.5",
+  "moonshot.kimi-k2-thinking",
+  "qwen.qwen3-next-80b-a3b",
+  "minimax.minimax-m2.5",
+  "zai.glm-5",
+  "openai.gpt-oss-120b-1:0",
+]);
+const DEFAULT_MODEL = process.env.LEUK_DIRECTORY_AI_MODEL ?? "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+
+// Extended thinking (`reasoningConfig`) and the cache breakpoint below are
+// Anthropic-specific mechanisms — only apply them when the picked model is a
+// Claude model, so a Llama/Mistral/Nova/Kimi/Qwen/MiniMax/GLM/gpt-oss request
+// doesn't carry a providerOption its model has no concept of.
+const CLAUDE_MODELS = new Set([
+  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "us.anthropic.claude-sonnet-4-6",
+  "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "us.anthropic.claude-opus-4-6-v1",
+  "us.anthropic.claude-opus-4-5-20251101-v1:0",
+]);
+
+let bedrockProvider: ReturnType<typeof createAmazonBedrock> | null = null;
+function bedrock() {
+  if (bedrockProvider) return bedrockProvider;
+  const creds = bedrockCredentials();
+  if (!creds) return null;
+  bedrockProvider = createAmazonBedrock(
+    "apiKey" in creds
+      ? { region: creds.region, apiKey: creds.apiKey }
+      : { region: creds.region, accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey },
+  );
+  return bedrockProvider;
+}
 
 const tools = {
   search_providers: tool({
@@ -117,7 +172,8 @@ const tools = {
 export async function POST(req: Request) {
   try {
     await requireUser();
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const provider = bedrock();
+    if (!provider) {
       return NextResponse.json({ error: "Directory assistant is not configured." }, { status: 503 });
     }
 
@@ -126,35 +182,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "messages are required." }, { status: 400 });
     }
     const model = body.model && MODELS.has(body.model) ? body.model : DEFAULT_MODEL;
+    const isClaude = CLAUDE_MODELS.has(model);
 
     // Cache breakpoint on the last conversation message: everything before it
     // (tools + instructions + history) is served from Anthropic's prompt cache
     // on each tool round and each follow-up turn — most of this route's
-    // time-to-first-token.
+    // time-to-first-token. Bedrock's Converse API honors the same
+    // providerOptions.anthropic.cacheControl shape (the package re-exports
+    // AnthropicProviderOptions verbatim). Claude only — see CLAUDE_MODELS.
     const messages: ModelMessage[] = await convertToModelMessages(body.messages.slice(-24));
-    if (messages.length) {
+    if (isClaude && messages.length) {
       messages[messages.length - 1].providerOptions = {
         anthropic: { cacheControl: { type: "ephemeral" } },
       };
     }
 
-    // Internal chain-of-thought ON (ruling 2026-07-22): the model thinks before
-    // and between tool calls and the summarized reasoning streams to the UI as
-    // `reasoning` parts. Haiku is a pre-adaptive model — it takes a budget;
-    // Sonnet/Opus run adaptive with display opt-in (omitted-by-default there).
-    const thinking =
-      model === "claude-haiku-4-5"
+    // Internal chain-of-thought ON for Claude (ruling 2026-07-22): the model
+    // thinks before and between tool calls and the summarized reasoning
+    // streams to the UI as `reasoning` parts. Haiku is a pre-adaptive model —
+    // it takes a budget; Sonnet/Opus run adaptive with display opt-in
+    // (omitted-by-default there). Non-Claude models have no equivalent
+    // concept, so they run without a reasoningConfig providerOption at all.
+    const thinking = !isClaude
+      ? undefined
+      : model === "us.anthropic.claude-haiku-4-5-20251001-v1:0"
         ? { type: "enabled", budgetTokens: 2000 }
         : { type: "adaptive", display: "summarized" };
 
     const result = streamText({
-      model: anthropic(model),
+      model: provider(model),
       instructions: DIRECTORY_SYSTEM,
       messages,
       tools,
       stopWhen: isStepCount(8),
       maxOutputTokens: 8192,
-      providerOptions: { anthropic: { thinking } },
+      // Bedrock's equivalent of Anthropic's `thinking` param — same shape
+      // (type/budgetTokens/display), different providerOptions key.
+      ...(thinking ? { providerOptions: { bedrock: { reasoningConfig: thinking } } } : {}),
     });
 
     return createUIMessageStreamResponse({
