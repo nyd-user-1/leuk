@@ -29,6 +29,7 @@ import type { DictionaryEntry } from "@/lib/repos/analytics";
 function dims(key: string): Omit<BoardItem, "id"> {
   const kind = METRIC_BY_KEY[key]?.kind;
   if (kind === "stat") return { w: 3, h: 8, minW: 2, minH: 6 };
+  if (kind === "offer") return { w: 6, h: 15, minW: 4, minH: 12 };
   return { w: 6, h: 11, minW: 3, minH: 8 };
 }
 
@@ -36,7 +37,7 @@ interface BoardState {
   ids: string[];
 }
 
-const KEY_PREFIX = "liminal-analytics:";
+const KEY_PREFIX = "leuk-analytics:";
 const VIEW_KEY = `${KEY_PREFIX}view`;
 const USER_VIEWS_KEY = `${KEY_PREFIX}views`;
 const boardKey = (view: string) => `${KEY_PREFIX}board:${view}`;

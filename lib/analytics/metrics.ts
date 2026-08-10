@@ -11,9 +11,9 @@
 // browser bundle, where the sql Proxy throws on construction.)
 
 /** The chart vocabulary. Each kind has exactly one renderer in components/analytics. */
-export type MetricKind = "stat" | "series" | "area" | "ranking" | "distribution" | "table" | "agenda";
+export type MetricKind = "stat" | "series" | "area" | "ranking" | "distribution" | "table" | "agenda" | "offer";
 
-export type MetricCategory = "Practice" | "Directory" | "Insurance graph" | "Rates" | "Codes & benchmarks" | "Photon";
+export type MetricCategory = "Practice" | "Finance" | "Directory" | "Insurance graph" | "Rates" | "Codes & benchmarks" | "Photon";
 
 /** practice = the caseload (practitioners see these, own-scoped). platform = the data platform (admin only). */
 export type MetricScope = "practice" | "platform";
@@ -34,6 +34,7 @@ export interface MetricDef {
 
 export const CATEGORIES: MetricCategory[] = [
   "Practice",
+  "Finance",
   "Directory",
   "Insurance graph",
   "Rates",
@@ -58,6 +59,12 @@ export const METRICS: MetricDef[] = [
   { key: "sessions_week", label: "Sessions this week", category: "Practice", kind: "stat", description: "Sessions so far this week, against the same point last week.", sourceTable: "appointments", poweredPage: { href: "/calendar", label: "Calendar" }, scope: "practice" },
   { key: "sessions_trend", label: "Sessions, last 8 weeks", category: "Practice", kind: "area", description: "Weekly session volume — the shape of the practice's workload.", sourceTable: "appointments", poweredPage: { href: "/calendar", label: "Calendar" }, scope: "practice" },
   { key: "rx_routing", label: "Awaiting pharmacy", category: "Practice", kind: "stat", description: "Prescriptions still routing to a pharmacy.", sourceTable: "photon (api)", poweredPage: { href: "/orders", label: "Orders" }, scope: "practice" },
+
+  // ── Finance — what Stripe Connect actually paid out ───────────────────────
+  { key: "revenue_month", label: "Revenue this month", category: "Finance", kind: "stat", description: "Net marketplace revenue so far this month, against the same point last month.", sourceTable: "stripe_payment_splits", poweredPage: { href: "/earnings", label: "Earnings" }, scope: "practice" },
+  { key: "revenue_trend", label: "Revenue, last 8 weeks", category: "Finance", kind: "area", description: "Weekly net revenue — the shape of the practice's income.", sourceTable: "stripe_payment_splits", poweredPage: { href: "/earnings", label: "Earnings" }, scope: "practice" },
+  { key: "avg_session_value", label: "Avg. session value", category: "Finance", kind: "stat", description: "Net proceeds per session, after the platform fee.", sourceTable: "stripe_payment_splits", poweredPage: { href: "/earnings", label: "Earnings" }, scope: "practice" },
+  { key: "finance_offer", label: "Leuk Capital & card", category: "Finance", kind: "offer", description: "A financing and business-card teaser sized off trailing Stripe Connect revenue. Preview only — nothing here is a live offer.", sourceTable: "stripe_payment_splits", poweredPage: { href: "/settings/payments", label: "Finance" }, scope: "practice" },
 
   // ── Directory — who exists ─────────────────────────────────────────────────
   { key: "dir_rows", label: "Directory rows", category: "Directory", kind: "stat", description: "One row per (source, source_id) — more than one per clinician by design.", sourceTable: "directory_providers", poweredPage: DIRECTORY, scope: "platform" },
@@ -133,6 +140,15 @@ export type MetricValue =
   | { kind: "series" | "area"; points: number[]; labels?: string[]; capL: string; capR: string }
   | { kind: "table"; cols: string[]; rows: string[][] }
   | { kind: "agenda"; items: AgendaEntry[] }
+  | {
+      kind: "offer";
+      badge: string;
+      headline: string;
+      amount: string;
+      sub: string;
+      bullets: string[];
+      cta: string;
+    }
   | { kind: "missing"; note: string };
 
 /** key → value, for every metric the viewer's role allows. */
@@ -151,12 +167,17 @@ export const BUILT_IN_VIEWS: BoardView[] = [
   {
     name: "Overview",
     builtIn: true,
-    ids: ["today_appts", "active_clients", "unread_threads", "outstanding", "dir_npis", "rate_rows", "next_up", "sessions_trend", "rows_by_payer", "providers_by_county"],
+    ids: ["today_appts", "active_clients", "unread_threads", "revenue_month", "dir_npis", "rate_rows", "next_up", "revenue_trend", "rows_by_payer", "providers_by_county"],
   },
   {
     name: "Practice day",
     builtIn: true,
     ids: ["today_appts", "active_clients", "unread_threads", "outstanding", "overdue", "sessions_week", "rx_routing", "next_up", "sessions_trend"],
+  },
+  {
+    name: "Revenue",
+    builtIn: true,
+    ids: ["revenue_month", "avg_session_value", "outstanding", "overdue", "revenue_trend", "finance_offer"],
   },
   {
     name: "Data platform",

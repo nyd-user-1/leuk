@@ -19,6 +19,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { Tag } from "@/components/ui/tag";
 import { useToast } from "@/components/ui/toast";
+import { formatCents } from "@/lib/format";
 import { ConnectEmbed } from "./connect-embed";
 import {
   connectStage,
@@ -29,7 +30,7 @@ import {
   type ConnectAccountStatus,
 } from "./connect-api";
 
-// Settings › Get paid — the practitioner's payouts surface. One card, four
+// Settings › Finance — the practitioner's payouts surface. One card, four
 // states: no account → create · created → embedded onboarding · submitted but
 // unverified → what's outstanding · charges enabled → balance/payouts/account.
 // The title lives in the TopBar (canonical layout rule); nothing here renders
@@ -56,7 +57,15 @@ function requirementLabel(key: string): string {
 
 type View = "balance" | "payouts" | "account";
 
-export function PaymentsSettings({ publishableKey }: { publishableKey: string }) {
+export function PaymentsSettings({
+  publishableKey,
+  lifetimeNetCents,
+  sessionCount,
+}: {
+  publishableKey: string;
+  lifetimeNetCents: number;
+  sessionCount: number;
+}) {
   const toast = useToast();
   const [account, setAccount] = useState<ConnectAccountStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,12 +162,12 @@ export function PaymentsSettings({ publishableKey }: { publishableKey: string })
       )}
 
       {stage === "none" && (
-        <SettingsCard icon="credit-card" title="Get paid">
+        <SettingsCard icon="credit-card" title="Finance">
           <EmptyState
             className="py-8"
             icon="dollar"
             title="Set up payments"
-            subtext="Clients pay Liminal for their sessions and Liminal pays you, minus a platform fee. Stripe collects your identity and bank details — it takes about five minutes."
+            subtext="Clients pay Leuk for their sessions and Leuk pays you, minus a platform fee. Stripe collects your identity and bank details — it takes about five minutes."
             actions={
               <Button loading={busy} onClick={() => void startSetup()}>
                 Set up payments
@@ -228,7 +237,7 @@ export function PaymentsSettings({ publishableKey }: { publishableKey: string })
             <>
               <SettingsCard
                 icon="credit-card"
-                title="Get paid"
+                title="Finance"
                 action={
                   <Button
                     size="sm"
@@ -251,6 +260,16 @@ export function PaymentsSettings({ publishableKey }: { publishableKey: string })
                   )}
                   <span className="text-sm text-text-muted">{account.stripeAccountId}</span>
                 </div>
+                {sessionCount > 0 && (
+                  <div className="mt-4 flex items-baseline gap-2 border-t border-border pt-4">
+                    <span className="text-[28px] font-bold leading-none tabular-nums text-text">
+                      {formatCents(lifetimeNetCents)}
+                    </span>
+                    <span className="text-sm text-text-muted">
+                      lifetime revenue, net of fees · {sessionCount.toLocaleString("en-US")} paid {sessionCount === 1 ? "session" : "sessions"}
+                    </span>
+                  </div>
+                )}
                 <div className={notices > 0 ? "mt-4" : "hidden"}>
                   <ConnectNotificationBanner
                     onLoadError={() => undefined}

@@ -9,8 +9,8 @@ const SETTINGS_TABS = [
   { key: "locations", label: "Locations", href: "/settings/locations" },
   { key: "availability", label: "Availability", href: "/settings/availability" },
   // Route is /settings/payments (what the Connect return URLs and the payout
-  // emails link to); the tab keeps the plainer "Get paid" label.
-  { key: "payments", label: "Get paid", href: "/settings/payments" },
+  // emails link to); the tab label is "Finance".
+  { key: "payments", label: "Finance", href: "/settings/payments" },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

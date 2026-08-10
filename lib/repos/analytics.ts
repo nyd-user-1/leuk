@@ -3,6 +3,7 @@ import { formatCents } from "@/lib/format";
 import { METRICS, type MetricValue, type MetricValues } from "@/lib/analytics/metrics";
 import { photonInventory, practiceSnapshot } from "@/lib/repos/dashboard";
 import { platformInventory, type DictionaryTable } from "@/lib/repos/admin";
+import { revenueSnapshot, type RevenueSnapshot } from "@/lib/repos/stripe-connect";
 import type { Role } from "@/lib/types";
 
 // analytics.ts — the numbers behind /analytics.
@@ -28,6 +29,40 @@ const pct1 = (n: number, d: number) => (d ? `${Math.round((n / d) * 1000) / 10}%
 function toRanking(rows: Array<{ name: string; n: number }>, fmt: (n: number) => string = num): MetricValue {
   const max = Math.max(1, ...rows.map((r) => r.n));
   return { kind: "ranking", rows: rows.map((r) => ({ name: r.name, pct: (r.n / max) * 100, value: fmt(r.n) })) };
+}
+
+/**
+ * The "Leuk Capital & card" teaser — a preview card, not a live offer. Sizes a
+ * plausible financing pre-qualification off trailing Stripe Connect revenue the
+ * same rough way Stripe Capital itself does (a multiple of recent volume),
+ * rounded to a clean number so it reads as an estimate, not a computed fact.
+ */
+function financeOfferValue(rev: RevenueSnapshot): MetricValue {
+  if (rev.trailingQuarterNetCents <= 0) {
+    return {
+      kind: "offer",
+      badge: "Preview",
+      headline: "Leuk Capital & the Leuk Card",
+      amount: "—",
+      sub: "Financing offers and a business card unlock once you have a few months of revenue on the books.",
+      bullets: ["Advance against future bookings, repaid as a share of each payout", "A no-fee debit card funded by your Stripe balance"],
+      cta: "Notify me",
+    };
+  }
+  const raw = rev.trailingQuarterNetCents * 3;
+  const amountCents = Math.min(7_500_000, Math.max(500_000, Math.round(raw / 50_000) * 50_000));
+  return {
+    kind: "offer",
+    badge: "Preview — not a live offer",
+    headline: "You may pre-qualify for Leuk Capital",
+    amount: formatCents(amountCents),
+    sub: `Estimated off your last 90 days of Stripe payouts (${formatCents(rev.trailingQuarterNetCents)} net). One repayment, taken as a share of each future payout — no fixed due date.`,
+    bullets: [
+      "Working capital, sized to what your practice actually brings in",
+      "The Leuk Card — a business debit card funded straight from your Stripe balance",
+    ],
+    cta: "Notify me when this opens",
+  };
 }
 
 // ── the extra queries (everything a count can't answer) ──────────────────────
@@ -137,9 +172,10 @@ export async function analyticsData(user: { id: string; role: Role }): Promise<A
   const values: MetricValues = {};
   const dictionary: Record<string, DictionaryEntry> = {};
 
-  const [snapshot, photon, inventory, extras] = await Promise.all([
+  const [snapshot, photon, revenue, inventory, extras] = await Promise.all([
     practiceSnapshot(user),
     photonInventory(),
+    revenueSnapshot({ userId: isAdmin ? null : user.id }),
     isAdmin ? platformInventory() : Promise.resolve(null),
     isAdmin && hasDb ? loadExtras() : Promise.resolve(null),
   ]);
@@ -168,6 +204,41 @@ export async function analyticsData(user: { id: string; role: Role }): Promise<A
   values.rx_routing = { kind: "stat", value: s.rxRouting === null ? "—" : num(s.rxRouting), sub: s.rxRouting === null ? "e-prescribing not connected" : "routing to a pharmacy" };
   values.photon_rx = photon ? { kind: "stat", value: num(photon.prescriptions), sub: "written in this org" } : { kind: "missing", note: "Photon is not connected." };
   values.photon_orders = photon ? { kind: "stat", value: num(photon.orders), sub: `${photon.routing} still routing` } : { kind: "missing", note: "Photon is not connected." };
+
+  // ── Finance — Stripe Connect revenue ────────────────────────────────────────
+  if (!revenue.hasAccount) {
+    const note = "No payout account yet — set up Finance to start seeing revenue here.";
+    values.revenue_month = { kind: "missing", note };
+    values.revenue_trend = { kind: "missing", note };
+    values.avg_session_value = { kind: "missing", note };
+    values.finance_offer = { kind: "missing", note: "Financing and card offers unlock once a payout account is active." };
+  } else {
+    const revDelta = revenue.monthNetCents - revenue.prevMonthNetCents;
+    values.revenue_month = {
+      kind: "stat",
+      value: formatCents(revenue.monthNetCents),
+      sub:
+        revenue.prevMonthNetCents === 0 && revenue.monthNetCents === 0
+          ? "no revenue yet this month"
+          : `${revDelta >= 0 ? "+" : ""}${formatCents(revDelta)} vs last month (${formatCents(revenue.prevMonthNetCents)})`,
+      tone: revDelta > 0 ? "success" : "default",
+    };
+    values.revenue_trend = revenue.weeklyRevenue.some((w) => w.cents > 0)
+      ? {
+          kind: "area",
+          points: revenue.weeklyRevenue.map((w) => w.cents),
+          labels: revenue.weeklyRevenue.map((w) => w.label),
+          capL: revenue.weeklyRevenue[0]?.label ?? "",
+          capR: formatCents(revenue.weeklyRevenue[revenue.weeklyRevenue.length - 1]?.cents ?? 0),
+        }
+      : { kind: "missing", note: "No revenue history yet." };
+    values.avg_session_value = {
+      kind: "stat",
+      value: formatCents(revenue.avgSessionNetCents),
+      sub: `net, across ${num(revenue.sessionCount)} paid ${revenue.sessionCount === 1 ? "session" : "sessions"}`,
+    };
+    values.finance_offer = financeOfferValue(revenue);
+  }
 
   if (!isAdmin || !inventory) {
     const data: AnalyticsPayload = { values, dictionary, generatedAt: new Date().toISOString() };

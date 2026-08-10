@@ -348,6 +348,121 @@ export async function attachTransferToSplit(paymentIntentId: string, transferId:
   return true;
 }
 
+// ── revenue analytics (the /analytics Finance card) ────────────────────────
+
+export interface RevenueSnapshot {
+  hasAccount: boolean;
+  /** All-time, net — the "Lifetime revenue" stat on both Finance and /analytics. */
+  lifetimeNetCents: number;
+  lifetimeGrossCents: number;
+  monthNetCents: number;
+  prevMonthNetCents: number;
+  /** Trailing 90 days, net — the input to the financing pre-qualification estimate. */
+  trailingQuarterNetCents: number;
+  sessionCount: number;
+  avgSessionNetCents: number;
+  /** Eight weeks of net revenue, oldest first — mirrors PracticeSnapshot.weeklySessions. */
+  weeklyRevenue: Array<{ label: string; cents: number }>;
+}
+
+const EMPTY_REVENUE: RevenueSnapshot = {
+  hasAccount: false,
+  lifetimeNetCents: 0,
+  lifetimeGrossCents: 0,
+  monthNetCents: 0,
+  prevMonthNetCents: 0,
+  trailingQuarterNetCents: 0,
+  sessionCount: 0,
+  avgSessionNetCents: 0,
+  weeklyRevenue: [],
+};
+
+/** Fill the empty weeks the same way dashboard.ts's toWeekly does — a gap is a zero. */
+function toWeeklyRevenue(rows: Array<{ wk: string; net: number }>): Array<{ label: string; cents: number }> {
+  const byWeek = new Map(rows.map((r) => [r.wk.slice(0, 10), Number(r.net)]));
+  const monday = new Date();
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return Array.from({ length: 8 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() - (7 - i) * 7 + 7);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return { label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }), cents: byWeek.get(key) ?? 0 };
+  });
+}
+
+/**
+ * Net marketplace revenue behind the /analytics Finance card — scoped the same
+ * way practiceSnapshot() is (admin = every connected account, practitioner =
+ * their own). Reads stripe_payment_splits only; never calls Stripe, so this is
+ * one cheap query alongside the rest of the board, not a per-render API hop.
+ */
+export async function revenueSnapshot(scope: { userId: string | null }): Promise<RevenueSnapshot> {
+  if (!hasDb) return EMPTY_REVENUE;
+
+  const totals = (await sql`
+    WITH acct AS (
+      SELECT stripe_account_id FROM stripe_connect_accounts
+      WHERE ${scope.userId}::uuid IS NULL OR user_id = ${scope.userId}::uuid
+    ), scope AS (
+      SELECT sp.amount_cents, sp.application_fee_cents, sp.created_at
+      FROM stripe_payment_splits sp
+      JOIN acct a ON a.stripe_account_id = sp.destination_account_id
+    )
+    SELECT
+      (SELECT count(*) FROM acct) AS account_count,
+      COALESCE(SUM(amount_cents - application_fee_cents), 0) AS lifetime_net,
+      COALESCE(SUM(amount_cents), 0) AS lifetime_gross,
+      COALESCE(SUM(amount_cents - application_fee_cents)
+        FILTER (WHERE created_at >= date_trunc('month', now())), 0) AS month_net,
+      COALESCE(SUM(amount_cents - application_fee_cents)
+        FILTER (WHERE created_at >= date_trunc('month', now() - interval '1 month')
+                  AND created_at < date_trunc('month', now())), 0) AS prev_month_net,
+      COALESCE(SUM(amount_cents - application_fee_cents)
+        FILTER (WHERE created_at >= now() - interval '90 days'), 0) AS trailing_quarter_net,
+      COUNT(*) AS session_count,
+      COALESCE(AVG(amount_cents - application_fee_cents), 0) AS avg_session_net
+    FROM scope
+  `) as Array<{
+    account_count: number;
+    lifetime_net: number;
+    lifetime_gross: number;
+    month_net: number;
+    prev_month_net: number;
+    trailing_quarter_net: number;
+    session_count: number;
+    avg_session_net: number;
+  }>;
+
+  const t = totals[0];
+  if (!t || Number(t.account_count) === 0) return EMPTY_REVENUE;
+
+  const weekly = (await sql`
+    WITH acct AS (
+      SELECT stripe_account_id FROM stripe_connect_accounts
+      WHERE ${scope.userId}::uuid IS NULL OR user_id = ${scope.userId}::uuid
+    )
+    SELECT to_char(date_trunc('week', sp.created_at), 'YYYY-MM-DD') AS wk,
+           SUM(sp.amount_cents - sp.application_fee_cents)::bigint AS net
+    FROM stripe_payment_splits sp
+    JOIN acct a ON a.stripe_account_id = sp.destination_account_id
+    WHERE sp.created_at >= date_trunc('week', now()) - interval '7 weeks'
+    GROUP BY wk ORDER BY wk
+  `) as Array<{ wk: string; net: number }>;
+
+  return {
+    hasAccount: true,
+    lifetimeNetCents: Number(t.lifetime_net),
+    lifetimeGrossCents: Number(t.lifetime_gross),
+    monthNetCents: Number(t.month_net),
+    prevMonthNetCents: Number(t.prev_month_net),
+    trailingQuarterNetCents: Number(t.trailing_quarter_net),
+    sessionCount: Number(t.session_count),
+    avgSessionNetCents: Math.round(Number(t.avg_session_net)),
+    weeklyRevenue: toWeeklyRevenue(weekly),
+  };
+}
+
 /** Splits for one connected account, newest first — the "you've been paid" feed. */
 export async function listPaymentSplits(
   destinationAccountId: string,

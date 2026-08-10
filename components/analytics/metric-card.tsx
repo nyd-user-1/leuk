@@ -8,7 +8,7 @@ import { MenuDivider, MenuItem } from "@/components/ui/dropdown-menu";
 import { Table, Td, Tr } from "@/components/ui/table";
 import type { AppointmentStatus } from "@/lib/types";
 import type { MetricDef, MetricValue } from "@/lib/analytics/metrics";
-import { DistBody, LineChart, RankingBody, StatBody } from "./charts";
+import { DistBody, LineChart, OfferBody, RankingBody, StatBody } from "./charts";
 
 // One metric on the board: a BoardCard (which owns the chrome and the whole
 // drag/resize/remove affordance pack) filled with this metric's body. The meta
@@ -39,6 +39,8 @@ function Body({ def, value }: { def: MetricDef; value: MetricValue | undefined }
     case "series":
     case "area":
       return <LineChart v={value} />;
+    case "offer":
+      return <OfferBody v={value} />;
     case "agenda":
       return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

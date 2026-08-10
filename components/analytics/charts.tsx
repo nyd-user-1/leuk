@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { MetricValue } from "@/lib/analytics/metrics";
 
 // The chart bodies — hq's fleet-view shapes (LineChart / RankingBody / DistBody)
-// rebuilt on Liminal's light tokens. Inline SVG, no chart library: each shape is
+// rebuilt on Leuk's light tokens. Inline SVG, no chart library: each shape is
 // ~30 lines and a dependency would cost more than it saves.
 //
 // Two things carried over from hq deliberately: the smooth cubic path (a
@@ -125,7 +125,45 @@ export function DistBody({ v }: { v: Extract<MetricValue, { kind: "distribution"
   );
 }
 
-/** The stat body — hq's KpiTile anatomy in Liminal type: big number, unit/delta subline. */
+/** The finance teaser — a headline number, a plain-English estimate, and a
+ *  disabled-by-design CTA. This is a preview card: nothing it shows is a real
+ *  offer, and the button never calls Stripe Capital or Issuing — it just
+ *  confirms interest locally, the same weight as any other "notify me" stub. */
+export function OfferBody({ v }: { v: Extract<MetricValue, { kind: "offer" }> }) {
+  const [sent, setSent] = useState(false);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-warning-tint px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-warning">
+        {v.badge}
+      </span>
+      <div>
+        <p className="text-[13px] font-medium text-text-muted">{v.headline}</p>
+        {v.amount !== "—" && <span className="text-[28px] font-bold leading-none tabular-nums text-text">{v.amount}</span>}
+      </div>
+      <p className="line-clamp-3 text-[13px] text-text-muted">{v.sub}</p>
+      <ul className="flex flex-col gap-1">
+        {v.bullets.map((b) => (
+          <li key={b} className="flex items-start gap-1.5 text-[13px] text-text-body">
+            <span aria-hidden className="mt-[3px] size-1 shrink-0 rounded-full bg-primary" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-auto pt-1">
+        <button
+          type="button"
+          disabled={sent}
+          onClick={() => setSent(true)}
+          className="rounded-field border border-primary bg-transparent px-3 py-1.5 text-[13px] font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-default disabled:border-border disabled:text-text-muted disabled:hover:bg-transparent"
+        >
+          {sent ? "We'll be in touch" : v.cta}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** The stat body — hq's KpiTile anatomy in Leuk type: big number, unit/delta subline. */
 export function StatBody({ v }: { v: Extract<MetricValue, { kind: "stat" }> }) {
   const tone =
     v.tone === "success" ? "text-success" : v.tone === "danger" ? "text-danger" : v.tone === "warning" ? "text-accent-deep" : "text-text";
