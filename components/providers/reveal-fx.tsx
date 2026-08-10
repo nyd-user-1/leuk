@@ -13,11 +13,17 @@ export function RevealFx({
   children,
   delay = 0,
   translateY = 20,
+  durationMs = 1100,
   className = "",
 }: {
   children: ReactNode;
   delay?: number; // seconds
   translateY?: number; // px offset before reveal
+  /** 1100ms is tuned for a marketing hero, arriving once. Pass something in
+   *  the 150–250ms range for an in-app route transition — see ContentSurface,
+   *  which remounts this on every navigation and needs it to feel instant,
+   *  not cinematic. */
+  durationMs?: number;
   className?: string;
 }) {
   const [on, setOn] = useState(false);
@@ -52,10 +58,10 @@ export function RevealFx({
         filter: done ? "none" : on ? "blur(0px)" : "blur(16px)",
         transform: `translateY(${on ? 0 : translateY}px)`,
         transition: [
-          "mask-position 1.1s cubic-bezier(0.25, 0.4, 0.25, 1)",
-          "-webkit-mask-position 1.1s cubic-bezier(0.25, 0.4, 0.25, 1)",
-          "filter 1.1s cubic-bezier(0.25, 0.4, 0.25, 1)",
-          "transform 1.1s cubic-bezier(0.25, 0.4, 0.25, 1)",
+          `mask-position ${durationMs}ms cubic-bezier(0.25, 0.4, 0.25, 1)`,
+          `-webkit-mask-position ${durationMs}ms cubic-bezier(0.25, 0.4, 0.25, 1)`,
+          `filter ${durationMs}ms cubic-bezier(0.25, 0.4, 0.25, 1)`,
+          `transform ${durationMs}ms cubic-bezier(0.25, 0.4, 0.25, 1)`,
         ].join(", "),
       }}
     >

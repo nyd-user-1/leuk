@@ -18,14 +18,13 @@ import type { SessionUser } from "@/lib/auth";
 // the panel now. The account chip lives at the bottom of the Sidebar.
 
 // The practitioner nav, categorized (Fathom pattern): a headerless top group,
-// then collapsible sections. Workspace is a single top item — its sub-views
-// (Analytics / Dashboard / Data dictionary / Docs) are in-content tabs, not
-// sidebar children.
+// then collapsible sections. Workspace lives under System (moved 2026-08-10 —
+// /chat is the front door now); its sub-views (Analytics / Dashboard / Data
+// dictionary / Docs) are in-content tabs, not sidebar children.
 const WORKSPACE_NAV: SidebarNavSection[] = [
   {
     items: [
       { label: "Chat", href: "/chat", icon: "message" },
-      { label: "Workspace", href: "/workspace", icon: "grid" },
       { label: "Calendar", href: "/calendar", icon: "calendar" },
       { label: "Inbox", href: "/inbox", icon: "inbox" },
       { label: "Clients", href: "/clients", icon: "users" },
@@ -61,6 +60,7 @@ const WORKSPACE_NAV: SidebarNavSection[] = [
     header: "System",
     icon: "monitor-check",
     items: [
+      { label: "Workspace", href: "/workspace", icon: "grid" },
       { label: "Monitor", href: "/monitor", icon: "activity" },
       { label: "Settings", href: "/settings", icon: "gear" },
       { label: "Design system", href: "/design-system", icon: "paint-roller" },

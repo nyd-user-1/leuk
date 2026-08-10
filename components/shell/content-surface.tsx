@@ -8,6 +8,7 @@ import { ownsPageTitle, routeTitle } from "@/components/shell/route-title";
 import { OPEN_COMMAND_PALETTE } from "@/components/search/command-palette";
 import { TOPBAR_ACTIONS_ID } from "@/components/shell/topbar-slot";
 import { Icon, type IconName } from "@/components/ui/icons";
+import { RevealFx } from "@/components/providers/reveal-fx";
 
 // Catalog `ContentSurface` — the inside of the floating white panel. Replaces
 // the old TopBar strip + ContentHeader H1 (retired 2026-07-23): the panel's
@@ -81,7 +82,12 @@ export function ContentSurface({
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] [scrollbar-width:none] md:p-6 md:pb-6 [&::-webkit-scrollbar]:hidden">
-        {children}
+        {/* key={pathname} remounts RevealFx on every navigation, replaying the
+            reveal from scratch — tuned fast (200ms, an 8px settle) so it reads
+            as "content just arrived," not a marketing-page flourish. */}
+        <RevealFx key={pathname} durationMs={200} translateY={8}>
+          {children}
+        </RevealFx>
       </div>
     </>
   );

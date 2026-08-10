@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Liminal theme — Component Catalog §1 (structure) + §1b (brand values).
+/* Leuk theme — Component Catalog §1 (structure) + §1b (brand values).
    Light theme only for the authenticated app (sidebar, calendar, EHR
    surfaces). The public marketing site additionally supports an optional
    dark toggle (see .dark override block + components/marketing/theme-toggle)
@@ -72,7 +72,7 @@
   --shadow-panel: inset 0 0 0 1px var(--color-border), 0 7px 32px rgb(0 0 0 / 0.18);
   --shadow-panel-spec: inset 0 0 0 1px #23252a, 0 7px 32px rgb(0 0 0 / 0.35);
 
-  /* Liminal ramps */
+  /* Leuk ramps */
   --color-navy-900: #1c2440;
   --color-navy-700: #2b3557;
   --color-teal-700: #35707c;
@@ -281,6 +281,21 @@ body {
 .sheet-rise { animation: sheet-rise 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .sheet-rise { animation: none; transform: none; }
+}
+
+/* ── Route loading (components/shell/route-loading.tsx) ──────────────────────
+   The Leuk mark, breathing — shown by app/(app)/loading.tsx and
+   app/portal/loading.tsx while a slow server component fetches, buying a
+   moment before ContentSurface's per-navigation RevealFx has something to
+   reveal. Scale + opacity, not a spinner — it should read as "the brand is
+   thinking," not "something is broken." */
+@keyframes logo-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.94); }
+}
+.logo-pulse { animation: logo-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-pulse { animation: none; opacity: 0.75; }
 }
 
 /* ── SidePanel flyover (components/ui/side-panel.tsx) ────────────────────────

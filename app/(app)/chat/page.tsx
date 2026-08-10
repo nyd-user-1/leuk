@@ -34,6 +34,20 @@ const FOLLOWUPS_KEY = "leuk-chat-followups";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// requireUser() (lib/auth.ts) throws AuthError("Sign in required.", 401) when
+// the 15-minute idle timeout has quietly expired mid-page — useChat surfaces
+// that as error.message set to the route's raw JSON body
+// (`{"error":"Sign in required."}`), which read as a broken app rather than
+// an expected security timeout. Caught here so it renders as the latter.
+function isSessionExpiredError(message: string | undefined): boolean {
+  if (!message) return false;
+  try {
+    return (JSON.parse(message) as { error?: string })?.error === "Sign in required.";
+  } catch {
+    return message.includes("Sign in required");
+  }
+}
+
 // One status line per GROUP of consecutive same-tool calls — parallel calls
 // merge their subjects ("Checked Oxford and Empire published rates") instead
 // of listing the same tool twice.
@@ -175,27 +189,35 @@ function AnswerFooter({
       <button type="button" onClick={copy} aria-label="Copy answer" className={btn}>
         <Icon name={copied ? "check" : "copy"} size={14} className={copied ? "text-success" : undefined} />
       </button>
-      <button
-        type="button"
-        onClick={() => setVote(vote === "up" ? null : "up")}
-        aria-label="Good answer"
-        className={`${btn} ${vote === "up" ? "text-primary" : ""}`}
-      >
-        {THUMB_UP}
-      </button>
-      <button
-        type="button"
-        onClick={() => setVote(vote === "down" ? null : "down")}
-        aria-label="Bad answer"
-        className={`${btn} ${vote === "down" ? "text-primary" : ""}`}
-      >
-        {THUMB_DOWN}
-      </button>
       {isLast && (
         <button type="button" onClick={onRegenerate} disabled={busy} aria-label="Regenerate answer" className={`${btn} disabled:opacity-40`}>
           <Icon name="refresh-cw" size={13} />
         </button>
       )}
+      {/* Stub — wired to nothing yet. */}
+      {isLast && (
+        <button type="button" aria-label="Edit" className={btn}>
+          <Icon name="edit" size={14} />
+        </button>
+      )}
+      <span className="ml-auto flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => setVote(vote === "up" ? null : "up")}
+          aria-label="Good answer"
+          className={`${btn} ${vote === "up" ? "text-primary" : ""}`}
+        >
+          {THUMB_UP}
+        </button>
+        <button
+          type="button"
+          onClick={() => setVote(vote === "down" ? null : "down")}
+          aria-label="Bad answer"
+          className={`${btn} ${vote === "down" ? "text-primary" : ""}`}
+        >
+          {THUMB_DOWN}
+        </button>
+      </span>
     </div>
   );
 }
@@ -404,18 +426,25 @@ export default function ChatPage() {
       <div className="flex h-full flex-col items-center justify-center">
         <div className="w-full">{input}</div>
         <div className="w-full px-1.5 sm:px-4">
-          <div className="mx-auto flex w-full max-w-[770px] flex-wrap gap-2">
-            {STARTERS.map((s) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => send(s.prompt)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] text-text transition-colors hover:border-primary hover:text-primary"
-              >
-                <Icon name={s.icon} size={14} className="text-primary" />
-                {s.label}
-              </button>
-            ))}
+          {/* Single line, width-matched to the input above it (same 770px/mx-auto
+              frame) — a fade to --color-surface on each edge signals there's more
+              to scroll instead of wrapping to a second row. */}
+          <div className="relative mx-auto w-full max-w-[770px]">
+            <div className="no-scrollbar flex w-full flex-nowrap gap-2 overflow-x-auto scroll-smooth">
+              {STARTERS.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => send(s.prompt)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] text-text transition-colors hover:border-primary hover:text-primary"
+                >
+                  <Icon name={s.icon} size={14} className="text-primary" />
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-surface to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface to-transparent" />
           </div>
         </div>
       </div>
@@ -458,10 +487,22 @@ export default function ChatPage() {
               <ThinkingOrb size={30} isThinking tooltip="Hi, I'm Leuk. How can I help you today?" onActivate={pingInput} />
             </div>
           )}
-          {error && (
-            <p className="rounded-field bg-danger-tint px-3 py-2 text-[13px] text-danger">
-              {error.message || "The directory assistant is temporarily unavailable."}
-            </p>
+          {error && isSessionExpiredError(error.message) ? (
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-field border border-warning/30 bg-warning-tint px-3 py-2.5 text-[13px] text-text">
+              <span className="flex items-center gap-2">
+                <Icon name="lock" size={15} className="shrink-0 text-warning" />
+                Your session ended after 15 minutes idle, for security — sign in again to keep chatting.
+              </span>
+              <TextLink href="/sign-in" className="shrink-0">
+                Sign in
+              </TextLink>
+            </div>
+          ) : (
+            error && (
+              <p className="rounded-field bg-danger-tint px-3 py-2 text-[13px] text-danger">
+                {error.message || "The directory assistant is temporarily unavailable."}
+              </p>
+            )
           )}
             <div ref={endRef} />
           </div>
