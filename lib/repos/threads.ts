@@ -1,6 +1,7 @@
 // Clinical domain — reads/writes the HIPAA-enabled project (see lib/db.ts).
 import { hasPhiDb as hasDb, sqlPhi as sql } from "@/lib/db";
 import { isoDateOnly, isoDateTime } from "@/lib/format";
+import { AGENTS } from "@/lib/agents/registry";
 import { mockId, mockStore } from "@/lib/mock";
 import "@/lib/mock/threads";
 import "@/lib/mock/clients"; // client rows for name joins + portal-login mapping
@@ -29,7 +30,8 @@ export interface ThreadDetail {
 
 type ThreadRow = {
   id: string;
-  client_id: string;
+  client_id: string | null;
+  agent_id: string | null;
   subject: string;
   status: ThreadStatus;
   last_message_at: string | Date | null;
@@ -40,7 +42,8 @@ type ThreadRow = {
 function toThread(r: ThreadRow): Thread {
   return {
     id: r.id,
-    clientId: r.client_id,
+    clientId: r.client_id ?? "",
+    agentId: r.agent_id,
     subject: r.subject,
     status: r.status,
     lastMessageAt: isoDateTime(r.last_message_at),
@@ -52,7 +55,8 @@ function toThread(r: ThreadRow): Thread {
 type MessageRow = {
   id: string;
   thread_id: string;
-  sender_id: string;
+  sender_id: string | null;
+  sender_agent_id: string | null;
   body: string;
   read_at: string | Date | null;
   created_at: string | Date;
@@ -62,16 +66,35 @@ function toMessage(r: MessageRow): Message {
   return {
     id: r.id,
     threadId: r.thread_id,
-    senderId: r.sender_id,
+    senderId: r.sender_id ?? "",
+    senderAgentId: r.sender_agent_id,
     body: r.body,
     readAt: isoDateTime(r.read_at),
     createdAt: isoDateTime(r.created_at),
   };
 }
 
+/** Whose conversation this is: the agent's name, or the client's. */
+function partyName(agentId: string | null, firstName: string | null, lastName: string | null): string {
+  if (agentId) return AGENTS.find((a) => a.id === agentId)?.name ?? agentId;
+  return firstName || lastName ? `${firstName ?? ""} ${lastName ?? ""}`.trim() : "Client";
+}
+
+/** Bubble identities for agent turns, keyed `agent:<id>` so they can't collide
+ *  with a user uuid in the same map. */
+function agentSenders(messages: Message[]): ThreadDetail["senders"] {
+  const out: ThreadDetail["senders"] = {};
+  for (const m of messages) {
+    if (!m.senderAgentId || out[`agent:${m.senderAgentId}`]) continue;
+    const def = AGENTS.find((a) => a.id === m.senderAgentId);
+    out[`agent:${m.senderAgentId}`] = { name: def?.name ?? m.senderAgentId, hue: "teal" };
+  }
+  return out;
+}
+
 function mockSummary(t: Thread): ThreadSummary {
   const store = mockStore();
-  const client = store.clients.get(t.clientId);
+  const client = t.clientId ? store.clients.get(t.clientId) : undefined;
   const msgs = [...store.messages.values()]
     .filter((m) => m.threadId === t.id)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
@@ -79,10 +102,10 @@ function mockSummary(t: Thread): ThreadSummary {
   const clientUserId = client?.userId ?? null;
   return {
     ...t,
-    clientName: client ? `${client.firstName} ${client.lastName}` : "Client",
+    clientName: partyName(t.agentId, client?.firstName ?? null, client?.lastName ?? null),
     snippet: last?.body ?? null,
-    unreadFromClient: msgs.filter((m) => !m.readAt && m.senderId === clientUserId).length,
-    unreadFromStaff: msgs.filter((m) => !m.readAt && m.senderId !== clientUserId).length,
+    unreadFromClient: msgs.filter((m) => !m.readAt && (m.senderAgentId || m.senderId === clientUserId)).length,
+    unreadFromStaff: msgs.filter((m) => !m.readAt && !m.senderAgentId && m.senderId !== clientUserId).length,
   };
 }
 
@@ -91,16 +114,16 @@ export async function listThreads(f?: { clientId?: string; status?: ThreadStatus
     const rows = (await sql`
       SELECT t.*, c.first_name, c.last_name, c.user_id AS client_user_id,
              (SELECT body FROM messages m WHERE m.thread_id = t.id ORDER BY m.created_at DESC LIMIT 1) AS snippet,
-             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND m.sender_id = c.user_id) AS unread_from_client,
-             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND (c.user_id IS NULL OR m.sender_id <> c.user_id)) AS unread_from_staff
-      FROM threads t JOIN clients c ON c.id = t.client_id
+             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND (m.sender_agent_id IS NOT NULL OR m.sender_id = c.user_id)) AS unread_from_client,
+             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND m.sender_agent_id IS NULL AND (c.user_id IS NULL OR m.sender_id <> c.user_id)) AS unread_from_staff
+      FROM threads t LEFT JOIN clients c ON c.id = t.client_id
       WHERE (${f?.clientId ?? null}::uuid IS NULL OR t.client_id = ${f?.clientId ?? null})
         AND (${f?.status ?? null}::text IS NULL OR t.status = ${f?.status ?? null})
       ORDER BY t.last_message_at DESC NULLS LAST
-    `) as Array<ThreadRow & { first_name: string; last_name: string; snippet: string | null; unread_from_client: number; unread_from_staff: number }>;
+    `) as Array<ThreadRow & { first_name: string | null; last_name: string | null; snippet: string | null; unread_from_client: number; unread_from_staff: number }>;
     return rows.map((r) => ({
       ...toThread(r),
-      clientName: `${r.first_name} ${r.last_name}`,
+      clientName: partyName(r.agent_id, r.first_name, r.last_name),
       snippet: r.snippet,
       unreadFromClient: r.unread_from_client,
       unreadFromStaff: r.unread_from_staff,
@@ -116,28 +139,28 @@ export async function getThread(id: string): Promise<ThreadDetail | null> {
   if (hasDb) {
     const summaries = (await sql`
       SELECT t.*, c.first_name, c.last_name,
-             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND m.sender_id = c.user_id) AS unread_from_client,
-             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND (c.user_id IS NULL OR m.sender_id <> c.user_id)) AS unread_from_staff
-      FROM threads t JOIN clients c ON c.id = t.client_id WHERE t.id = ${id}
-    `) as Array<ThreadRow & { first_name: string; last_name: string; unread_from_client: number; unread_from_staff: number }>;
+             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND (m.sender_agent_id IS NOT NULL OR m.sender_id = c.user_id)) AS unread_from_client,
+             (SELECT count(*)::int FROM messages m WHERE m.thread_id = t.id AND m.read_at IS NULL AND m.sender_agent_id IS NULL AND (c.user_id IS NULL OR m.sender_id <> c.user_id)) AS unread_from_staff
+      FROM threads t LEFT JOIN clients c ON c.id = t.client_id WHERE t.id = ${id}
+    `) as Array<ThreadRow & { first_name: string | null; last_name: string | null; unread_from_client: number; unread_from_staff: number }>;
     const r = summaries[0];
     if (!r) return null;
     const msgRows = (await sql`SELECT * FROM messages WHERE thread_id = ${id} ORDER BY created_at ASC`) as MessageRow[];
     const messages = msgRows.map(toMessage);
-    const senderIds = [...new Set(messages.map((m) => m.senderId))];
+    const senderIds = [...new Set(messages.map((m) => m.senderId).filter(Boolean))];
     const users = senderIds.length
       ? ((await sql`SELECT id, name, avatar_hue FROM users WHERE id = ANY(${senderIds})`) as Array<{ id: string; name: string; avatar_hue: AvatarHue }>)
       : [];
     return {
       thread: {
         ...toThread(r),
-        clientName: `${r.first_name} ${r.last_name}`,
+        clientName: partyName(r.agent_id, r.first_name, r.last_name),
         snippet: messages[messages.length - 1]?.body ?? null,
         unreadFromClient: r.unread_from_client,
         unreadFromStaff: r.unread_from_staff,
       },
       messages,
-      senders: Object.fromEntries(users.map((u) => [u.id, { name: u.name, hue: u.avatar_hue }])),
+      senders: { ...agentSenders(messages), ...Object.fromEntries(users.map((u) => [u.id, { name: u.name, hue: u.avatar_hue }])) },
     };
   }
   const store = mockStore();
@@ -146,9 +169,9 @@ export async function getThread(id: string): Promise<ThreadDetail | null> {
   const messages = [...store.messages.values()]
     .filter((m) => m.threadId === id)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  const senders: ThreadDetail["senders"] = {};
+  const senders: ThreadDetail["senders"] = agentSenders(messages);
   for (const m of messages) {
-    if (senders[m.senderId]) continue;
+    if (!m.senderId || senders[m.senderId]) continue;
     const u = store.users.get(m.senderId);
     senders[m.senderId] = { name: u?.name ?? "User", hue: u?.avatarHue ?? "teal" };
   }
@@ -177,6 +200,7 @@ export async function createThread(input: CreateThreadInput): Promise<Thread> {
   const thread: Thread = {
     id: mockId(),
     clientId: input.clientId,
+    agentId: null, // staff compose always opens a client thread
     subject: input.subject,
     status: "open",
     lastMessageAt: now,
@@ -199,7 +223,7 @@ export async function postMessage(threadId: string, senderId: string, body: stri
     return toMessage(rows[0]);
   }
   const now = new Date().toISOString();
-  const message: Message = { id: mockId(), threadId, senderId, body, readAt: null, createdAt: now };
+  const message: Message = { id: mockId(), threadId, senderId, senderAgentId: null, body, readAt: null, createdAt: now };
   const store = mockStore();
   store.messages.set(message.id, message);
   const t = store.threads.get(threadId);

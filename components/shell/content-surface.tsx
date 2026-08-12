@@ -85,7 +85,18 @@ export function ContentSurface({
         {/* key={pathname} remounts RevealFx on every navigation, replaying the
             reveal from scratch — tuned fast (200ms, an 8px settle) so it reads
             as "content just arrived," not a marketing-page flourish. */}
-        <RevealFx key={pathname} durationMs={200} translateY={8}>
+        {/* h-full here is load-bearing, not cosmetic: RevealFx wraps every page
+            in a plain block div, and full-height surfaces (calendar grid, inbox
+            master/detail, the centred chat composer) size themselves with
+            `h-full`. Without this the wrapper shrink-wraps its content and
+            every one of them collapses to natural height with dead space
+            below. It has to be a definite `h-full`, not `min-h-full`: a child's
+            percentage height resolves against the parent's HEIGHT, and a parent
+            with only a min-height is still auto. Pages taller than the viewport
+            overflow this box and scroll normally — safe here because the reveal
+            mask is a horizontal gradient that tiles identically down the axis,
+            so the overflow is not clipped. */}
+        <RevealFx key={pathname} durationMs={200} translateY={8} className="h-full">
           {children}
         </RevealFx>
       </div>

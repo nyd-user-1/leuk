@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TopBarActions } from "@/components/shell/topbar-slot";
+import { AgentButton } from "@/components/agents/agent-button";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { ReferModal } from "@/components/providers/refer-modal";
@@ -41,6 +42,7 @@ export function ProviderProfile({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <TopBarActions>
+        <AgentButton context={{ label: name, detail: `Provider NPI ${provider.npi}` }} agentId="directory" />
         <Button size="sm" leftIcon="send" onClick={() => setReferOpen(true)}>
           Refer a client
         </Button>

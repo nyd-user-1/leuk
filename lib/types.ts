@@ -258,7 +258,11 @@ export type ThreadStatus = "open" | "closed";
 
 export interface Thread {
   id: string;
+  /** Empty on an agent thread — a thread is a client OR an agent conversation,
+   *  never both (sql/072_agent_threads.sql explains why that stays strict). */
   clientId: string;
+  /** Practice-agent id (lib/agents/registry.ts) when this is an agent thread. */
+  agentId: string | null;
   subject: string;
   status: ThreadStatus;
   lastMessageAt: string | null;
@@ -269,7 +273,10 @@ export interface Thread {
 export interface Message {
   id: string;
   threadId: string;
+  /** Empty when the turn came from an agent — see `senderAgentId`. */
   senderId: string;
+  /** Practice-agent id when an agent wrote this turn rather than a user. */
+  senderAgentId: string | null;
   body: string;
   readAt: string | null;
   createdAt: string;

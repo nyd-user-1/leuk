@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { formatDateTime } from "@/lib/format";
 import type { AvatarHue, Message, Thread } from "@/lib/types";
 
@@ -19,13 +20,19 @@ export interface SenderInfo {
   hue: AvatarHue;
 }
 
-/** Render message bodies with tappable in-app links (e.g. /portal/forms/…). */
+// In-app destinations a message body may reference. Agent findings must carry
+// an href that resolves (docs/TASK-PRACTICE-AGENTS.md: "a number a clinician
+// cannot click through to is a number they will not trust twice"), so this is
+// the app's link surface, not just the portal's.
+const LINKABLE = /(\/(?:portal|inbox|clients|notes|rates|directory|orgs|billing|networks|plans|calendar)\/?[\w/-]*)/g;
+
+/** Render message bodies with tappable in-app links. */
 function MessageBody({ body }: { body: string }) {
-  const parts = body.split(/(\/(?:portal|inbox)\/[\w/-]+)/g);
+  const parts = body.split(LINKABLE);
   return (
     <>
       {parts.map((p, i) =>
-        p.startsWith("/portal/") || p.startsWith("/inbox/") ? (
+        p.startsWith("/") && p.length > 1 ? (
           <Link key={i} href={p} className="font-medium text-primary underline underline-offset-2">
             {p}
           </Link>
@@ -102,7 +109,7 @@ export function ThreadView({
       }`}
     >
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <Avatar name={thread.clientName} size="md" />
+        {thread.agentId ? <AgentAvatar agentId={thread.agentId} size="md" /> : <Avatar name={thread.clientName} size="md" />}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-[15px] font-semibold text-text">{thread.clientName}</span>
@@ -119,12 +126,16 @@ export function ThreadView({
 
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
         {messages.map((m) => {
-          const mine = m.senderId === meId;
-          const sender = senders[m.senderId];
+          const mine = !m.senderAgentId && m.senderId === meId;
+          const sender = senders[m.senderAgentId ? `agent:${m.senderAgentId}` : m.senderId];
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`flex max-w-[75%] items-end gap-2 ${mine ? "flex-row-reverse" : ""}`}>
-                <Avatar name={sender?.name ?? "User"} hue={sender?.hue} size="sm" />
+                {m.senderAgentId ? (
+                  <AgentAvatar agentId={m.senderAgentId} />
+                ) : (
+                  <Avatar name={sender?.name ?? "User"} hue={sender?.hue} size="sm" />
+                )}
                 <div>
                   <div
                     className={`whitespace-pre-wrap rounded-card px-4 py-2.5 text-[15px] text-text ${

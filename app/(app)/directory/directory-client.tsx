@@ -19,6 +19,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { Toolbar } from "@/components/ui/toolbar";
 import { useToast } from "@/components/ui/toast";
 import { IndexHeader } from "@/components/ui/index-header";
+import { AgentButton } from "@/components/agents/agent-button";
 import { ReferModal } from "@/components/providers/refer-modal";
 import { formatDate, formatPhone, providerDisplayName, shortProfession, stateFromZip } from "@/lib/format";
 import type { ProviderNetworkSummary } from "@/lib/repos/networks";
@@ -443,6 +444,7 @@ export function DirectoryClient({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <IndexHeader
+        actions={<AgentButton context={{ label: "Provider directory" }} agentId="directory" />}
         newLabel="New provider"
         onNew={() => toast("New provider isn\u2019t wired up yet.", "info")}
         slideActive={false}

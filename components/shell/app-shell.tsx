@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { MobileNav } from "@/components/shell/mobile-nav";
+import { AgentDock } from "@/components/agents/agent-dock";
 import { CommandPalette } from "@/components/search/command-palette";
 import { ContentSurface } from "@/components/shell/content-surface";
 import { Sidebar, type SidebarNavSection } from "@/components/shell/sidebar";
+import { APP_PANEL_ROOT_ID } from "@/components/shell/app-panel-root";
 import { MAIN_PANEL_ID } from "@/components/shell/main-panel";
 import type { SessionUser } from "@/lib/auth";
 
@@ -132,6 +134,18 @@ export function AppShell({
           </ContentSurface>
         </main>
       </div>
+
+      {/* Push-panel lane. A flex SIBLING of the content column, so an open
+          AppPanel takes width from the page instead of covering it, and the
+          node outlives every route change because it sits outside `children`.
+          Vertical padding only — horizontal padding here would leave a dead
+          24px gutter while the lane is empty. */}
+      <div id={APP_PANEL_ROOT_ID} className="flex h-full shrink-0 md:py-6" />
+      {/* Mounted once, outside the routed subtree: that is what lets the
+          transcript survive navigation. Pages only toggle it (AgentButton).
+          Workspace only — the roster is staff-facing (provider directory,
+          rates, credentialing); a patient has no business holding its end. */}
+      {variant === "workspace" && <AgentDock />}
     </div>
   );
 }

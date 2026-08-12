@@ -13,6 +13,8 @@ import type { AvatarHue } from "@/lib/types";
 // `searchable` adds a filter input; each option can carry a leading color dot
 // (`option.color`) OR an initials Avatar (`option.avatar`, e.g. a practitioner
 // picker) — color-dot and avatar are mutually exclusive per option.
+// `onCreateOption` turns the filter into type-to-create: an unmatched query
+// offers a create row, and Enter commits it (see the calendar's Client picker).
 
 export interface SelectOption {
   value: string;
@@ -56,6 +58,8 @@ export function Select({
   placeholder,
   value,
   onValueChange,
+  onCreateOption,
+  createOptionLabel,
   tone = "default",
   id,
   className = "",
@@ -71,6 +75,15 @@ export function Select({
   value?: string;
   onValueChange?: (value: string) => void;
   /**
+   * Type-to-create (`searchable` only). When the query matches no option, the
+   * menu offers a create row and Enter in the filter commits it. Resolve with
+   * the new option's value to select it, or null to leave the menu open (the
+   * caller reports why — a toast, usually).
+   */
+  onCreateOption?: (label: string) => Promise<string | null>;
+  /** Copy for that row. Default: `Add “Tony Stark”`. */
+  createOptionLabel?: (query: string) => string;
+  /**
    * `primary` renders the trigger label, chevron, and every option row in teal
    * rather than only the selected row — the marketing filter row, where each
    * dropdown reads as a live filter chip rather than a neutral form field.
@@ -82,6 +95,7 @@ export function Select({
   const inputId = id ?? rest.name;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [creating, setCreating] = useState(false);
   // Menu is portaled to <body> and fixed off the trigger rect so no
   // `overflow-hidden`/scroll-container ancestor can clip it (matches DropdownMenu).
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -131,6 +145,39 @@ export function Select({
 
   const selected = options.find((o) => o.value === value);
   const isPrimary = tone === "primary";
+
+  const trimmed = query.trim();
+  const canCreate =
+    !!searchable &&
+    !!onCreateOption &&
+    trimmed.length > 0 &&
+    !options.some((o) => o.label.toLowerCase() === trimmed.toLowerCase());
+
+  const runCreate = async () => {
+    if (!canCreate || creating) return;
+    setCreating(true);
+    const created = await onCreateOption?.(trimmed).catch(() => null);
+    setCreating(false);
+    if (!created) return; // caller surfaced the failure; keep the query typed
+    onValueChange?.(created);
+    setQuery("");
+    setOpen(false);
+  };
+
+  // Enter commits: the create row when the query is new, otherwise the lone
+  // remaining match (typing four letters and hitting Enter should pick it).
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (canCreate) {
+      void runCreate();
+      return;
+    }
+    if (filtered.length === 1) {
+      onValueChange?.(filtered[0].value);
+      setOpen(false);
+    }
+  };
 
   return (
     <div className={className}>
@@ -185,7 +232,8 @@ export function Select({
                   autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search…"
+                  onKeyDown={onSearchKey}
+                  placeholder={onCreateOption ? "Search or type a new name…" : "Search…"}
                   className="h-9 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-text-muted"
                 />
               </div>
@@ -213,8 +261,26 @@ export function Select({
                   </button>
                 );
               })}
-              {filtered.length === 0 && <p className="px-2.5 py-2 text-sm text-text-muted">No matches</p>}
+              {filtered.length === 0 && !canCreate && (
+                <p className="px-2.5 py-2 text-sm text-text-muted">No matches</p>
+              )}
             </div>
+            {canCreate && (
+              <div className={filtered.length > 0 ? "mt-1 border-t border-border pt-1" : ""}>
+                <button
+                  type="button"
+                  disabled={creating}
+                  onClick={runCreate}
+                  className="flex w-full items-center gap-2 rounded-field px-2.5 py-2 text-left text-[15px] font-medium text-primary transition-colors hover:bg-[#F3F4F6] disabled:opacity-60"
+                >
+                  <Icon name="plus" size={16} className="shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {creating ? "Adding…" : (createOptionLabel?.(trimmed) ?? `Add “${trimmed}”`)}
+                  </span>
+                  <span className="shrink-0 text-[12px] font-normal text-text-muted">Enter</span>
+                </button>
+              </div>
+            )}
             </div>,
             document.body,
           )}

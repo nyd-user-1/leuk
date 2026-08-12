@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { formatTime } from "@/lib/format";
 import type { Appointment } from "@/lib/types";
-import type { Location, Service } from "@/lib/types";
+import type { Client, Location, Service } from "@/lib/types";
 import type { ClientLite, CreateAppointmentInput } from "@/lib/repos/appointments";
 import type { PractitionerLite } from "@/lib/repos/services";
 import { SERVICE_COLOR_SLOTS } from "@/lib/service-colors";
@@ -54,7 +54,7 @@ function sessionIcon(svc?: Service): IconName | undefined {
 
 export function CalendarClient({
   initialAppointments,
-  clients,
+  clients: initialClients,
   services,
   locations,
   practitioners,
@@ -67,6 +67,9 @@ export function CalendarClient({
 }) {
   const toast = useToast();
   const [appointments, setAppointments] = useState(initialAppointments);
+  // Local so a client quick-added from the New appointment panel is selectable
+  // immediately, without a round trip back through the server component.
+  const [clients, setClients] = useState(initialClients);
   const [view, setView] = useState<"day" | "week" | "month">("week");
   const [agendaRange, setAgendaRange] = useState<"day" | "week" | "month">("day");
   const [anchor, setAnchor] = useState(() => dateKey(new Date()));
@@ -212,6 +215,41 @@ export function CalendarClient({
     toast("Appointment created.", "success");
     setPanel(null);
     return true;
+  };
+
+  // Quick-add from the Client picker — name only; the rest of the record gets
+  // filled in on /clients. A booked person is a client, not a lead.
+  const createClient = async (name: string, practitionerId: string | null): Promise<ClientLite | null> => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length < 2) {
+      toast("Enter a first and last name.", "danger");
+      return null;
+    }
+    const res = await fetch("/api/clients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: parts[0],
+        lastName: parts.slice(1).join(" "),
+        status: "active",
+        primaryPractitionerId: practitionerId,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { client?: Client; error?: string };
+    if (!res.ok || !data.client) {
+      toast(data.error ?? "Could not add the client.", "danger");
+      return null;
+    }
+    const c = data.client;
+    const lite: ClientLite = {
+      id: c.id,
+      name: `${c.firstName} ${c.lastName}`,
+      status: c.status,
+      userId: c.userId,
+    };
+    setClients((list) => [...list, lite].sort((a, b) => a.name.localeCompare(b.name)));
+    toast(`${lite.name} added to your clients.`, "success");
+    return lite;
   };
 
   // ── toolbar state helpers ───────────────────────────────────────────────────
@@ -369,6 +407,7 @@ export function CalendarClient({
         locations={locations}
         practitioners={practitioners}
         onClose={() => setPanel(null)}
+        onCreateClient={createClient}
         onCreate={createAppointment}
       />
     </div>

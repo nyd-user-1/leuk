@@ -200,6 +200,7 @@ export function AppointmentFormPanel({
   locations,
   practitioners,
   onClose,
+  onCreateClient,
   onCreate,
 }: {
   draft: CreateDraft | null;
@@ -208,6 +209,12 @@ export function AppointmentFormPanel({
   locations: Location[];
   practitioners: PractitionerLite[];
   onClose: () => void;
+  /**
+   * Quick-add from the Client picker: the client isn't in the book yet, so the
+   * name typed into the filter becomes one. Resolves with the new client (now
+   * present in `clients`) or null when the create was rejected.
+   */
+  onCreateClient?: (name: string, practitionerId: string | null) => Promise<ClientLite | null>;
   onCreate: (input: {
     clientId: string;
     practitionerId: string;
@@ -330,6 +337,12 @@ export function AppointmentFormPanel({
           }))}
           value={clientId}
           onValueChange={setClientId}
+          onCreateOption={
+            onCreateClient
+              ? async (name) => (await onCreateClient(name, practitionerId || null))?.id ?? null
+              : undefined
+          }
+          createOptionLabel={(name) => `Add “${name}” as a new client`}
         />
         <Select
           label="Service"

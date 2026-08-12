@@ -13,8 +13,8 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import { AuthError, requireUser } from "@/lib/auth";
 import { bedrockCredentials } from "@/lib/ai/bedrock";
+import { AGENT_PRESETS, runPracticeServices, type ToolKey } from "@/lib/ai/agent-presets";
 import {
-  DIRECTORY_SYSTEM,
   runDirectoryFacets,
   runGetProvider,
   runMarketRates,
@@ -97,7 +97,13 @@ function bedrock() {
   return bedrockProvider;
 }
 
-const tools = {
+const ALL_TOOLS = {
+  practice_services: tool({
+    description:
+      "This practice's own active service catalog: name, duration, and the list price it charges. Use alongside market_rates to compare what the practice charges against what a payer publishes. Does NOT contain remitted/paid amounts.",
+    inputSchema: z.object({}),
+    execute: () => runPracticeServices(),
+  }),
   search_providers: tool({
     description:
       "Search the NY provider directory. Call this when the user wants providers matching criteria (name, place, profession, insurance). Call directory_facets first if unsure of valid values for profession/subspecialty/county/insurance_payer. Returns one page (10 rows) plus the total count.",
@@ -169,6 +175,12 @@ const tools = {
   }),
 };
 
+/** The subset of ALL_TOOLS this agent is allowed to call. A tool an agent has
+ *  no business using is not "unused" — attaching it invites the model to. */
+function toolsFor(keys: ToolKey[]) {
+  return Object.fromEntries(keys.map((k) => [k, ALL_TOOLS[k]]));
+}
+
 export async function POST(req: Request) {
   try {
     await requireUser();
@@ -177,9 +189,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Directory assistant is not configured." }, { status: 503 });
     }
 
-    const body = (await req.json()) as { messages?: UIMessage[]; model?: string };
+    const body = (await req.json()) as { messages?: UIMessage[]; model?: string; agent?: string };
     if (!Array.isArray(body.messages) || body.messages.length === 0) {
       return NextResponse.json({ error: "messages are required." }, { status: 400 });
+    }
+    // The caller names the agent it believes it is talking to
+    // (lib/agents/registry.ts); the preset decides the system prompt and the
+    // tool set. An unknown id is rejected rather than silently served as the
+    // directory agent — answering as the wrong agent is a quiet lie about who
+    // replied, and PHI agents (Friday) must never be answerable here.
+    const agentId = body.agent ?? "directory";
+    const preset = AGENT_PRESETS[agentId];
+    if (!preset) {
+      return NextResponse.json({ error: `Agent "${agentId}" is not available here.` }, { status: 400 });
     }
     const model = body.model && MODELS.has(body.model) ? body.model : DEFAULT_MODEL;
     const isClaude = CLAUDE_MODELS.has(model);
@@ -211,9 +233,9 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: provider(model),
-      instructions: DIRECTORY_SYSTEM,
+      instructions: preset.system,
       messages,
-      tools,
+      tools: toolsFor(preset.tools),
       stopWhen: isStepCount(8),
       maxOutputTokens: 8192,
       // Bedrock's equivalent of Anthropic's `thinking` param — same shape
@@ -229,6 +251,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     console.error("ai/directory failed", (err as Error)?.name ?? "error");
-    return NextResponse.json({ error: "The directory assistant is temporarily unavailable." }, { status: 502 });
+    return NextResponse.json({ error: "The assistant is temporarily unavailable." }, { status: 502 });
   }
 }

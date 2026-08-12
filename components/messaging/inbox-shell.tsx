@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
+import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { CountBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,7 +41,7 @@ interface ComposeDraft {
   savedAt: string; // ISO
 }
 
-const DRAFTS_KEY = "liminal:inbox-drafts";
+const DRAFTS_KEY = "leuk:inbox-drafts";
 
 function loadDrafts(): ComposeDraft[] {
   try {
@@ -296,7 +297,7 @@ export function InboxShell({
                 const unread = unreadCount > 0;
                 const current = t.id === activeId;
                 // The client's counterparty is always their care team; staff see the client's name.
-                const heading = isClient ? "Care team" : t.clientName;
+                const heading = t.agentId ? t.clientName : isClient ? "Care team" : t.clientName;
                 return (
                   <Link
                     key={t.id}
@@ -307,7 +308,7 @@ export function InboxShell({
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <Avatar name={heading} size="sm" />
+                      {t.agentId ? <AgentAvatar agentId={t.agentId} /> : <Avatar name={heading} size="sm" />}
                       <span className={`min-w-0 flex-1 truncate text-[15px] text-text ${unread ? "font-bold" : "font-semibold"}`}>
                         {heading}
                       </span>
