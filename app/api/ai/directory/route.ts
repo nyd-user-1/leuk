@@ -14,6 +14,7 @@ import { NextResponse } from "next/server";
 import { AuthError, requireUser } from "@/lib/auth";
 import { bedrockCredentials } from "@/lib/ai/bedrock";
 import { AGENT_PRESETS, runPracticeServices, type ToolKey } from "@/lib/ai/agent-presets";
+import { CLAUDE_MODEL_IDS, MODEL_IDS } from "@/lib/ai/model-options";
 import {
   runDirectoryFacets,
   runGetProvider,
@@ -47,42 +48,11 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-// The client (components/directory/chat-input.tsx) now sends real Bedrock
-// inference-profile ids directly — no friendly-id translation layer. Every id
-// in MODELS was verified directly against this AWS account's granted model
-// access (2026-08-10): Bedrock lists far more inference profiles per region
-// than an account is actually granted, and the failure is a plain
-// AccessDeniedException at call time, not something discoverable up front.
-// Keep this Set and chat-input.tsx's MODEL_OPTIONS in lockstep — an id here
-// with no matching picker entry is unreachable; a picker entry not here 503s.
-const MODELS = new Set([
-  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "us.anthropic.claude-sonnet-4-6",
-  "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-  "us.anthropic.claude-opus-4-6-v1",
-  "us.anthropic.claude-opus-4-5-20251101-v1:0",
-  "mistral.mistral-large-3-675b-instruct",
-  "us.amazon.nova-pro-v1:0",
-  "moonshotai.kimi-k2.5",
-  "moonshot.kimi-k2-thinking",
-  "qwen.qwen3-next-80b-a3b",
-  "minimax.minimax-m2.5",
-  "zai.glm-5",
-  "openai.gpt-oss-120b-1:0",
-]);
+// Model allow-list + Claude detection now derive from MODEL_OPTIONS
+// (lib/ai/model-options.ts) so the picker and the route cannot drift apart.
+const MODELS = MODEL_IDS;
+const CLAUDE_MODELS = CLAUDE_MODEL_IDS;
 const DEFAULT_MODEL = process.env.LEUK_DIRECTORY_AI_MODEL ?? "us.anthropic.claude-haiku-4-5-20251001-v1:0";
-
-// Extended thinking (`reasoningConfig`) and the cache breakpoint below are
-// Anthropic-specific mechanisms — only apply them when the picked model is a
-// Claude model, so a Llama/Mistral/Nova/Kimi/Qwen/MiniMax/GLM/gpt-oss request
-// doesn't carry a providerOption its model has no concept of.
-const CLAUDE_MODELS = new Set([
-  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-  "us.anthropic.claude-sonnet-4-6",
-  "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-  "us.anthropic.claude-opus-4-6-v1",
-  "us.anthropic.claude-opus-4-5-20251101-v1:0",
-]);
 
 let bedrockProvider: ReturnType<typeof createAmazonBedrock> | null = null;
 function bedrock() {

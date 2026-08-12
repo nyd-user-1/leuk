@@ -43,3 +43,14 @@ export const MODEL_OPTIONS: ModelOption[] = [
 ];
 
 export const DEFAULT_MODEL_ID = MODEL_OPTIONS[0].id;
+
+/** Allow-list for the chat routes. Derived from MODEL_OPTIONS rather than
+ *  hand-maintained, so a picker entry can never drift out of lockstep with the
+ *  route's Set — an id in only one place is either unreachable or a 503. */
+export const MODEL_IDS = new Set(MODEL_OPTIONS.map((m) => m.id));
+
+/** Extended thinking and the prompt-cache breakpoint are Anthropic mechanisms;
+ *  only Claude models may carry those providerOptions. */
+export const CLAUDE_MODEL_IDS = new Set(
+  MODEL_OPTIONS.filter((m) => m.id.includes("anthropic.claude")).map((m) => m.id),
+);

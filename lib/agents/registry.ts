@@ -47,9 +47,8 @@ export const AGENTS: AgentDef[] = [
     icon: "message-circle-heart",
     image: "/agents/friday.jpg",
     phi: "yes",
-    endpoint: null,
-    unavailable: "Not wired yet — needs a streaming clinical route with PHI auditing.",
-    placeholder: "Ask about this session…",
+    endpoint: "/api/ai/friday",
+    placeholder: "Ask about your notes or today's sessions…",
   },
   {
     id: "bev",
