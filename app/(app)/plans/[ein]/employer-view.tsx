@@ -26,29 +26,23 @@ export function EmployerView({
   initialTab?: string;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 lg:flex-row">
-      <aside className="min-h-0 lg:h-full lg:w-80 lg:shrink-0">
-        <EmployerRail employer={employer} registry={registry} />
-      </aside>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <EmployerTabs
-          initialTab={initialTab}
-          tabs={[
-            {
-              key: "rates",
-              label: "Networks & rates",
-              count: rateSummary.length || undefined,
-              content: <RatesPanel rateSummary={rateSummary} plans={plans} cptLabels={cptLabels} />,
-            },
-            {
-              key: "plans",
-              label: "Plans",
-              count: plans.length || undefined,
-              content: <PlansPanel plans={plans} employerName={employer.name} />,
-            },
-          ]}
-        />
-      </div>
-    </div>
+    <EmployerTabs
+      initialTab={initialTab}
+      object={<EmployerRail employer={employer} registry={registry} />}
+      tabs={[
+        {
+          key: "rates",
+          label: "Networks & rates",
+          count: rateSummary.length || undefined,
+          content: <RatesPanel rateSummary={rateSummary} plans={plans} cptLabels={cptLabels} />,
+        },
+        {
+          key: "plans",
+          label: "Plans",
+          count: plans.length || undefined,
+          content: <PlansPanel plans={plans} employerName={employer.name} />,
+        },
+      ]}
+    />
   );
 }

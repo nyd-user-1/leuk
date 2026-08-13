@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Banner } from "@/components/ui/banner";
@@ -10,8 +10,8 @@ import { Icon } from "@/components/ui/icons";
 import { KebabMenu } from "@/components/ui/kebab-menu";
 import { MenuItem } from "@/components/ui/dropdown-menu";
 import { SortableHead, Table, Td, Tr, useSort } from "@/components/ui/table";
-import { Tabs } from "@/components/ui/tabs";
 import { TabReveal } from "@/components/ui/tab-reveal";
+import { DrillDownScaffold } from "@/components/shell/drill-down-scaffold";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cptLabel } from "@/components/rates/cpt";
@@ -56,7 +56,7 @@ const RATE_FIELD: Record<RateColKey, keyof NetworkMembershipRow> = {
   b99214: "best99214",
 };
 
-export function ProviderRates({ npi }: { npi: string | null }) {
+export function ProviderRates({ npi, object }: { npi: string | null; object: ReactNode }) {
   const router = useRouter();
   // Standard anatomy: select column (nothing consumes the selection yet).
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -157,18 +157,8 @@ export function ProviderRates({ npi }: { npi: string | null }) {
     [rates, needle],
   );
 
-  if (rates === null || memberships === null)
-    return <TableSkeleton head={["Insurer", "Network", "Accepting", "Updated", ...RATE_COLS.map((c) => c.label)]} />;
-
-  if (memberships.length === 0) {
-    return (
-      <Banner variant="info">
-        No network listings or published rate rows for this provider — which is{" "}
-        <span className="font-semibold">not</span> the same as not being in-network. Some payers block
-        rate-file pulls, and clinicians with out-of-state practice addresses are missing from NY files.
-      </Banner>
-    );
-  }
+  const loading = rates === null || memberships === null;
+  const empty = !loading && memberships.length === 0;
 
   // The in-chrome toolbar both views share: search left, utilities right
   // (the Networks view's column picker rides here).
@@ -186,23 +176,28 @@ export function ProviderRates({ npi }: { npi: string | null }) {
     </>
   );
 
+  // The scaffold always renders — the object panel and tab rail stay put while
+  // the table below cycles through loading / empty / data.
   return (
-    <>
-      {/* The drill-down tab rail (founder spec 2026-07-23) — same anatomy as
-          the /orgs record; TabReveal plays the switch. */}
-      <Tabs
-        slideActive
-        className="mb-4 shrink-0"
-        active={view}
-        onChange={(k) => setView(k as "networks" | "rates")}
-        items={[
-          { key: "rates", label: "All rates" },
-          { key: "networks", label: "Networks" },
-        ]}
-      />
-
-      <TabReveal id={view} className="flex min-h-0 flex-1 flex-col">
-
+    <DrillDownScaffold
+      object={object}
+      active={view}
+      onChange={(k) => setView(k as "networks" | "rates")}
+      tabs={[
+        { key: "rates", label: "All rates" },
+        { key: "networks", label: "Networks" },
+      ]}
+    >
+      {loading ? (
+        <TableSkeleton head={["Insurer", "Network", "Accepting", "Updated", ...RATE_COLS.map((c) => c.label)]} />
+      ) : empty ? (
+        <Banner variant="info">
+          No network listings or published rate rows for this provider — which is{" "}
+          <span className="font-semibold">not</span> the same as not being in-network. Some payers block
+          rate-file pulls, and clinicians with out-of-state practice addresses are missing from NY files.
+        </Banner>
+      ) : (
+        <TabReveal id={view} className="flex min-h-0 flex-1 flex-col">
       {view === "networks" ? (
         <Table
           className="min-h-0 flex-1"
@@ -362,7 +357,8 @@ export function ProviderRates({ npi }: { npi: string | null }) {
           ))}
         </Table>
       )}
-      </TabReveal>
-    </>
+        </TabReveal>
+      )}
+    </DrillDownScaffold>
   );
 }
