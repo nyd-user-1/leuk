@@ -15,7 +15,12 @@ function fail(e: unknown) {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireUser();
-    const { threadId, body } = (await req.json()) as { threadId?: string; body?: string };
+    const { threadId, body, agentId } = (await req.json()) as {
+      threadId?: string;
+      body?: string;
+      /** Set when persisting an agent's turn after it finished streaming. */
+      agentId?: string;
+    };
     if (!threadId || !body?.trim()) {
       return NextResponse.json({ error: "threadId and body are required." }, { status: 400 });
     }
@@ -30,8 +35,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "This conversation is closed." }, { status: 400 });
       }
     }
-    const message = await postMessage(threadId, user.id, body.trim());
-    await logEvent({ actorId: user.id, action: "message.send", entity: "message", entityId: message.id, meta: { thread: threadId } });
+    // An agent turn may only be stored on that agent's own thread, and only by
+    // staff. Without this check any caller could forge a message attributed to
+    // Bev on someone else's conversation.
+    if (agentId) {
+      if (user.role === "client") return NextResponse.json({ error: "Not found." }, { status: 404 });
+      if (detail.thread.agentId !== agentId) {
+        return NextResponse.json({ error: "Agent does not own this thread." }, { status: 400 });
+      }
+    }
+    const message = await postMessage(threadId, user.id, body.trim(), agentId ?? null);
+    await logEvent({
+      actorId: user.id,
+      action: "message.send",
+      entity: "message",
+      entityId: message.id,
+      meta: { thread: threadId, ...(agentId ? { agent: agentId } : {}) },
+    });
     return NextResponse.json(message, { status: 201 });
   } catch (e) {
     return fail(e);

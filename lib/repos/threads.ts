@@ -212,18 +212,34 @@ export async function createThread(input: CreateThreadInput): Promise<Thread> {
   return thread;
 }
 
-export async function postMessage(threadId: string, senderId: string, body: string): Promise<Message> {
+/** Post a turn to a thread. `senderId` is a user; pass `agentId` INSTEAD when a
+ *  practice agent is speaking — messages_sender_ck enforces exactly one, and an
+ *  agent has no row in `users` to borrow. */
+export async function postMessage(
+  threadId: string,
+  senderId: string | null,
+  body: string,
+  agentId?: string | null,
+): Promise<Message> {
   if (hasDb) {
     const rows = (await sql`
-      INSERT INTO messages (thread_id, sender_id, body)
-      VALUES (${threadId}, ${senderId}, ${body})
+      INSERT INTO messages (thread_id, sender_id, sender_agent_id, body)
+      VALUES (${threadId}, ${agentId ? null : senderId}, ${agentId ?? null}, ${body})
       RETURNING *
     `) as MessageRow[];
     await sql`UPDATE threads SET last_message_at = now(), updated_at = now() WHERE id = ${threadId}`;
     return toMessage(rows[0]);
   }
   const now = new Date().toISOString();
-  const message: Message = { id: mockId(), threadId, senderId, senderAgentId: null, body, readAt: null, createdAt: now };
+  const message: Message = {
+    id: mockId(),
+    threadId,
+    senderId: agentId ? "" : (senderId ?? ""),
+    senderAgentId: agentId ?? null,
+    body,
+    readAt: null,
+    createdAt: now,
+  };
   const store = mockStore();
   store.messages.set(message.id, message);
   const t = store.threads.get(threadId);

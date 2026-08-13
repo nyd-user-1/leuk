@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { AuthError, requireRole } from "@/lib/auth";
 import { listClients } from "@/lib/repos/clients";
 import { searchProviders } from "@/lib/repos/directory";
+import { normalizeOrgName, providerDisplayName } from "@/lib/format";
 import { listOrgs } from "@/lib/repos/orgs";
 import { searchEmployers } from "@/lib/repos/plans";
 
@@ -13,6 +14,11 @@ export const dynamic = "force-dynamic";
 // one indexed round-trip per corpus, all in parallel. This route REUSES the
 // domain repos rather than re-implementing search — the palette is a new surface
 // over the same reads the index pages use.
+//
+// Names come out of NPPES as "PADGETT SHELLEY" / "HEADWAY MICHIGAN BEHAVIORAL
+// HEALTH SERVICES, P.C." — normalize HERE rather than at each call site, so the
+// palette, the composer's "@" menu and anything else built on this route all
+// read the same way.
 //
 // PHI note: client name search is practitioner-gated (requireRole). We do NOT
 // logEvent the keystrokes — that would flood the audit log with partial-name
@@ -54,7 +60,7 @@ export async function GET(req: NextRequest) {
       .slice(0, CAP)
       .map((p) => ({
         id: p.npi!,
-        title: p.name,
+        title: providerDisplayName(p.name, p.entityType),
         subtitle: [p.profession, p.city].filter(Boolean).join(" · ") || undefined,
         href: `/directory/providers/${p.npi}`,
       }));
@@ -62,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     const og: SearchItem[] = orgs.slice(0, CAP).map((o) => ({
       id: o.tin,
-      title: o.label,
+      title: normalizeOrgName(o.label),
       subtitle: `${o.npis.toLocaleString("en-US")} clinician${o.npis === 1 ? "" : "s"}`,
       href: `/orgs/${encodeURIComponent(o.tin)}`,
     }));

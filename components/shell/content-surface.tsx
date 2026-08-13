@@ -82,9 +82,12 @@ export function ContentSurface({
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] [scrollbar-width:none] md:p-6 md:pb-6 [&::-webkit-scrollbar]:hidden">
-        {/* key={pathname} remounts RevealFx on every navigation, replaying the
-            reveal from scratch — tuned fast (200ms, an 8px settle) so it reads
-            as "content just arrived," not a marketing-page flourish. */}
+        {/* Keyed on the SECTION, not the full pathname. Keying on pathname
+            remounted the whole surface for every URL change — so moving between
+            two inbox threads blanked and re-faded the list, the header and the
+            thread together, when the only thing that actually changed was the
+            right-hand pane. Sections still get the reveal on arrival; drilling
+            around inside one does not. */}
         {/* h-full here is load-bearing, not cosmetic: RevealFx wraps every page
             in a plain block div, and full-height surfaces (calendar grid, inbox
             master/detail, the centred chat composer) size themselves with
@@ -96,7 +99,7 @@ export function ContentSurface({
             overflow this box and scroll normally — safe here because the reveal
             mask is a horizontal gradient that tiles identically down the axis,
             so the overflow is not clipped. */}
-        <RevealFx key={pathname} durationMs={200} translateY={8} className="h-full">
+        <RevealFx key={pathname.split("/")[1] ?? ""} durationMs={200} translateY={8} className="h-full">
           {children}
         </RevealFx>
       </div>

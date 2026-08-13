@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
-import { CountBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field } from "@/components/ui/field";
@@ -15,8 +14,9 @@ import { TopBarActions } from "@/components/shell/topbar-slot";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select } from "@/components/ui/select";
 import { Tabs } from "@/components/ui/tabs";
+import { KebabMenu } from "@/components/ui/kebab-menu";
+import { MenuItem } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { Toolbar } from "@/components/ui/toolbar";
 import { useToast } from "@/components/ui/toast";
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { ThreadSummary } from "@/lib/repos/threads";
@@ -80,6 +80,7 @@ export function InboxShell({
   const active = threads.find((t) => t.id === activeId);
   const [tab, setTab] = useState<ShellTab>(active?.status === "closed" ? "closed" : "open");
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "agents" | "clients" | "unread">("all");
   const [composeOpen, setComposeOpen] = useState(false);
   const [compose, setCompose] = useState({ clientId: "", subject: "", body: "" });
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -120,6 +121,9 @@ export function InboxShell({
   const q = query.trim().toLowerCase();
   const visible = threads.filter((t) => {
     if (t.status !== tab) return false;
+    if (filter === "agents" && !t.agentId) return false;
+    if (filter === "clients" && t.agentId) return false;
+    if (filter === "unread" && (isClient ? t.unreadFromStaff : t.unreadFromClient) === 0) return false;
     if (!q) return true;
     return (
       t.clientName.toLowerCase().includes(q) ||
@@ -217,15 +221,6 @@ export function InboxShell({
         active={tab}
         onChange={(k) => setTab(k as ShellTab)}
       />
-      <Toolbar className={`mb-4 shrink-0 ${activeId ? "max-lg:hidden" : ""}`}>
-        <SearchInput
-          placeholder={tab === "drafts" ? "Search drafts" : "Search conversations"}
-          className="w-full max-w-md"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </Toolbar>
-
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-card border border-border bg-surface shadow-card">
         {/* Thread list pane */}
         <div
@@ -233,6 +228,23 @@ export function InboxShell({
             activeId ? "max-lg:hidden" : ""
           }`}
         >
+          {/* Search rides at the top of the pane it filters, with the kebab
+              opposite — the same header shape every table in the app uses. */}
+          <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2.5">
+            <SearchInput
+              placeholder={tab === "drafts" ? "Search drafts" : "Search conversations"}
+              className="min-w-0 flex-1"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <KebabMenu label="Filter conversations">
+              <MenuItem icon="inbox" label="All conversations" selected={filter === "all"} onClick={() => setFilter("all")} />
+              <MenuItem icon="sparkle" label="Agents only" selected={filter === "agents"} onClick={() => setFilter("agents")} />
+              <MenuItem icon="users" label="Clients only" selected={filter === "clients"} onClick={() => setFilter("clients")} />
+              <MenuItem icon="message" label="Unread only" selected={filter === "unread"} onClick={() => setFilter("unread")} />
+            </KebabMenu>
+          </div>
+
           <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
             {tab === "drafts" ? (
               visibleDrafts.length === 0 ? (
@@ -303,25 +315,42 @@ export function InboxShell({
                     key={t.id}
                     href={`${basePath}/${t.id}`}
                     aria-current={current ? "page" : undefined}
-                    className={`block border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-canvas ${
-                      current ? "bg-canvas" : ""
+                    // Washed teal = read/opened. Unread rows stay on white so
+                    // the eye lands on them first; the open one is tinted.
+                    className={`group block border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-canvas ${
+                      current ? "bg-primary-wash" : unread ? "" : "bg-primary-wash/40"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      {t.agentId ? <AgentAvatar agentId={t.agentId} /> : <Avatar name={heading} size="sm" />}
-                      <span className={`min-w-0 flex-1 truncate text-[15px] text-text ${unread ? "font-bold" : "font-semibold"}`}>
+                      {/* Unread count rides the avatar rather than taking its
+                          own row — the list is a scan surface, not a report. */}
+                      <span className="relative shrink-0">
+                        {t.agentId ? <AgentAvatar agentId={t.agentId} /> : <Avatar name={heading} size="sm" />}
+                        {unread && (
+                          <span
+                            aria-label={`${unreadCount} unread`}
+                            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white"
+                          >
+                            {unreadCount}
+                          </span>
+                        )}
+                      </span>
+                      <span
+                        // One weight down once it's been read.
+                        className={`min-w-0 flex-1 truncate text-[15px] text-text transition-colors group-hover:text-primary ${
+                          unread ? "font-semibold" : "font-normal"
+                        }`}
+                      >
                         {heading}
                       </span>
                       <span className="shrink-0 text-[12px] text-text-muted">{threadTime(t.lastMessageAt)}</span>
                     </span>
-                    <span className={`mt-1 block truncate text-sm ${unread ? "font-medium text-text" : "text-text-body"}`}>
+                    <span
+                      className={`mt-1 block truncate text-sm transition-colors group-hover:text-primary ${
+                        unread ? "font-medium text-text" : "font-normal text-text-body"
+                      }`}
+                    >
                       {t.subject}
-                    </span>
-                    <span className="mt-0.5 flex items-center gap-2">
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-text-muted">
-                        {t.snippet ?? "No messages yet"}
-                      </span>
-                      <CountBadge count={unreadCount} />
                     </span>
                   </Link>
                 );

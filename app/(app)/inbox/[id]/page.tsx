@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
+import { AgentThreadView } from "@/components/messaging/agent-thread-view";
 import { ThreadView } from "@/components/messaging/thread-view";
+import { getAgent } from "@/lib/agents/registry";
 import { TextLink } from "@/components/ui/text-link";
 import { logEvent } from "@/lib/audit";
 import { getUser } from "@/lib/auth";
@@ -29,6 +31,12 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
         </TextLink>
       </div>
       <div className="min-h-0 flex-1">
+        {/* An agent thread streams live (same renderer as /chat) rather than
+            posting and waiting; a client thread stays plain secure messaging.
+            An agent with no endpoint yet falls through to the read-only view. */}
+        {detail.thread.agentId && getAgent(detail.thread.agentId).endpoint ? (
+          <AgentThreadView thread={detail.thread} messages={detail.messages} frameless />
+        ) : (
         <ThreadView
           thread={detail.thread}
           messages={detail.messages}
@@ -37,6 +45,7 @@ export default async function InboxThreadPage({ params }: { params: Promise<{ id
           canManage
           frameless
         />
+        )}
       </div>
     </div>
   );

@@ -8,7 +8,9 @@ import { Icon } from "@/components/ui/icons";
 import { Tag } from "@/components/ui/tag";
 import { MODEL_OPTIONS, DEFAULT_MODEL_ID } from "@/lib/ai/model-options";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
-import { AGENTS, getAgent } from "@/lib/agents/registry";
+import { AssistantMessage } from "@/components/agents/assistant-message";
+import { AGENTS, commandsFor, getAgent } from "@/lib/agents/registry";
+import { applyInsert, useComposerMenu } from "@/components/directory/composer-menu";
 import { closeAgentPanel, setAgentId, useAgentPanel } from "@/lib/agents/panel-store";
 
 // The agent dock — one chat surface reachable from anywhere in the workspace.
@@ -64,6 +66,7 @@ export function AgentDock() {
 
   const [modelId, setModelId] = useState(DEFAULT_MODEL_ID);
   const [value, setValue] = useState("");
+  const [caret, setCaret] = useState(0);
   const [agentMenu, setAgentMenu] = useState(false);
   const [modelMenu, setModelMenu] = useState(false);
 
@@ -84,7 +87,7 @@ export function AgentDock() {
     [agent.endpoint, agent.id],
   );
 
-  const { messages, sendMessage, stop, status, error } = useChat({ id: agent.id, transport });
+  const { messages, sendMessage, stop, status, error, regenerate } = useChat({ id: agent.id, transport });
   const isStreaming = status === "submitted" || status === "streaming";
 
   useEffect(() => {
@@ -107,6 +110,21 @@ export function AgentDock() {
   }, [agentMenu, modelMenu]);
 
   const selectedModel = MODEL_OPTIONS.find((m) => m.id === modelId) ?? MODEL_OPTIONS[0];
+
+  // Same "@"/"/" engine as /chat and the Inbox composer.
+  const menu = useComposerMenu({ value, caret, mentions: true, commands: commandsFor(agent.id), agentId: agent.id });
+  const choose = (i: number) => {
+    const item = menu.items[i];
+    if (!item || !menu.hit) return;
+    const { next, caret: pos } = applyInsert(value, menu.hit.start, caret, item.insert ?? item.label);
+    setValue(next);
+    setCaret(pos);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(pos, pos);
+    });
+  };
+  const syncCaret = () => setCaret(inputRef.current?.selectionStart ?? 0);
 
   const submit = () => {
     const text = value.trim();
@@ -136,12 +154,42 @@ export function AgentDock() {
       footer={
         <div ref={menusRef} className="p-2.5">
           {agent.endpoint ? (
-            <div className="rounded-2xl border border-border bg-canvas px-3 pb-2 pt-3 transition-colors focus-within:border-primary">
+            <div className="relative rounded-2xl border border-border bg-canvas px-3 pb-2 pt-3 transition-colors focus-within:border-primary">
+              {menu.open && (
+                <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 w-full overflow-y-auto rounded-card border border-border bg-surface py-1 shadow-menu">
+                  {menu.items.length === 0 && menu.loading && (
+                    <p className="px-3 py-2 text-[13px] text-text-muted">Searching…</p>
+                  )}
+                  {menu.items.map((it, i) => (
+                    <button
+                      key={it.id}
+                      type="button"
+                      onMouseEnter={() => menu.setActive(i)}
+                      onMouseDown={(e) => { e.preventDefault(); choose(i); }}
+                      className={`flex w-full items-baseline gap-2 px-3 py-1.5 text-left ${i === menu.active ? "bg-[rgba(0,0,0,0.05)]" : ""}`}
+                    >
+                      <span className="truncate text-[13px] font-medium text-text">{it.label}</span>
+                      {it.hint && <span className="truncate text-[11px] text-text-muted">{it.hint}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
               <textarea
                 ref={inputRef}
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                  setCaret(e.target.selectionStart ?? 0);
+                }}
+                onClick={syncCaret}
+                onKeyUp={syncCaret}
                 onKeyDown={(e) => {
+                  if (menu.open && menu.items.length) {
+                    if (e.key === "ArrowDown") { e.preventDefault(); menu.move(1); return; }
+                    if (e.key === "ArrowUp") { e.preventDefault(); menu.move(-1); return; }
+                    if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); choose(menu.active); return; }
+                    if (e.key === "Escape") { e.preventDefault(); setCaret(-1); return; }
+                  }
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     submit();
@@ -267,37 +315,33 @@ export function AgentDock() {
         )}
 
         <div className="space-y-4">
-          {messages.map((m) => (
-            <div key={m.id}>
-              {m.parts.map((part, i) => {
-                if (part.type === "text") {
-                  return m.role === "user" ? (
-                    <p
-                      key={i}
-                      className="ml-auto w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl bg-canvas px-3 py-2 text-[15px] text-text"
-                    >
-                      {part.text}
-                    </p>
-                  ) : (
-                    <p key={i} className="whitespace-pre-wrap text-[15px] leading-relaxed text-text">
-                      {part.text}
-                    </p>
-                  );
-                }
-                // Tool activity doubles as the status display — it only ever
-                // names work that actually ran.
-                if (part.type.startsWith("tool-")) {
-                  return (
-                    <p key={i} className="flex items-center gap-1.5 py-0.5 text-[12px] text-text-muted">
-                      <Icon name="sparkle" size={13} className="shrink-0" />
-                      {part.type.replace(/^tool-/, "").replace(/_/g, " ")}
-                    </p>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))}
+          {messages.map((m, i) =>
+            m.role === "user" ? (
+              <p
+                key={m.id}
+                className="ml-auto w-fit max-w-[85%] whitespace-pre-wrap rounded-2xl bg-canvas px-3 py-2 text-[15px] text-text"
+              >
+                {m.parts
+                  .filter((p): p is { type: "text"; text: string } => p.type === "text")
+                  .map((p) => p.text)
+                  .join("\n")}
+              </p>
+            ) : (
+              // Same renderer as /chat and the Inbox — markdown, grouped tool
+              // status lines, reasoning, follow-ups. A dock-local plain-text
+              // branch leaked raw `[label](href)` and the FOLLOW_UPS block.
+              <AssistantMessage
+                key={m.id}
+                message={m}
+                isCurrent={i === messages.length - 1}
+                isStreaming={isStreaming}
+                followUpsDefault
+                onSend={(q) => sendMessage({ text: q })}
+                onRegenerate={() => regenerate()}
+                onOrbActivate={() => inputRef.current?.focus()}
+              />
+            ),
+          )}
           {isStreaming && messages[messages.length - 1]?.role === "user" && (
             <p className="text-[13px] text-text-muted">Thinking…</p>
           )}

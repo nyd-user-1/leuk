@@ -42,7 +42,7 @@ export const AGENTS: AgentDef[] = [
   },
   {
     id: "friday",
-    name: "Friday",
+    name: "Friday (Agent)",
     role: "Sessions, notes, and clinical drafting",
     icon: "message-circle-heart",
     image: "/agents/friday.jpg",
@@ -52,7 +52,7 @@ export const AGENTS: AgentDef[] = [
   },
   {
     id: "bev",
-    name: "Bev",
+    name: "Bev (Agent)",
     role: "Where you are and aren't listed by payers",
     icon: "id-card",
     image: "/agents/bev.jpg",
@@ -62,7 +62,7 @@ export const AGENTS: AgentDef[] = [
   },
   {
     id: "sal",
-    name: "Sal",
+    name: "Sal (Agent)",
     role: "Published rates vs. what the practice charges",
     icon: "dollar",
     image: "/agents/sal.jpg",
@@ -76,4 +76,62 @@ export const DEFAULT_AGENT_ID = "directory";
 
 export function getAgent(id: string): AgentDef {
   return AGENTS.find((a) => a.id === id) ?? AGENTS[0];
+}
+
+/** "/" commands offered in the composer. Deliberately a plain list: skills will
+ *  be appended here (or fetched into the same shape) without the composer, the
+ *  Inbox or /chat needing to change. `agents` scopes a command to specific
+ *  agents; omit it to offer the command everywhere. */
+export interface AgentCommand {
+  name: string;
+  description?: string;
+  group?: string;
+  agents?: string[];
+  /** What actually goes into the message. Picking "/missing" inserts THIS, not
+   *  the literal token — the model has no "/missing" function and said so. A
+   *  command is a saved phrasing until skills give it real dispatch. */
+  prompt: string;
+}
+
+export const AGENT_COMMANDS: AgentCommand[] = [
+  {
+    name: "listings", group: "Credentialing", agents: ["bev", "directory"],
+    description: "Where this provider is listed, by payer",
+    prompt: "Which payer directories list this provider? Give me one line per payer with the as-of date.",
+  },
+  {
+    name: "missing", group: "Credentialing", agents: ["bev"],
+    description: "Payer directories this provider is absent from",
+    prompt: "Which payer directories does this provider NOT appear in? Say plainly whether that means unlisted or uncontracted.",
+  },
+  {
+    name: "rates", group: "Rates", agents: ["sal", "directory"],
+    description: "Published rates for a payer and code",
+    prompt: "What does this payer publish for this CPT code? Give median and the interquartile range.",
+  },
+  {
+    name: "compare", group: "Rates", agents: ["sal", "directory"],
+    description: "Compare two payers on the same code",
+    prompt: "Compare these two payers on the same CPT code — median, spread, and the dollar gap.",
+  },
+  {
+    name: "charges", group: "Rates", agents: ["sal"],
+    description: "This practice's list prices vs. published rates",
+    prompt: "Compare this practice's list prices against what payers publish, and flag anything we list below the published rate.",
+  },
+  {
+    name: "unsigned", group: "Clinical", agents: ["friday"],
+    description: "Notes drafted but not signed",
+    prompt: "Which of my notes are drafted but still unsigned, and how long has each been sitting?",
+  },
+  {
+    name: "today", group: "Clinical", agents: ["friday"],
+    description: "Today's sessions",
+    prompt: "What sessions do I have today?",
+  },
+];
+
+/** Commands an agent may be offered. */
+export function commandsFor(agentId: string): AgentCommand[] {
+  return AGENT_COMMANDS.filter((c) => !c.agents || c.agents.includes(agentId));
 }

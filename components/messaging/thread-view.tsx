@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
+import { ChatInput } from "@/components/directory/chat-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -66,7 +67,8 @@ export function ThreadView({
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const send = async () => {
+  const sendText = async (text: string) => {
+    const draft = text;
     if (!draft.trim() || busy) return;
     setBusy(true);
     const res = await fetch("/api/messages", {
@@ -110,12 +112,11 @@ export function ThreadView({
     >
       <div className="flex items-center gap-3 border-b border-border px-5 py-4">
         {thread.agentId ? <AgentAvatar agentId={thread.agentId} size="md" /> : <Avatar name={thread.clientName} size="md" />}
+        {/* Name and the Close control, nothing else. The status badge said
+            what the button already says, and the subject repeats the list row
+            you clicked to get here. */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-[15px] font-semibold text-text">{thread.clientName}</span>
-            <Badge variant={closed ? "neutral" : "success"}>{closed ? "Closed" : "Open"}</Badge>
-          </div>
-          <p className="truncate text-sm text-text-muted">{thread.subject}</p>
+          <span className="truncate text-[15px] font-semibold text-text">{thread.clientName}</span>
         </div>
         {canManage && (
           <Button variant="secondary" size="sm" disabled={busy} onClick={() => setStatus(closed ? "open" : "closed")}>
@@ -159,20 +160,16 @@ export function ThreadView({
           This conversation is closed{canManage ? " — reopen it to reply." : "."}
         </p>
       ) : (
-        <div className="flex items-end gap-3 border-t border-border px-5 py-4">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
-            }}
-            rows={2}
+        // The composer /chat and the agent threads use. No model picker and no
+        // "/" skills — a patient thread has neither — so ChatInput renders just
+        // the field, the "+" and Send. One container, three surfaces.
+        <div className="border-t border-border">
+          <ChatInput
+            onSend={(text) => void sendText(text)}
+            onStop={() => {}}
+            isStreaming={busy}
             placeholder="Write a message…"
-            className="min-h-[44px] flex-1 resize-y rounded-field border border-field-border bg-surface px-3 py-2.5 text-[15px] text-text placeholder:text-text-muted outline-none transition-colors focus:border-field-border-focus"
           />
-          <Button leftIcon="send" onClick={send} loading={busy} disabled={!draft.trim()}>
-            Send
-          </Button>
         </div>
       )}
     </div>

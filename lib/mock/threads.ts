@@ -113,12 +113,12 @@ const agentMessages: MessageFixture[] = [
     body: `Aetna's provider directory stopped listing your Union Square office this morning. It listed both addresses on 2026-08-04 and only the Brooklyn one on 2026-08-11.
 
 Evidence — Aetna Plan-Net FHIR pull, as of 2026-08-11:
-  • PractitionerRole 1720394857-aetna-01 → 115 W 30th St (present)
-  • PractitionerRole 1720394857-aetna-02 → Union Square (absent, was present 08-04)
+- PractitionerRole 1720394857-aetna-01 → 115 W 30th St (present)
+- PractitionerRole 1720394857-aetna-02 → Union Square (absent, was present 08-04)
 
 This is the second consecutive sweep, so it is a real delisting rather than a one-night gap. Nothing changed on our side — no roster submission went out in that window.
 
-/directory/providers/1720394857`,
+[View the listing](/directory/providers/1720394857)`,
     readAt: null,
     createdAt: "2026-08-11T08:12:00-04:00",
   },
@@ -129,14 +129,14 @@ This is the second consecutive sweep, so it is a real delisting rather than a on
     body: `Cigna's published in-network rate for 90837 sits below Oxford's for the same code and setting.
 
 Median, office setting, current published files:
-  • Oxford  $154.30
-  • Cigna   $142.00  — 8% lower
+- Oxford  $154.30
+- Cigna   $142.00  — 8% lower
 
 Your list price for 90837 is $150.00, so Cigna is the one payer of the two publishing under what you charge.
 
 To be clear about what this is: published rates, not remits. Leuk does not store paid-per-code data yet, so I cannot tell you what Cigna has actually paid you — only what it says it pays.
 
-/rates`,
+[Published rates](/rates)`,
     readAt: null,
     createdAt: "2026-08-10T16:55:00-04:00",
   },
@@ -161,9 +161,8 @@ To be clear about what this is: published rates, not remits. Leuk does not store
     threadId: T("17103"),
     senderAgentId: "friday",
     body: `Two progress notes have been unsigned longer than 72 hours:
-
-  • Casey Morgan — session 2026-08-07, drafted, unsigned 4 days
-  • Jordan Lee — session 2026-08-08, drafted, unsigned 3 days
+- Casey Morgan — session 2026-08-07, drafted, unsigned 4 days
+- Jordan Lee — session 2026-08-08, drafted, unsigned 3 days
 
 Both have complete transcripts and drafted bodies, so signing is the only step left. I have not changed either note.`,
     readAt: null,
@@ -197,7 +196,7 @@ Leuk locations: Union Square (212) 555-0190 · Brooklyn Heights (718) 555-0164
 
 A wrong number in a payer directory reads to a referrer as a practice that doesn't pick up. I can't see who submitted it or when — only what the directory currently publishes.
 
-/settings/locations`,
+[Your practice locations](/settings/locations)`,
     readAt: null,
     createdAt: "2026-08-09T09:31:00-04:00",
   },
@@ -208,12 +207,12 @@ A wrong number in a payer directory reads to a referrer as a practice that doesn
     body: `For 90834 (45-min therapy), Oxford's published in-network median is $128.60 against Cigna's $115.75 — Oxford pays about 11% more for the same code.
 
 Median, office setting, current published files:
-  • Oxford  $128.60  (IQR $121.00–$137.40)
-  • Cigna   $115.75  (IQR $108.20–$124.00)
+- Oxford  $128.60  (IQR $121.00–$137.40)
+- Cigna   $115.75  (IQR $108.20–$124.00)
 
 Worth knowing before your next Cigna conversation. This is published rate only — I can't see what either has actually remitted to you.
 
-/rates`,
+[Published rates](/rates)`,
     readAt: null,
     createdAt: "2026-08-08T14:02:00-04:00",
   },
@@ -237,7 +236,7 @@ Emblem pull, as of 2026-08-06: no PractitionerRole for NPI 1720394857.
 
 I can see the listing is absent. I cannot see whether you are contracted with Emblem and merely unlisted, or not contracted at all — Leuk holds no contract data. If you believe you're in-network, this is a directory problem worth escalating; if you're not, it's a gap worth pricing.
 
-/networks`,
+[Your network participation](/networks)`,
     readAt: null,
     createdAt: "2026-08-06T07:58:00-04:00",
   },
@@ -249,7 +248,7 @@ I can see the listing is absent. I cannot see whether you are contracted with Em
 
 A list price below the published in-network rate caps what you can collect from self-pay clients and anchors low in any negotiation.
 
-/catalog`,
+[Your service catalog](/catalog)`,
     readAt: "2026-08-05T11:25:00-04:00",
     createdAt: "2026-08-05T11:20:00-04:00",
   },
