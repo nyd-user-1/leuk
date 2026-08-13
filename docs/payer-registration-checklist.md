@@ -1,20 +1,38 @@
 # Payer registration checklist
 
-_Written 2026-07-11. Registrations are pure calendar cost — submit early, harvest when
+_Written 2026-07-11, boilerplate corrected 2026-08-05 after the Aetna rejection.
+Registrations are pure calendar cost — submit early, harvest when
 credentials land. Companion docs: `PAYER-RESEARCH.md` (why each payer matters),
 `PAYER-HANDOFF.md` (how the ingester works), `TASK-AETNA.md` (run when Aetna approves)._
 
 **Application boilerplate (reuse everywhere):**
-- App name: `Liminal Provider Directory`
+- App name: `Leuk Provider Directory`
+- Organization name: `2525 LLC (NYSgpt)` — the legal entity, with the email domain in
+  parentheses so the reviewer's name↔domain check resolves inside the field itself.
 - Type: Third-party application · **Provider Directory API only** (never request
   Patient Access scopes — we must not even hold credentials for member PHI).
-- Purpose (paste): *"Liminal is a New York behavioral-health practice-management platform.
-  We consume public Da Vinci PDex Plan-Net Provider Directory APIs (CMS-9115-F) to display
-  accurate, source-attributed insurance-network participation and accepting-new-patients
-  status for licensed NY mental-health providers. Read-only; no member data requested."*
+- Purpose (paste): *"Leuk is a New York behavioral-health practice-management platform
+  operated by 2525 LLC and served at leuk.nysgpt.com. We consume public Da Vinci PDex
+  Plan-Net Provider Directory APIs (CMS-9115-F) to display accurate, source-attributed
+  insurance-network participation and accepting-new-patients status for licensed NY
+  mental-health providers. Read-only; no member data requested."*
 - Contact: brendan@nysgpt.com
+- Domains (when asked): `nysgpt.com, leuk.nysgpt.com, limen.nysgpt.com` — lead with
+  `nysgpt.com`, the email domain under verification. Do **not** list `*.vercel.app`
+  deployment aliases: a hash-suffixed hostname reads as hobbyist to a security reviewer
+  and drags an unexplained name onto the form.
 - Credentials → `.env.local` only (`<PAYER>_CLIENT_ID` / `<PAYER>_CLIENT_SECRET`).
   Never in the DB, never committed.
+
+> **Name coherence is a review gate, not a formality.** Aetna rejected the 2026-07-11
+> application on 2026-07-22 for exactly this — org `2525 LLC` against email
+> `brendan@nysgpt.com`, with nothing on file linking them. Every name on an application
+> must resolve to something the reviewer can see: **2525 LLC** in the nysgpt.com footer,
+> **NYSgpt** as the domain and umbrella, **Leuk** as the product at the subdomain you
+> listed. The product's earlier working name is retired — it appears on no live surface,
+> survives only as the repo directory, and must never reach a payer form. Do not write
+> "d/b/a" unless a NY Certificate of Assumed Name has actually been filed; that phrasing
+> asserts a filing exists.
 
 ---
 
@@ -48,8 +66,21 @@ credentials land. Companion docs: `PAYER-RESEARCH.md` (why each payer matters),
   research §7 (does Optum Behavioral Health publish into UHC's feed?).
 - **Brendan does:** nothing.
 
-## 3. Aetna — ✅ submitted 2026-07-11, review 2–4 business days
+## 3. Aetna — ⏳ resubmitted 2026-08-05, decision expected Aug 7–11
 
+- **Timeline:** submitted 2026-07-11 → **rejected 2026-07-22** (*"Aetna restricts
+  application registration from developers who do not have registered email addresses
+  from a verifiable domain from within their organization"*) → nysgpt.com footer updated
+  to name 2525 LLC → questionnaire resubmitted 2026-08-05 under org `2525 LLC (NYSgpt)`,
+  app `Leuk Provider Directory`, plus a reply to
+  `AetnaInteroperabilityProductionAccess@aetna.com` attesting domain ownership and
+  offering the LLC filing receipt / EIN letter.
+- **Watch:** My Dashboard → My Approvals → Approval Status. A request there for the
+  filing receipt or EIN letter is a good sign, not a bounce.
+- **If rejected again:** the only remaining lever is an email address at a domain that
+  *is* the entity name (a `2525llc.com` mailbox). The portal account email is read-only,
+  so switching means a new registration and a fresh review clock — which is why the
+  footer-attestation route was taken instead.
 - When approved: Client ID/Secret from `developerportal.aetna.com` → `.env.local` →
   run `docs/TASK-AETNA.md` (STEP 0 handshake stops for review before any harvest).
 

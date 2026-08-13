@@ -1,12 +1,12 @@
-# Liminal Database Atlas
+# Leuk Database Atlas
 
-> **Generated** by `scripts/db-atlas.mjs` on 2026-07-19 — do not hand-edit. Re-run `node --env-file=.env.local scripts/db-atlas.mjs` to refresh. Row counts on tables above 500,000 rows are planner estimates (`≈`), never `count(*)`.
+> **Generated** by `scripts/db-atlas.mjs` on 2026-08-05 — do not hand-edit. Re-run `node --env-file=.env.local scripts/db-atlas.mjs` to refresh. Row counts on tables above 500,000 rows are planner estimates (`≈`), never `count(*)`.
 
-The live public schema holds **83** relations — 72 tables and 11 materialized views. Grouped by domain below; the graph of how they join is in the per-table Obsidian notes under `~/Vaults/hq/liminal/atlas/`.
+The live public schema holds **91** relations — 78 tables and 13 materialized views. Grouped by domain below; the graph of how they join is in the per-table Obsidian notes under `~/Vaults/hq/leuk/atlas/`.
 
 ## Contents
 
-- [Who exists (foundation)](#who-exists-foundation)
+- [Objects](#objects)
 - [Insurance graph](#insurance-graph)
 - [Rates (Transparency-in-Coverage)](#rates-transparency-in-coverage)
 - [Medicare benchmark (CMS PFS)](#medicare-benchmark-cms-pfs)
@@ -16,7 +16,7 @@ The live public schema holds **83** relations — 72 tables and 11 materialized 
 - [Unmapped tables](#unmapped-tables)
 - [Matview lineage](#matview-lineage)
 
-## Who exists (foundation)
+## Objects
 
 _The provider book everything else keys on. One clinician, one NPI, many sources._
 
@@ -114,7 +114,7 @@ Per-NPI licenses, degrees and taxonomies — the source of the profession + cred
 
 The raw national NPPES registry as loaded — every provider in the country, all specialties. directory_providers is the NY behavioral-health distillation of it.
 
-**Table** · ≈ 9,669,700 rows · defined in sql/030 · powers `/directory`
+**Table** · ≈ 9,674,243 rows · defined in sql/030 · powers `/directory`
 
 **Joins:** `directory_providers` (`npi`) · `nppes_organizations` (`npi`) · `nppes_other_names` (`npi`) · `nucc_taxonomy` · `organizations` (`npi`) · `provider_qualifications` (`npi`)
 
@@ -374,7 +374,7 @@ Per-insurer network/product labels from directories — the labels membership ha
 
 Payer-attested membership: one row per (npi × payer × network × location), carrying accepting-new-patients + as-of. THE membership evidence, FHIR flavor — what the insurance badge reads.
 
-**Table** · ≈ 2,443,529 rows · defined in sql/013 · powers `/directory`
+**Table** · ≈ 2,448,473 rows · defined in sql/013 · powers `/directory`
 
 **Joins:** `directory_providers` (`npi`) · `fhir_locations` · `payer_networks` (`network_id`) · `payer_sources` (`payer_source_id`) · `provider_participation_summary` (`npi`)
 
@@ -563,7 +563,7 @@ _What payers actually pay, from their own published machine-readable files._
 
 The rate corpus. One row per (npi × tin × payer × plan/network × CPT × rate × POS × file date). A rate proves a CONTRACT as of a date — never patient cost, never standalone membership.
 
-**Table** · ≈ 14,022,580 rows · defined in sql/017 · powers `/rates`
+**Table** · ≈ 16,470,526 rows · defined in sql/017 · powers `/rates`
 
 **Joins:** `cpt_codes` · `directory_providers` (`npi`) · `org_tin_rate_summary` (`tin`) · `payer_rate_totals` (`payer`) · `plans` (`source_file`) · `provider_rate_summary` (`npi`) · `rate_bands_checked_payers` (`payer`) · `rate_bands_license_summary` (`billing_code`) · `rate_bands_payer_summary` (`payer`) · `rate_table_mv` (`tin`) · `tin_registry` (`tin`)
 
@@ -588,7 +588,7 @@ The rate corpus. One row per (npi × tin × payer × plan/network × CPT × rate
 
 Per-NPI rate rollup (matview) — what each provider is paid, precomputed so /recruiting stays fast.
 
-**Matview** · 44,003 rows · defined in sql/021 · powers `/recruiting` · refreshed nightly by the 04:12 cron
+**Matview** · 44,093 rows · defined in sql/021 · powers `/recruiting` · refreshed nightly by the 04:12 cron
 
 **Joins:** `directory_providers` (`npi`) · `provider_rate_signals` (`npi`)
 
@@ -623,7 +623,7 @@ Per-NPI network aggregate (matview) feeding the directory Accepting/Network sort
 
 The published rate table (matview): one row per (payer, TIN) with per-code rates + clinician counts — precomputed, which is why the public page loads instantly.
 
-**Matview** · 38,956 rows · defined in sql/027 · powers `/published-rates` · refreshed nightly by the 04:12 cron
+**Matview** · 38,984 rows · defined in sql/027 · powers `/published-rates` · refreshed nightly by the 04:12 cron
 
 **Joins:** `org_tin_rosters` (`tin`) · `provider_rate_signals` (`tin`) · `rate_table_child_mv` (`tin`) · `tin_registry` (`tin`)
 
@@ -657,7 +657,7 @@ The published rate table (matview): one row per (payer, TIN) with per-code rates
 
 Per-network/setting detail rows under each rate_table_mv parent (facility vs office is a real price difference).
 
-**Matview** · 134,549 rows · defined in sql/032 · powers `/published-rates` · refreshed nightly by the 04:12 cron
+**Matview** · 144,865 rows · defined in sql/032 · powers `/published-rates` · refreshed nightly by the 04:12 cron
 
 **Joins:** `rate_table_mv` (`tin`)
 
@@ -690,7 +690,7 @@ Per-network/setting detail rows under each rate_table_mv parent (facility vs off
 
 Per-TIN clinician roster (matview): who bills under each org — the roster behind an org page.
 
-**Matview** · 155,317 rows · defined in sql/025 · powers `/orgs` · refreshed nightly by the 04:12 cron
+**Matview** · 165,361 rows · defined in sql/025 · powers `/orgs` · refreshed nightly by the 04:12 cron
 
 **Joins:** `directory_providers` (`npi`) · `org_tin_rate_summary` (`tin`) · `organizations` (`npi`) · `rate_table_mv` (`tin`) · `tin_registry` (`tin`)
 
@@ -708,7 +708,7 @@ Per-TIN clinician roster (matview): who bills under each org — the roster behi
 
 Per-(TIN, payer, code) rate percentiles (matview) — what each org is paid at p25/median/p75.
 
-**Matview** · ≈ 542,151 rows · defined in sql/025 · powers `/orgs` · refreshed nightly by the 04:12 cron
+**Matview** · ≈ 941,014 rows · defined in sql/025 · powers `/orgs` · refreshed nightly by the 04:12 cron
 
 **Joins:** `org_tin_rosters` (`tin`) · `provider_rate_signals` (`tin`)
 
@@ -719,6 +719,7 @@ Per-(TIN, payer, code) rate percentiles (matview) — what each org is paid at p
 | `billing_code` | text |
 | `npis` | integer |
 | `rate_points` | integer |
+| `distinct_rates` | integer |
 | `p25` | double precision |
 | `median` | double precision |
 | `p75` | double precision |
@@ -746,7 +747,7 @@ TIN → business-name registry: the naming layer behind every org display name. 
 
 Per-payer rate totals (matview) — the small denominator table the admin/observatory reads instead of scanning the multi-million-row corpus.
 
-**Matview** · 34 rows · defined in sql/026 · powers `/workspace` · refreshed nightly by the 04:12 cron
+**Matview** · 36 rows · defined in sql/026 · powers `/workspace` · refreshed nightly by the 04:12 cron
 
 **Joins:** `provider_rate_signals` (`payer`) · `rate_bands_payer_summary` (`payer`)
 
@@ -761,7 +762,7 @@ Per-payer rate totals (matview) — the small denominator table the admin/observ
 
 Rate bands by license/profession (matview) — the p25/median/p75 distribution per profession that /rates Bands renders. Part of the sql/024 precompute that took /rates from 20-32s to <0.3s.
 
-**Matview** · 1,318 rows · defined in sql/024 · powers `/rates` · refreshed nightly by the 04:12 cron
+**Matview** · 1,658 rows · defined in sql/024 · powers `/rates` · refreshed nightly by the 04:12 cron
 
 **Joins:** `provider_rate_signals` (`billing_code`)
 
@@ -781,7 +782,7 @@ Rate bands by license/profession (matview) — the p25/median/p75 distribution p
 
 Rate bands by payer (matview) — per-payer percentile bands over the priced codes.
 
-**Matview** · 174 rows · defined in sql/024 · powers `/rates` · refreshed nightly by the 04:12 cron
+**Matview** · 189 rows · defined in sql/024 · powers `/rates` · refreshed nightly by the 04:12 cron
 
 **Joins:** `payer_rate_totals` (`payer`) · `provider_rate_signals` (`payer`)
 
@@ -1006,7 +1007,7 @@ _The ledger and notification tables the automation writes to._
 
 The maintenance ledger: one row per run of the nightly matview cron ('daily') and the harvest runner ('harvest:<id>'). The /workspace sync-health card + run-history table read it.
 
-**Table** · 19 rows · defined in sql/035 · powers `/workspace`
+**Table** · 93 rows · defined in sql/035 · powers `/workspace`
 
 | column | type |
 | --- | --- |
@@ -1148,7 +1149,7 @@ Client invoices with human numbers (INV-2026-0001) and a draft→sent→paid/ove
 
 Clinical documentation (soft-deleted, sign-and-lock lifecycle). PHI.
 
-**Table** · 30 rows · defined in sql/001
+**Table** · 32 rows · defined in sql/001
 
 **Joins:** `clients` (`client_id`)
 
@@ -1205,6 +1206,8 @@ Client documents: portal uploads, rendered form PDFs, generated superbills. PHI.
 | `kind` | text |
 | `created_at` | timestamp with time zone |
 | `updated_at` | timestamp with time zone |
+| `storage` | text |
+| `provenance` | text |
 
 ### `payers`
 
@@ -1249,7 +1252,7 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 
 ### `audit_events`
 
-**Table** · 2,174 rows · 7 columns
+**Table** · 2,960 rows · 7 columns
 
 | column | type |
 | --- | --- |
@@ -1272,6 +1275,19 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 | `weekday` | integer |
 | `start_time` | time without time zone |
 | `end_time` | time without time zone |
+| `created_at` | timestamp with time zone |
+| `updated_at` | timestamp with time zone |
+
+### `canvas_maps`
+
+**Table** · 0 rows · 6 columns
+
+| column | type |
+| --- | --- |
+| `id` | uuid |
+| `owner_id` | text |
+| `name` | text |
+| `doc` | jsonb |
 | `created_at` | timestamp with time zone |
 | `updated_at` | timestamp with time zone |
 
@@ -1392,7 +1408,7 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 
 ### `lead_reports`
 
-**Table** · 2 rows · 4 columns
+**Table** · 18 rows · 4 columns
 
 | column | type |
 | --- | --- |
@@ -1424,6 +1440,18 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 | `payer_label` | text |
 | `network_label` | text |
 | `network_id` | text |
+
+### `note_amendments`
+
+**Table** · 4 rows · 5 columns
+
+| column | type |
+| --- | --- |
+| `id` | uuid |
+| `note_id` | uuid |
+| `author_id` | uuid |
+| `body_md` | text |
+| `created_at` | timestamp with time zone |
 
 ### `note_templates`
 
@@ -1474,7 +1502,7 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 
 ### `org_network_rates`
 
-**Matview** · ≈ 701,699 rows · 10 columns
+**Matview** · ≈ 1,163,331 rows · 10 columns
 
 | column | type |
 | --- | --- |
@@ -1488,6 +1516,19 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 | `rate_max` | numeric |
 | `as_of` | date |
 | `file_date` | date |
+
+### `org_tin_npi_rates`
+
+**Matview** · ≈ 1,765,261 rows · 6 columns
+
+| column | type |
+| --- | --- |
+| `tin` | text |
+| `npi` | text |
+| `billing_code` | text |
+| `distinct_rates` | integer |
+| `min_rate` | double precision |
+| `max_rate` | double precision |
 
 ### `password_tokens`
 
@@ -1621,6 +1662,30 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 | `created_at` | timestamp with time zone |
 | `updated_at` | timestamp with time zone |
 
+### `rate_service_rows_mv`
+
+**Matview** · ≈ 1,091,544 rows · 17 columns
+
+| column | type |
+| --- | --- |
+| `payer` | text |
+| `tin` | text |
+| `npi` | text |
+| `network` | text |
+| `setting` | text |
+| `billing_code` | text |
+| `rate` | numeric |
+| `n_rates` | integer |
+| `min_rate` | numeric |
+| `max_rate` | numeric |
+| `display_name` | text |
+| `credential` | text |
+| `profession` | text |
+| `city` | text |
+| `county` | text |
+| `as_of` | date |
+| `search_text` | text |
+
 ### `referrals`
 
 **Table** · 0 rows · 8 columns
@@ -1635,6 +1700,19 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 | `status` | text |
 | `created_by` | uuid |
 | `created_at` | timestamp with time zone |
+
+### `schema_drafts`
+
+**Table** · 1 rows · 6 columns
+
+| column | type |
+| --- | --- |
+| `id` | uuid |
+| `owner_id` | text |
+| `name` | text |
+| `doc` | jsonb |
+| `created_at` | timestamp with time zone |
+| `updated_at` | timestamp with time zone |
 
 ### `services`
 
@@ -1654,13 +1732,62 @@ _In the database but not yet in the atlas metadata (mirror `lib/repos/admin.ts`)
 
 ### `sessions`
 
-**Table** · 510 rows · 4 columns
+**Table** · 719 rows · 4 columns
 
 | column | type |
 | --- | --- |
 | `token` | text |
 | `user_id` | uuid |
 | `expires_at` | timestamp with time zone |
+| `created_at` | timestamp with time zone |
+
+### `stripe_connect_accounts`
+
+**Table** · 1 rows · 11 columns
+
+| column | type |
+| --- | --- |
+| `id` | uuid |
+| `user_id` | uuid |
+| `org_tin` | text |
+| `stripe_account_id` | text |
+| `business_type` | text |
+| `charges_enabled` | boolean |
+| `payouts_enabled` | boolean |
+| `details_submitted` | boolean |
+| `requirements_due` | jsonb |
+| `created_at` | timestamp with time zone |
+| `updated_at` | timestamp with time zone |
+
+### `stripe_events`
+
+**Table** · 16 rows · 7 columns
+
+| column | type |
+| --- | --- |
+| `id` | text |
+| `type` | text |
+| `stripe_account_id` | text |
+| `payload` | jsonb |
+| `received_at` | timestamp with time zone |
+| `processed_at` | timestamp with time zone |
+| `error` | text |
+
+### `stripe_payment_splits`
+
+**Table** · 0 rows · 10 columns
+
+| column | type |
+| --- | --- |
+| `id` | uuid |
+| `invoice_id` | uuid |
+| `payment_intent_id` | text |
+| `checkout_session_id` | text |
+| `destination_account_id` | text |
+| `amount_cents` | integer |
+| `application_fee_cents` | integer |
+| `currency` | text |
+| `transfer_id` | text |
 | `created_at` | timestamp with time zone |
 
 ### `threads`
@@ -1720,6 +1847,7 @@ The derived views the app reads instead of the base tables. The nightly 04:12 cr
 | Matview | Defined in | Rebuilt by nightly cron | Reads |
 | --- | --- | --- | --- |
 | `org_network_rates` | — | ✓ | — |
+| `org_tin_npi_rates` | — | on ingest | — |
 | `org_tin_rate_summary` | sql/025 | ✓ | `org_tin_rosters`, `provider_rate_signals` |
 | `org_tin_rosters` | sql/025 | ✓ | `directory_providers`, `org_tin_rate_summary`, `organizations`, `rate_table_mv` |
 | `payer_rate_totals` | sql/026 | ✓ | `provider_rate_signals`, `rate_bands_payer_summary` |
@@ -1728,5 +1856,6 @@ The derived views the app reads instead of the base tables. The nightly 04:12 cr
 | `rate_bands_checked_payers` | sql/024 | ✓ | `provider_rate_signals` |
 | `rate_bands_license_summary` | sql/024 | ✓ | `provider_rate_signals` |
 | `rate_bands_payer_summary` | sql/024 | ✓ | `payer_rate_totals`, `provider_rate_signals` |
+| `rate_service_rows_mv` | — | ✓ | — |
 | `rate_table_child_mv` | sql/032 | ✓ | `rate_table_mv` |
 | `rate_table_mv` | sql/027 | ✓ | `org_tin_rosters`, `provider_rate_signals`, `rate_table_child_mv`, `tin_registry` |
