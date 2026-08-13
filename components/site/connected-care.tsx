@@ -26,7 +26,7 @@ export function ConnectedCare() {
       </div>
       <Reveal className="lg:order-last">
         <img
-          src={`${ILLO}/liminal_w5kx7ww5kx7ww5kx.avif`}
+          src={`${ILLO}/leuk_w5kx7ww5kx7ww5kx.avif`}
           alt="A watercolour illustration — a bedside nightstand at dawn: a lamp, a glass of water, folded glasses, a small plant, and a phone showing a morning appointment reminder."
           width={1407}
           height={768}

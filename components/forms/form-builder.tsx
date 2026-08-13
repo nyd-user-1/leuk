@@ -131,9 +131,9 @@ const BLOCK_HUE: Record<FormBlockType, string> = {
 const OPTION_TYPES: FormBlockType[] = ["select", "radio", "checkbox", "scale"];
 
 // Native HTML5 drag payload for palette → canvas (same approach as the hq DnD).
-const DND_BLOCK = "application/x-liminal-block";
+const DND_BLOCK = "application/x-leuk-block";
 // Separate payload for reordering blocks already committed to the canvas.
-const DND_REORDER = "application/x-liminal-block-reorder";
+const DND_REORDER = "application/x-leuk-block-reorder";
 
 function newBlock(type: FormBlockType): FormBlock {
   const id = `b_${Math.random().toString(36).slice(2, 9)}`;

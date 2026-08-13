@@ -4001,7 +4001,7 @@
         "name": "provider_leads_pkey",
         "columns": "{id}"
       },
-      "comment": "Anonymous public appointment requests for directory providers; Liminal follows up and uses demand as a recruitment hook."
+      "comment": "Anonymous public appointment requests for directory providers; Leuk follows up and uses demand as a recruitment hook."
     },
     {
       "schema": "public",
@@ -4275,7 +4275,7 @@
         "name": "provider_profiles_pkey",
         "columns": "{id}"
       },
-      "comment": "Rich /providers/[slug] content for bookable Liminal practitioners, keyed 1:1 to users.id."
+      "comment": "Rich /providers/[slug] content for bookable Leuk practitioners, keyed 1:1 to users.id."
     },
     {
       "schema": "public",
@@ -4942,7 +4942,7 @@
         "name": "sessions_pkey",
         "columns": "{token}"
       },
-      "comment": "Cookie session tokens (liminal_session); rows die with their user."
+      "comment": "Cookie session tokens (leuk_session); rows die with their user."
     },
     {
       "schema": "public",

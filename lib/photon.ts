@@ -155,7 +155,7 @@ export async function photonQuery<T>(query: string, variables?: Record<string, u
 /** Photon's SexType enum; free-text gender rides along in `gender`. */
 export type PhotonSex = "MALE" | "FEMALE" | "UNKNOWN";
 
-/** Map a Liminal `clients.gender` free-text value onto Photon's SexType. */
+/** Map a Leuk `clients.gender` free-text value onto Photon's SexType. */
 export function toPhotonSex(gender: string | null | undefined): PhotonSex {
   const g = (gender ?? "").trim().toLowerCase();
   if (g === "male" || g === "m" || g === "man") return "MALE";

@@ -623,25 +623,30 @@ const ASSET_GROUPS: Array<{ label: string; tile: "light" | "navy"; items: string
     label: "Watercolour illustrations",
     tile: "light",
     items: [
-      "illustrations/liminal_e0mhvxe0mhvxe0mh-mint.avif",
-      "illustrations/liminal_e0mhvxe0mhvxe0mh.avif",
-      "illustrations/liminal_4ji9244ji9244ji9.avif",
-      "illustrations/liminal_5ziunj5ziunj5ziu.avif",
-      "illustrations/liminal_7h6ra17h6ra17h6r.avif",
-      "illustrations/liminal_99yp1z99yp1z99yp.avif",
-      "illustrations/liminal_a2t92la2t92la2t9.avif",
-      "illustrations/liminal_n1y3w0n1y3w0n1y3.avif",
-      "illustrations/liminal_nielb8nielb8niel.avif",
-      "illustrations/liminal_w5kx7ww5kx7ww5kx.avif",
-      "illustrations/liminal_xj1aw5xj1aw5xj1a.avif",
-      "illustrations/liminal-3.avif",
-      "illustrations/liminal-8.avif",
-      "illustrations/liminal-9.avif",
-      "illustrations/liminal-13.avif",
-      "illustrations/liminal-landscape_b69909b69909b699.avif",
-      "illustrations/liminal-landscape_rhjb16rhjb16rhjb.avif",
-      "illustrations/liminal-landscape_w68hevw68hevw68h.avif",
-      "illustrations/Leuk-life_law6m9law6m9law6.avif",
+      "illustrations/leuk_e0mhvxe0mhvxe0mh-mint.avif",
+      "illustrations/leuk_e0mhvxe0mhvxe0mh.avif",
+      "illustrations/leuk_4ji9244ji9244ji9.avif",
+      "illustrations/leuk_5ziunj5ziunj5ziu.avif",
+      "illustrations/leuk_7h6ra17h6ra17h6r.avif",
+      "illustrations/leuk_99yp1z99yp1z99yp.avif",
+      "illustrations/leuk_a2t92la2t92la2t9.avif",
+      "illustrations/leuk_n1y3w0n1y3w0n1y3.avif",
+      "illustrations/leuk_nielb8nielb8niel.avif",
+      "illustrations/leuk_w5kx7ww5kx7ww5kx.avif",
+      "illustrations/leuk_xj1aw5xj1aw5xj1a.avif",
+      "illustrations/leuk-3.avif",
+      "illustrations/leuk-8.avif",
+      "illustrations/leuk-9.avif",
+      "illustrations/leuk-13.avif",
+      "illustrations/leuk-landscape_b69909b69909b699.avif",
+      "illustrations/leuk-landscape_rhjb16rhjb16rhjb.avif",
+      "illustrations/leuk-landscape_w68hevw68hevw68h.avif",
+      // Five paths below keep the pre-rename object name. A blob pathname is a
+      // storage key, not a brand: renaming it in source only 404s the image,
+      // because the object itself is still called `Liminal-…`. Re-uploading
+      // needs a Vercel Blob write, which is unavailable while the account is
+      // fair-use blocked. Rename the objects, then these five strings.
+      "illustrations/Liminal-life_law6m9law6m9law6.avif",
     ],
   },
   {
@@ -654,10 +659,10 @@ const ASSET_GROUPS: Array<{ label: string; tile: "light" | "navy"; items: string
       "illustrations/Gemini_Generated_Image_gandqagandqagand.avif",
       "illustrations/Gemini_Generated_Image_m17ugum17ugum17u.avif",
       "illustrations/Gemini_Generated_Image_q35ecjq35ecjq35e.avif",
-      "illustrations/Leuk-dusk-landscape-5-July-07-2026-12_33AM.avif",
+      "illustrations/Liminal-dusk-landscape-5-July-07-2026-12_33AM.avif",
       "illustrations/dusk-7.avif",
-      "illustrations/liminal-dusk-landscape_4ijehh4ijehh4ije.avif",
-      "illustrations/liminal-dusk-landscape_vu9yc6vu9yc6vu9y.avif",
+      "illustrations/leuk-dusk-landscape_4ijehh4ijehh4ije.avif",
+      "illustrations/leuk-dusk-landscape_vu9yc6vu9yc6vu9y.avif",
       "illustrations/maya-1.avif",
       "illustrations/maya-2.avif",
       "illustrations/maya-4.avif",
@@ -990,7 +995,7 @@ export default function DesignSystemPage() {
                 <p className="mb-2 text-[13px] font-semibold text-text-muted">Stock / placeholder photo</p>
                 <div className="w-40 overflow-hidden rounded-card border border-border shadow-card">
                   <img
-                    src="https://c1vijjkvyt1skkfe.public.blob.vercel-storage.com/illustrations/liminal_w5kx7ww5kx7ww5kx.avif"
+                    src="https://c1vijjkvyt1skkfe.public.blob.vercel-storage.com/illustrations/leuk_w5kx7ww5kx7ww5kx.avif"
                     alt="Leuk watercolour illustration — a still life of a lamp, book, and reading glasses on a side table."
                     width={1407}
                     height={768}
@@ -1059,10 +1064,10 @@ export default function DesignSystemPage() {
               </p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[
-                  { u: "illustrations/liminal_e0mhvxe0mhvxe0mh-mint.avif", a: "Bench by a lake" },
-                  { u: "illustrations/liminal_nielb8nielb8niel.avif", a: "Cooking by a window" },
-                  { u: "illustrations/liminal_n1y3w0n1y3w0n1y3.avif", a: "Man on a porch" },
-                  { u: "illustrations/liminal_w5kx7ww5kx7ww5kx.avif", a: "Still life" },
+                  { u: "illustrations/leuk_e0mhvxe0mhvxe0mh-mint.avif", a: "Bench by a lake" },
+                  { u: "illustrations/leuk_nielb8nielb8niel.avif", a: "Cooking by a window" },
+                  { u: "illustrations/leuk_n1y3w0n1y3w0n1y3.avif", a: "Man on a porch" },
+                  { u: "illustrations/leuk_w5kx7ww5kx7ww5kx.avif", a: "Still life" },
                 ].map((i) => (
                   <div key={i.u} className="overflow-hidden rounded-card" style={{ backgroundColor: "#dcecec" }}>
                     <img
@@ -1100,7 +1105,7 @@ export default function DesignSystemPage() {
                       style={{ backgroundColor: "#dcecec" }}
                     >
                       <img
-                        src="https://c1vijjkvyt1skkfe.public.blob.vercel-storage.com/illustrations/liminal_xj1aw5xj1aw5xj1a.avif"
+                        src="https://c1vijjkvyt1skkfe.public.blob.vercel-storage.com/illustrations/leuk_xj1aw5xj1aw5xj1a.avif"
                         alt="Three friends at a table"
                         className="absolute right-0 top-1/2 w-3/4 -translate-y-1/2"
                         loading="lazy"

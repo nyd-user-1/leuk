@@ -1,4 +1,4 @@
--- Liminal — 030: nppes_npi (the full NPPES dissemination file, nationwide).
+-- Leuk — 030: nppes_npi (the full NPPES dissemination file, nationwide).
 --
 -- WHY THIS EXISTS. sql/025's nppes_organizations is NY-scoped by construction
 -- ("NY practice location + every npi-type TIN"): 103,772 of its 104,060 rows are

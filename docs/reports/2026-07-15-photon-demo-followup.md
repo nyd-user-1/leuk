@@ -14,9 +14,9 @@ Continues `docs/reports/2026-07-14-photon-demo.md`, which is a snapshot as filed
 
 ## DB changes
 - **`clients` 14 → 13.** Deleted the orphaned `Shelley Padgett` CLIENT row
-  (`shelley@liminalpsychiatry.org`, created 2026-07-10) — 0 appointments, no portal user, no invoices,
+  (`shelley@leukpsychiatry.org`, created 2026-07-10) — 0 appointments, no portal user, no invoices,
   notes, files or threads. A booking-test leftover that duplicated the practitioner's name. The
-  practitioner user `shelley@liminal.demo` (`…1006`) is untouched.
+  practitioner user `shelley@leuk.demo` (`…1006`) is untouched.
 - **Peter Parker** (17 appointments, all intact): `dob NULL → 2001-08-10`,
   `phone 555.555.5555 → +1 646 555 0147`.
 - **`photon_patient_id`: 12/14 → 13/13.** Peter = `pat_01KXJ06MA5BNJ34ZG6CK2ZTDZD`. Every client now

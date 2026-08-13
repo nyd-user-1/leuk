@@ -147,7 +147,7 @@ const FICTIONAL_SPOTLIGHT: ProviderSpotlight[] = [
     specialties: ["Medication management", "ADHD", "Anxiety"],
     moreCount: 6,
     careType: "medication",
-    illustrationKey: "liminal_4ji9244ji9244ji9",
+    illustrationKey: "leuk_4ji9244ji9244ji9",
     href: "/providers",
   },
   {
@@ -161,7 +161,7 @@ const FICTIONAL_SPOTLIGHT: ProviderSpotlight[] = [
     specialties: ["Couples counseling", "Family conflict", "Communication"],
     moreCount: 5,
     careType: "therapy",
-    illustrationKey: "liminal-9",
+    illustrationKey: "leuk-9",
     href: "/providers",
   },
   {
@@ -175,7 +175,7 @@ const FICTIONAL_SPOTLIGHT: ProviderSpotlight[] = [
     specialties: ["Trauma & PTSD", "EMDR", "Grief"],
     moreCount: 4,
     careType: "therapy",
-    illustrationKey: "liminal_a2t92la2t92la2t9",
+    illustrationKey: "leuk_a2t92la2t92la2t9",
     href: "/providers",
   },
   {
@@ -189,7 +189,7 @@ const FICTIONAL_SPOTLIGHT: ProviderSpotlight[] = [
     specialties: ["Men’s mental health", "Anger management", "Career & burnout"],
     moreCount: 3,
     careType: "therapy",
-    illustrationKey: "liminal_n1y3w0n1y3w0n1y3",
+    illustrationKey: "leuk_n1y3w0n1y3w0n1y3",
     href: "/providers",
   },
   {

@@ -1,4 +1,4 @@
--- Liminal — 020: employers + plans (the demand-side entity the payer ToCs revealed).
+-- Leuk — 020: employers + plans (the demand-side entity the payer ToCs revealed).
 --
 -- Every other payer source gave us network→rate. Aetna's per-employer ToC gives
 -- employer → plan → network → the rate file that prices it — the "plan ↔ network

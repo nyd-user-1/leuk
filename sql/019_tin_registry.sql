@@ -1,4 +1,4 @@
--- Liminal — 019: tin_registry (organization names for contract-holder TINs).
+-- Leuk — 019: tin_registry (organization names for contract-holder TINs).
 --
 -- provider_rate_signals.tin is a bare string ('ein:832675429'); the MRF
 -- provider_references carry the org's business_name alongside — this table is

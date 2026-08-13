@@ -12,8 +12,8 @@
 Both files are idempotent — safe to re-run.
 
 Demo logins (password `demo`):
-- `brendan@liminal.demo` — admin/practitioner
-- `casey@liminal.demo` — client portal
+- `brendan@leuk.demo` — admin/practitioner
+- `casey@leuk.demo` — client portal
 
 > `.env.local` contains an unquoted `&`, so `source .env.local` fails under zsh. For psql:
 > `export DATABASE_URL="$(grep -m1 '^DATABASE_URL=' .env.local | cut -d= -f2- | tr -d '\"')"`

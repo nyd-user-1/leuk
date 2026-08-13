@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Demo seeding: sync every Liminal client to Photon so each carries a real
+// Demo seeding: sync every Leuk client to Photon so each carries a real
 // photon_patient_id. All demo data is fake; 0 prescriptions is expected.
 //
 //   node --env-file=.env.local scripts/sync-photon-patients.mjs [--dry]

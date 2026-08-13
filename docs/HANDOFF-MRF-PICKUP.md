@@ -2,8 +2,8 @@
 
 _Lead session resuming the MRF marathon (693184af / NYS-25..32). Read
 `docs/MRF-RESULTS.md` + `docs/MRF-QUEUE.md` first, plus the memory files
-`handoff-2026-07-12-mrf-rates.md` / `liminal-rate-signals.md` under
-`~/.claude/projects/-Users-brendanstanton-Code-liminal/memory/`. This doc is
+`handoff-2026-07-12-mrf-rates.md` / `leuk-rate-signals.md` under
+`~/.claude/projects/-Users-brendanstanton-Code-leuk/memory/`. This doc is
 the delta since those._
 
 ## State at handoff

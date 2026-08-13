@@ -1,4 +1,4 @@
--- Liminal — Photon e-prescribing demo (029). Three things, all re-runnable:
+-- Leuk — Photon e-prescribing demo (029). Three things, all re-runnable:
 --   1. Dr. Shelley Padgett's users row (the one practitioner fixture no
 --      migration ever created — see the note below).
 --   2. Spreads every demo client across the five practitioners.
@@ -17,10 +17,10 @@
 -- avatar_hue is CHECK-constrained to (teal, amber, pink, blue) — 5 practitioners
 -- can't have 5 distinct hues, so teal repeats. Matches her live row exactly.
 INSERT INTO users (id, role, name, email, password_hash, avatar_hue, phone, timezone, slug)
-SELECT '00000000-0000-4000-8000-000000001006', 'practitioner', 'Dr. Shelley Padgett', 'shelley@liminal.demo',
-  (SELECT password_hash FROM users WHERE email = 'brendan@liminal.demo'),
+SELECT '00000000-0000-4000-8000-000000001006', 'practitioner', 'Dr. Shelley Padgett', 'shelley@leuk.demo',
+  (SELECT password_hash FROM users WHERE email = 'brendan@leuk.demo'),
   'teal', '+1 212 555 0144', 'America/New_York', 'shelley-padgett'
-WHERE EXISTS (SELECT 1 FROM users WHERE email = 'brendan@liminal.demo')
+WHERE EXISTS (SELECT 1 FROM users WHERE email = 'brendan@leuk.demo')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── 2. spread clients across the practitioners ───────────────────────────────

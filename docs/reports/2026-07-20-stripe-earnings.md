@@ -116,7 +116,7 @@ to those two secondary lists is a trivial follow-up if wanted.
 - `tsc --noEmit` — clean at every commit.
 
 - **Gated / empty state — VERIFIED headless.** Real cookie login as
-  `brendan@liminal.demo` against the running dev server. `/earnings` → HTTP 200;
+  `brendan@leuk.demo` against the running dev server. `/earnings` → HTTP 200;
   TopBar H1 "Earnings"; sidebar shows Earnings active in the Practice section
   between Billing and Catalog; the "Set up payments first" EmptyState + CTA
   render; **zero console errors, zero page errors**. Captured *before* the T6
@@ -124,7 +124,7 @@ to those two secondary lists is a trivial follow-up if wanted.
   why the gate showed, and why this screenshot is the honest record of that state.
   Screenshot: `docs/reports/assets/2026-07-20-stripe-earnings/earnings-gated.png`.
 
-- **Practitioner-only gate — VERIFIED headless.** Login as `casey@liminal.demo`
+- **Practitioner-only gate — VERIFIED headless.** Login as `casey@leuk.demo`
   (role `client`) → `GET /earnings` redirects to `/portal`. Clients never see the
   page.
 
@@ -134,7 +134,7 @@ to those two secondary lists is a trivial follow-up if wanted.
 ## The demo — driven against the live sandbox (T6 complete)
 
 The T6 drive landed, so the active money views are now **visually verified**
-against a real settled charge. Driven headless as `brendan@liminal.demo` against
+against a real settled charge. Driven headless as `brendan@leuk.demo` against
 connected account `acct_1TvBKiJvfwWFuhCf` (`charges_enabled` + `payouts_enabled`
 true, `card_payments`/`transfers` ACTIVE), payment `py_1TvC5yJvfwWFuhCfDyGRZhFx`.
 
@@ -201,10 +201,10 @@ here — this was a composition mistake, not a missing primitive.
 4. **Stripe labels our application fee "Processing fees" to the therapist.** In
    the connected account's payment_details view the $15.00 line reads *Processing
    fees*, not "platform fee" — Stripe's own copy, inside the iframe, not
-   something the appearance API can rename. So the therapist sees Liminal's
+   something the appearance API can rename. So the therapist sees Leuk's
    revenue conflated with card-processing cost. That is a **pricing-and-copy
    decision, not a UI bug** (it feeds open fork #1): if we want the therapist to
-   understand what Liminal charges versus what Stripe charges, it has to be said
+   understand what Leuk charges versus what Stripe charges, it has to be said
    in OUR chrome around the component, since we cannot relabel theirs. Worth a
    founder ruling before this is shown to real therapists.
 

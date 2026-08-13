@@ -44,7 +44,7 @@ Verified current state (read sql/002_seed.sql lines 11–15 yourself):
 Do, as migration `sql/028_photon_demo.sql` (or next free number — check
 `ls sql/` first), applied to the live DB:
 1. INSERT two new practitioner users: "Dr. Shelley Padgett"
-   (shelley@liminal.demo) and "Jason Hilario" (jason.h@liminal.demo — check
+   (shelley@leuk.demo) and "Jason Hilario" (jason.h@leuk.demo — check
    sql/011 first; a Jason provider exists somewhere, avoid email collision),
    role='practitioner', password_hash copied verbatim from an existing demo
    user row (same bcrypt = password "demo" works; that IS the existing demo
@@ -170,9 +170,9 @@ OUT OF SCOPE
 =========================================================
 DONE WHEN
 =========================================================
-1. Admin (brendan@liminal.demo / demo): "All Clients" with Practitioner +
+1. Admin (brendan@leuk.demo / demo): "All Clients" with Practitioner +
    Rx columns; every row has a practitioner; 5 practitioners ~equal.
-2. Practitioner (shelley@liminal.demo / demo): "My Clients", no Practitioner
+2. Practitioner (shelley@leuk.demo / demo): "My Clients", no Practitioner
    column, only her clients, Rx column present.
 3. Casey Morgan detail: Rx tab (after Personal, before Insurance) lists real
    Neutron data; Create-prescription either submits for a Photon-authorized

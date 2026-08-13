@@ -1,7 +1,7 @@
--- Liminal — 061: Stripe Connect marketplace tables (TASK-STRIPE-MARKETPLACE, tranche 1).
+-- Leuk — 061: Stripe Connect marketplace tables (TASK-STRIPE-MARKETPLACE, tranche 1).
 --
--- The money model: a client pays LIMINAL, Liminal pays the therapist's connected
--- account, Liminal keeps an application fee. Tranche 1 uses DESTINATION CHARGES
+-- The money model: a client pays Leuk, Leuk pays the therapist's connected
+-- account, Leuk keeps an application fee. Tranche 1 uses DESTINATION CHARGES
 -- (`transfer_data[destination]` + `application_fee_amount` on a platform Checkout
 -- Session), so Stripe moves the money in one hop and these tables only have to
 -- record WHO the account is, WHAT Stripe currently allows it to do, and HOW a
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS stripe_payment_splits (
   -- acct_… of the therapist paid by this charge (destination charge target).
   destination_account_id TEXT NOT NULL,
   amount_cents           INTEGER NOT NULL,   -- gross the client paid
-  application_fee_cents  INTEGER NOT NULL,   -- what Liminal kept
+  application_fee_cents  INTEGER NOT NULL,   -- what Leuk kept
   currency               TEXT NOT NULL DEFAULT 'usd',
   transfer_id            TEXT,               -- tr_… once Stripe reports it
   created_at             TIMESTAMPTZ NOT NULL DEFAULT now()

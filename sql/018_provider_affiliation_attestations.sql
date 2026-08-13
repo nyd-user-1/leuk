@@ -1,4 +1,4 @@
--- Liminal — 018: provider_affiliation_attestations (Roster Check write path).
+-- Leuk — 018: provider_affiliation_attestations (Roster Check write path).
 --
 -- Insert-only log of a provider's own statement about whether they're still
 -- affiliated with a TIN a payer publishes them under. This is our proprietary

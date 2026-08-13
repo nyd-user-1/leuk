@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { fetchAccountSessionSecret } from "./connect-api";
 
 // Boots the Stripe Connect embedded-components runtime and themes it to the
-// Liminal kit, so the Stripe-rendered iframes read as part of the app rather
+// Leuk kit, so the Stripe-rendered iframes read as part of the app rather
 // than a bolted-on widget. Values are the light-mode tokens from
 // app/globals.css — the authenticated app never renders dark (AppShell strips
 // the `dark` class), so a static map is correct here.

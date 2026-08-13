@@ -128,7 +128,7 @@ export default async function NotePrintPage({ params }: { params: Promise<{ id: 
             <p className="mt-3 text-sm leading-relaxed text-text-muted">
               Leuk Psychiatry
               <br />
-              hello@liminal.demo · (555) 010-3010
+              hello@leuk.demo · (555) 010-3010
             </p>
           </div>
           <div className="text-right">

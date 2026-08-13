@@ -5,7 +5,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { SidePanel } from "@/components/ui/side-panel";
 import { CATEGORIES, type BoardView, type MetricDef, type MetricKind } from "@/lib/analytics/metrics";
 
-// The KPI library — hq's kpi-panel.tsx, image-faithful, in Liminal's light kit
+// The KPI library — hq's kpi-panel.tsx, image-faithful, in Leuk's light kit
 // and the reskinned SidePanel (kicker "KPI LIBRARY").
 //
 // Kept from hq: the search field, a VIEWS list above the metrics (name + "N
@@ -13,7 +13,7 @@ import { CATEGORIES, type BoardView, type MetricDef, type MetricKind } from "@/l
 // kind + state (ON BOARD / + ADD). Rows are draggable onto the board AND
 // click-to-add — both, because hq does both and they suit different moods.
 
-export const DRAG_TYPE = "application/liminal-metric";
+export const DRAG_TYPE = "application/leuk-metric";
 
 /** The shape glyphs — hq's ShapeGlyph, same silhouettes, currentColor. */
 function ShapeGlyph({ kind }: { kind: MetricKind }) {

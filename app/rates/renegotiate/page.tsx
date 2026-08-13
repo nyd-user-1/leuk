@@ -152,7 +152,7 @@ export default async function RenegotiatePrintPage({
         <p className="mt-8 border-t border-border pt-4 text-[12.5px] leading-relaxed text-text-muted">
           Every figure here is {payer ?? "the payer"}&rsquo;s own published Transparency-in-Coverage rate. Rates belong
           to the contract that renders the care — this letter asks the payer to align its schedules, and does not change
-          how any claim is coded. Liminal does not negotiate on your behalf.
+          how any claim is coded. Leuk does not negotiate on your behalf.
         </p>
       </div>
     </div>

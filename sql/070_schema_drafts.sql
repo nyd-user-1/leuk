@@ -1,4 +1,4 @@
--- Liminal — 070: schema_drafts (editable schema-redesign canvases).
+-- Leuk — 070: schema_drafts (editable schema-redesign canvases).
 --
 -- A draft is a hypothetical schema — tables/columns/edges the user is free to
 -- invent, rename, or delete, unlike every other canvas doc in this app (org

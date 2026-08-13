@@ -49,7 +49,7 @@ export interface ScribeSettings {
   alwaysOn: boolean; // auto-start scribe when joining an appointment call
 }
 
-export const SCRIBE_SETTINGS_KEY = "liminal.scribeSettings";
+export const SCRIBE_SETTINGS_KEY = "leuk.scribeSettings";
 
 export const DEFAULT_SCRIBE_SETTINGS: ScribeSettings = {
   template: "soap",

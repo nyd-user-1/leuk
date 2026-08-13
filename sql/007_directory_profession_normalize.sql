@@ -1,4 +1,4 @@
--- Liminal — 007: normalize the profession vocabulary across sources.
+-- Leuk — 007: normalize the profession vocabulary across sources.
 --
 -- Medicaid stored raw uppercase service categories ("CLINICAL SOCIAL WORKER")
 -- while NPPES stores clean discipline labels ("Clinical Social Worker"), so the

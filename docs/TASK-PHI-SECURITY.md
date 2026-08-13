@@ -25,7 +25,7 @@ authenticated user reading another's records by changing an id. Sweep **all 24
 BOTH (a) role via `requireRole`, AND (b) **ownership** — that the requested
 resource belongs to the caller (client sees only their own record; practitioner
 only their own patients). Drive it with the two demo logins
-(`brendan@liminal.demo` practitioner / `casey@liminal.demo` client, pw `demo`):
+(`brendan@leuk.demo` practitioner / `casey@leuk.demo` client, pw `demo`):
 try to read the other user's appointments, notes, invoices, messages, files by
 id. Report every route where ownership isn't enforced; fix with a shared
 ownership-check helper. **Pay special attention to `app/api/files/download`** —

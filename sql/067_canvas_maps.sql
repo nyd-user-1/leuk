@@ -1,4 +1,4 @@
--- Liminal — 067: canvas_maps (the /maps builder's saved documents).
+-- Leuk — 067: canvas_maps (the /maps builder's saved documents).
 --
 -- A map is user-drawn STRUCTURE over reference data: entity nodes (org TINs,
 -- payer names, provider NPIs) with positions, serialized as one JSONB doc

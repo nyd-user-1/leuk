@@ -1,4 +1,4 @@
--- Liminal — Jason Hilario, real practitioner (011). Adds a fifth bookable
+-- Leuk — Jason Hilario, real practitioner (011). Adds a fifth bookable
 -- practitioner (psychiatric NP, Reno NV) via the provider_profiles content
 -- model from 008. Bio content is real, sourced from his public Headway
 -- profile (care.headway.co/providers/jason-hilario), not authored copy.
@@ -8,8 +8,8 @@
 -- appointments are untouched — only his /providers/[slug] content goes away.
 
 INSERT INTO users (id, role, name, email, password_hash, avatar_hue, phone, timezone, slug)
-SELECT '00000000-0000-4000-8000-000000001007', 'practitioner', 'Jason Hilario', 'jason@liminal.demo',
-  (SELECT password_hash FROM users WHERE email = 'brendan@liminal.demo'),
+SELECT '00000000-0000-4000-8000-000000001007', 'practitioner', 'Jason Hilario', 'jason@leuk.demo',
+  (SELECT password_hash FROM users WHERE email = 'brendan@leuk.demo'),
   'pink', '+1 775 555 0161', 'America/Los_Angeles', 'jason-hilario'
 ON CONFLICT (id) DO NOTHING;
 
@@ -38,14 +38,14 @@ ARRAY['English','Tagalog'],
 'Reno, Nevada · also available by video across Nevada',
 ARRAY['Reno','Sparks','Verdi','Damonte Ranch','Somersett','South Reno','Spanish Springs','Cold Springs'],
 NULL
-FROM users WHERE email = 'jason@liminal.demo'
+FROM users WHERE email = 'jason@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;
 
 -- M-F 9-5, matching the other four practitioners' schedule.
 INSERT INTO availability (practitioner_id, weekday, start_time, end_time)
 SELECT u.id, w, '09:00', '17:00'
 FROM users u, generate_series(1, 5) AS w
-WHERE u.email = 'jason@liminal.demo'
+WHERE u.email = 'jason@leuk.demo'
   AND NOT EXISTS (
     SELECT 1 FROM availability a WHERE a.practitioner_id = u.id AND a.weekday = w
   );
@@ -53,4 +53,4 @@ WHERE u.email = 'jason@liminal.demo'
 -- Brendan is the practice admin, not a public-facing provider — no bio
 -- content, no /providers/brendan-stanton page. Safe to re-run.
 DELETE FROM provider_profiles
-WHERE user_id = (SELECT id FROM users WHERE email = 'brendan@liminal.demo');
+WHERE user_id = (SELECT id FROM users WHERE email = 'brendan@leuk.demo');

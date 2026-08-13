@@ -90,4 +90,4 @@ Sections 5–8 (Billing, Portal sweep, Verify+report) below were originally writ
 - Read `docs/TASK-TABLE-STANDARD.md` (the spec) top to bottom first, then this file.
 - The reference implementation the spec points to (`clients-index.tsx`) is now **already updated** by this session — don't re-read the old version, it's gone.
 - `components/ui/table.tsx` is the single most important file to understand before touching anything else — every subsequent page leans on its exports.
-- Dev server: `npm run dev` → localhost:3010, `brendan@liminal.demo` / `demo`.
+- Dev server: `npm run dev` → localhost:3010, `brendan@leuk.demo` / `demo`.

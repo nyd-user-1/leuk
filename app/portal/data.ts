@@ -6,7 +6,7 @@ import { clientForUser } from "@/lib/repos/threads";
 import type { Client } from "@/lib/types";
 
 // Shared portal-page guard: signed-in client role + their client record
-// (clients.user_id mapping — e.g. casey@liminal.demo → Casey Morgan).
+// (clients.user_id mapping — e.g. casey@leuk.demo → Casey Morgan).
 // Practitioners/admins are bounced to their workspace by the root redirect.
 
 export async function requirePortalClient(): Promise<{ user: SessionUser; client: Client | null }> {

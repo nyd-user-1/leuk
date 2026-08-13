@@ -1,4 +1,4 @@
--- Liminal — 005: trigram indexes for fast substring search on the directory.
+-- Leuk — 005: trigram indexes for fast substring search on the directory.
 --
 -- searchProviders / searchPrograms match free-text `q` with
 -- `name ILIKE '%q%' OR city ILIKE '%q%' OR profession ILIKE '%q%'`. A btree

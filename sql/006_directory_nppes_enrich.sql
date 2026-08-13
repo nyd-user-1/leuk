@@ -1,4 +1,4 @@
--- Liminal — 006: enrich directory_providers with the NPPES fields we skipped.
+-- Leuk — 006: enrich directory_providers with the NPPES fields we skipped.
 --
 -- The first NPPES pass captured ~30% of the file. This adds the high-value
 -- columns the field catalog flagged (docs-nppes-field-catalog.md): real primary

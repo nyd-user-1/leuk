@@ -16,4 +16,4 @@ CREATE TABLE IF NOT EXISTS provider_leads (
 
 CREATE INDEX IF NOT EXISTS idx_provider_leads_provider ON provider_leads(provider_id);
 
-COMMENT ON TABLE provider_leads IS 'Anonymous public appointment requests for directory providers; Liminal follows up and uses demand as a recruitment hook.';
+COMMENT ON TABLE provider_leads IS 'Anonymous public appointment requests for directory providers; Leuk follows up and uses demand as a recruitment hook.';

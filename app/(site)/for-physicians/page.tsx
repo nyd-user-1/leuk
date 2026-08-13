@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "Refer your patients to verified New York mental health providers — no portal login, no fax. Closed-loop communication back to you.",
 };
 
-const REFERRAL_EMAIL = "mailto:referrals@liminal.demo";
+const REFERRAL_EMAIL = "mailto:referrals@leuk.demo";
 
 export default function PhysiciansPage() {
   return (

@@ -10,16 +10,16 @@
 //
 // WHY THESE VALUES (all measured against the live db 2026-07-20, not guessed):
 //
-//  * Client = Casey Morgan (the demo client login casey@liminal.demo). Casey's
+//  * Client = Casey Morgan (the demo client login casey@leuk.demo). Casey's
 //    three existing invoices are ALL `paid`, so before this row there was no
 //    payable invoice in the portal at all and T4 had nothing to click.
 //
 //  * Appointment = the completed 2026-06-15 session, whose practitioner_id is
-//    brendan@liminal.demo. That matters: an invoice reaches a therapist only
+//    brendan@leuk.demo. That matters: an invoice reaches a therapist only
 //    through its appointment, so the destination connected account resolves
 //    off this column. Seeding with appointment_id NULL (as the existing demo
 //    invoices have it) would leave a marketplace charge with nobody to pay.
-//    brendan@liminal.demo is role=admin, which requireRole("practitioner")
+//    brendan@leuk.demo is role=admin, which requireRole("practitioner")
 //    accepts (lib/auth.ts:241) — so the same login creates the account and
 //    owns the session being billed.
 //

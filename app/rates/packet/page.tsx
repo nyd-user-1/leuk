@@ -58,7 +58,7 @@ export default async function CredentialingPacketPrintPage({
         </p>
 
         <div className="mt-7">
-          <h2 className="text-[16px] font-semibold text-text">Identity — held by Liminal</h2>
+          <h2 className="text-[16px] font-semibold text-text">Identity — held by Leuk</h2>
           <table className="mt-2 w-full border-collapse text-left text-[13.5px]">
             <tbody>
               <tr className="border-b border-border">
@@ -130,7 +130,7 @@ export default async function CredentialingPacketPrintPage({
         </div>
 
         <p className="mt-8 border-t border-border pt-4 text-[12.5px] leading-relaxed text-text-muted">
-          Formatted for transcription into any payer&rsquo;s application — Liminal does not submit applications on
+          Formatted for transcription into any payer&rsquo;s application — Leuk does not submit applications on
           your behalf. Presence in current network participation is the payer&rsquo;s own published attestation as
           of the file date, not a guarantee this payer will credential you.
         </p>

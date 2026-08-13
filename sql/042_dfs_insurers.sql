@@ -1,4 +1,4 @@
--- Liminal — 042: NYS DFS supervised-insurer reference (NYS-104).
+-- Leuk — 042: NYS DFS supervised-insurer reference (NYS-104).
 --
 -- The Department of Financial Services company directory
 -- (myportal.dfs.ny.gov → /companydirectory/) is the authoritative list of

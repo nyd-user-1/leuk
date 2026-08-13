@@ -1,4 +1,4 @@
--- Liminal — 023: provider_participation_summary (per-NPI network aggregate).
+-- Leuk — 023: provider_participation_summary (per-NPI network aggregate).
 --
 -- The directory's server-side Accepting/Network sort (session-3 handoff) was
 -- aggregating all of provider_network_participation per request — 2.7–5s once

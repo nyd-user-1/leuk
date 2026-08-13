@@ -1,4 +1,4 @@
--- Liminal — 013: payer insurance-network directory (FHIR Da Vinci PDex Plan-Net).
+-- Leuk — 013: payer insurance-network directory (FHIR Da Vinci PDex Plan-Net).
 --
 -- NPPES (sql/003 + 006) gives us provider identity but ZERO insurance data — no
 -- plan participation, no accepting-new-patients status. Payers publish that under

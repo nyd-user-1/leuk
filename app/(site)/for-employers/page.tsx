@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "Give your people real access to therapy and psychiatric care across New York — with the engagement and outcomes a benefits team can measure.",
 };
 
-const EMPLOYER_EMAIL = "mailto:employers@liminal.demo";
+const EMPLOYER_EMAIL = "mailto:employers@leuk.demo";
 
 export default function EmployersPage() {
   return (

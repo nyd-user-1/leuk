@@ -63,7 +63,7 @@ You are one of two executor sessions **sharing this same working tree**:
   Economics card must carry this exact line: *"Rates belong to the contract
   that renders the care — these numbers inform where you schedule your hours
   and what you renegotiate, never how a claim is coded."*
-- Dev: localhost:3010, sign in `brendan@liminal.demo` / `demo`.
+- Dev: localhost:3010, sign in `brendan@leuk.demo` / `demo`.
   `npx tsc --noEmit` stays clean. Verify headless in a real browser
   (playwright-core is in node_modules; see scratchpad patterns from phase 1 if
   present). Report before committing.

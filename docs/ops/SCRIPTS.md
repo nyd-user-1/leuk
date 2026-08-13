@@ -107,7 +107,7 @@ divides by. See `scripts/cms/LICENSE_NOTE.md` for the CPT-descriptor rule.
 
 | Script | Purpose | Invocation | Writes to | Resumable | Cron-able | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `db-atlas.mjs` | **The Database Atlas generator** — read-only introspection of the live schema → `docs/data/DATABASE.md` + per-table Obsidian notes | `node … scripts/db-atlas.mjs` | `docs/data/DATABASE.md`, `~/Vaults/hq/liminal/atlas/*.md` (read-only vs DB) | n/a (regenerates) | **yes — `db-atlas` weekly** | active (new) |
+| `db-atlas.mjs` | **The Database Atlas generator** — read-only introspection of the live schema → `docs/data/DATABASE.md` + per-table Obsidian notes | `node … scripts/db-atlas.mjs` | `docs/data/DATABASE.md`, `~/Vaults/hq/leuk/atlas/*.md` (read-only vs DB) | n/a (regenerates) | **yes — `db-atlas` weekly** | active (new) |
 
 ## Harvest helpers (`.harvest/`)
 
@@ -126,7 +126,7 @@ Not data-engine, but part of the repo's script surface.
 
 | Script | Purpose | Writes to | Status |
 | --- | --- | --- | --- |
-| `ingest-liminal-assets.mjs` | Compress liminal illustration PNGs → AVIF → Vercel Blob (public) | Vercel Blob `assets/` | one-off |
+| `ingest-leuk-assets.mjs` | Compress leuk illustration PNGs → AVIF → Vercel Blob (public) | Vercel Blob `assets/` | one-off |
 | `ingest-dusk-dawn.mjs` | Same, for the dusk/dawn/maya illustrations | Vercel Blob `illustrations/` | one-off |
 | `make-favicon.mjs` | Build the multi-size favicon `.ico` from `app/icon.svg` | `public/` | one-off (build) |
 | `add-lena-marcus-availability.mjs` | Give two demo practitioners a real availability slate so their spotlight cards compute | `availability` | one-off (demo) |

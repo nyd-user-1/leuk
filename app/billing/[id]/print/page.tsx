@@ -79,7 +79,7 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
             <p className="mt-3 text-sm leading-relaxed text-text-muted">
               Leuk Psychiatry
               <br />
-              hello@liminal.demo · (555) 010-3010
+              hello@leuk.demo · (555) 010-3010
             </p>
           </div>
           <div className="text-right">
@@ -199,7 +199,7 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
         )}
 
         <p className="mt-10 border-t border-border pt-4 text-center text-[13px] text-text-muted">
-          Thank you — {invoice.number} · Leuk Psychiatry · hello@liminal.demo
+          Thank you — {invoice.number} · Leuk Psychiatry · hello@leuk.demo
         </p>
       </div>
     </div>

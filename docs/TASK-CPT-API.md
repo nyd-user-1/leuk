@@ -6,14 +6,14 @@
 > as the spec to revive if the licensing trigger fires (see
 > scripts/cms/LICENSE_NOTE.md).
 
-Liminal keys rates by TIN × network × service code but references codes as bare
+Leuk keys rates by TIN × network × service code but references codes as bare
 identifiers (90791, 90834, 90837, 90853, 99214) with hardcoded names
 (`lib/rate-table.ts:25`). This task seeds an official CPT descriptor layer from
 the AMA CPT API platform. `cpt_codes` is already listed as a **planned** table
 in `lib/repos/admin.ts:105` under Linear ticket **NYS-50** — this task is that
 ticket.
 
-DB: live Neon Postgres (`liminal`). Connect the way every repo script does:
+DB: live Neon Postgres (`leuk`). Connect the way every repo script does:
 `node --env-file=.env.local scripts/...` reading `DATABASE_URL` — see
 `scripts/nppes-sync.mjs` for the house pattern (header comments there are the
 style bar for ingest scripts: idempotency contract, resumability, why-notes).

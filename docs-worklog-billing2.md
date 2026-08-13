@@ -44,7 +44,7 @@ validator errors are NOT ours). Delete this file in the final commit, once ADHD 
 
 ### C. Inbox (`components/messaging/inbox-shell.tsx`)
 - [x] Page-level tabs + search above container — `670eb6f`.
-- [x] Drafts tab: compose-modal drafts persisted in localStorage (`liminal:inbox-drafts`),
+- [x] Drafts tab: compose-modal drafts persisted in localStorage (`leuk:inbox-drafts`),
   reopen-on-click, delete, save-on-close, clear-on-send — `670eb6f`.
 
 ### D. Library / forms
@@ -92,7 +92,7 @@ validator errors are NOT ours). Delete this file in the final commit, once ADHD 
 
 ## Done so far (check git log to confirm)
 - [x] Everything in the previous commit `4cf6dc7` (billing split view, pay sheet, emails,
-  SidePanel mobileSheet, LIMINAL_EMAIL_FROM=billing@nysgpt.com in .env.local).
+  SidePanel mobileSheet, LEUK_EMAIL_FROM=billing@nysgpt.com in .env.local).
 - [x] Chunk A (b322805 + ad13cf0 revert): library New→TopBar, breadcrumb toggle-back under
   library search (Breadcrumb gained onClick items), tab restyle applied then reverted.
 - [x] Chunk B billing restructure (6fccf05 + 47d17a8): page-level tabs incl. Overview (KPIs),

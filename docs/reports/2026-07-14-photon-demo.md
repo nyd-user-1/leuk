@@ -28,7 +28,7 @@
 - **Both new practitioners already existed.** Brief says insert Shelley + Jason; live DB already had
   Shelley (`…1006`) and Jason (`…1007`, from sql/011). Migration keeps an idempotent Shelley INSERT
   because *no migration ever created her* — a from-scratch rebuild had 4 practitioners. On live it no-ops.
-- **Brief wrong on two facts:** `users.slug` DOES exist (sql/008); Jason's email is `jason@liminal.demo`.
+- **Brief wrong on two facts:** `users.slug` DOES exist (sql/008); Jason's email is `jason@leuk.demo`.
 - **Org id from the M2M token's `http://photon.health/org_id` claim**, not an 8th env var — it follows the
   credentials sandbox→prod automatically. Only `photon.health` literal in the diff; it's a claim key, not a URL.
 - **`dev-mode`, not `env`, selects sandbox.** SDK source: `env` sets the API host but leaves the Auth0

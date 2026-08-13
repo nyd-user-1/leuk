@@ -3,17 +3,17 @@
 CMS Interoperability & Patient Access Final Rule (CMS-9115-F) APIs from Aetna/CVS Health.
 Covers Aetna, Innovation Health, Allina Health. Prior-auth pieces also fall under CMS-0057.
 
-**For Liminal, the API that matters is the Provider Directory API** — it's public, non-PII, requires no member consent, and is the cleanest path to Aetna directory data. It's a useful complement to Aetna's MRF rates, whose per-NPI-per-TIN-per-plan duplication is already solved at the band/median layer (NYS-28 cracked the files, NYS-38 the distinct-schedule count, sql/024/025 the aggregates); the open remainder is display-side dedup (NYS-44), not a blocker on the data. Everything else on the portal is member-data or prior-auth machinery that only becomes relevant if/when Liminal submits claims or acts as an EHR integration.
+**For Leuk, the API that matters is the Provider Directory API** — it's public, non-PII, requires no member consent, and is the cleanest path to Aetna directory data. It's a useful complement to Aetna's MRF rates, whose per-NPI-per-TIN-per-plan duplication is already solved at the band/median layer (NYS-28 cracked the files, NYS-38 the distinct-schedule count, sql/024/025 the aggregates); the open remainder is display-side dedup (NYS-44), not a blocker on the data. Everything else on the portal is member-data or prior-auth machinery that only becomes relevant if/when Leuk submits claims or acts as an EHR integration.
 
 ---
 
 ## APIs at a glance
 
-| API | Purpose | Auth burden | Liminal relevance |
+| API | Purpose | Auth burden | Leuk relevance |
 |---|---|---|---|
 | **Provider Directory** | Provider + pharmacy directory data | Low — app token only, no member consent | **High — start here** |
 | Patient Access | Claims, encounters, formulary, clinical for a consenting member | High — member auth / IAL2 | Later, if patient-facing |
-| Payer-to-Payer | Same data, payer→payer, member-directed | High | Only if Liminal is a payer |
+| Payer-to-Payer | Same data, payer→payer, member-directed | High | Only if Leuk is a payer |
 | Provider Access | Bulk export of attributed members (treatment) | High — JWT/SMART | Only as EHR |
 | Prior Authorization (CRD/DTR/PAS) | End-to-end prior auth | High — JWT/SMART | **Coming Soon — not live yet** |
 | RTPBC | Medication cost + coverage | Med/High | Only if handling Rx |
@@ -32,7 +32,7 @@ Selected via "I Am Representing" at app creation. **The app type gates which API
 - **Provider System** → Prior Auth (S+P)
 - **Broker** → Medicare Provider Directory only (P); reserved for Medicare NextGen partners
 
-**For Liminal Provider Directory access: create a Third-Party (or Payer) Production application.**
+**For Leuk Provider Directory access: create a Third-Party (or Payer) Production application.**
 
 ---
 
@@ -110,7 +110,7 @@ Three PKCE variants; pick by whether the client secret is exposed:
 
 ## JWT client-assertion (EHR / Provider System — Prior Auth, Provider Access)
 
-Only needed if Liminal ever integrates as an EHR/provider system. Uses `client_assertion` JWT signed with the app's private key (JWKS).
+Only needed if Leuk ever integrates as an EHR/provider system. Uses `client_assertion` JWT signed with the app's private key (JWKS).
 
 - Body: `grant_type=client_credentials`, `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, `client_assertion=<signed JWT>`, `scope=system/*.read`
 - Header: `alg` (RS256/RS384/ES256 — Provider System requires **RS384**), `typ=JWT`, `kid`
@@ -125,7 +125,7 @@ Only needed if Liminal ever integrates as an EHR/provider system. Uses `client_a
 
 ---
 
-## Practical sequence for Liminal (Provider Directory)
+## Practical sequence for Leuk (Provider Directory)
 
 1. Register with business email; verify code within 10 min.
 2. Create **Production Third-Party** app → complete questionnaire → wait 2–4 business days.

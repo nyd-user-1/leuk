@@ -205,7 +205,7 @@ node --env-file=.env.local scripts/ingest-payers.mjs --payer=<x> --report-only
 ## Humana reverse-lookup checkpoint (preserved — do NOT resume)
 
 `{"mode":"enrich","index":43348,"stats":{"probed":43348,"hits":2168,"matched":34159,
-"participation":40682,"pages":2181}}` — was at `$TMPDIR/liminal-ingest-humana-enrich.json`,
+"participation":40682,"pages":2181}}` — was at `$TMPDIR/leuk-ingest-humana-enrich.json`,
 copied to `docs/humana-reverse-checkpoint.json`. Kept only as a record; routing abandons it for
 the Path B walk.
 

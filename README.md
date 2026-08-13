@@ -1,6 +1,6 @@
-# Liminal
+# Leuk
 
-All-in-one practice management + EHR for healthcare and wellness professionals: scheduling, clinical documentation with an AI charting assistant, telehealth video, billing & payments, and a client portal with intake forms and secure messaging. Branded for Liminal Psychiatry (navy · teal · amber); compliance posture targets HIPAA/GDPR/PIPEDA — role-based access on every route, append-only audit trail, httpOnly sessions, soft-delete on clinical data.
+All-in-one practice management + EHR for healthcare and wellness professionals: scheduling, clinical documentation with an AI charting assistant, telehealth video, billing & payments, and a client portal with intake forms and secure messaging. Branded for Leuk Psychiatry (navy · teal · amber); compliance posture targets HIPAA/GDPR/PIPEDA — role-based access on every route, append-only audit trail, httpOnly sessions, soft-delete on clinical data.
 
 ## Quick start (no configuration needed)
 
@@ -12,10 +12,10 @@ npm run dev        # http://localhost:3010
 With no `DATABASE_URL` set, the app runs on an in-memory demo dataset (a psychiatry practice with 12 clients, a week of appointments, notes, invoices, forms, and message threads). All CRUD works; data resets on restart.
 
 **Demo logins** (password `demo`):
-- `brendan@liminal.demo` — practitioner/admin → workspace (calendar, clients, inbox, billing, templates, settings)
-- `casey@liminal.demo` — client → portal (appointments, records, forms, invoices, messages)
+- `brendan@leuk.demo` — practitioner/admin → workspace (calendar, clients, inbox, billing, templates, settings)
+- `casey@leuk.demo` — client → portal (appointments, records, forms, invoices, messages)
 
-Public booking page (no login): `http://localhost:3010/book/liminal`
+Public booking page (no login): `http://localhost:3010/book/leuk`
 
 ## Attach a database (Neon)
 
@@ -43,9 +43,9 @@ Import the repo, set the env vars above, deploy. Note: telehealth signaling (`ap
 
 ## Architecture
 
-- **Next 16 App Router · React 19 · Tailwind v4** — design tokens in `app/globals.css`; the design system spec lives in the Component Catalog (Obsidian vault, reverse-engineered from Carepatron and re-themed Liminal).
+- **Next 16 App Router · React 19 · Tailwind v4** — design tokens in `app/globals.css`; the design system spec lives in the Component Catalog (Obsidian vault, reverse-engineered from Carepatron and re-themed Leuk).
 - **`lib/repos/*`** — one data module per domain; each function runs tagged-template SQL against Neon when `DATABASE_URL` is set, else the seeded in-memory store (`lib/mock/*`).
-- **Auth** — cookie session (`liminal_session`), bcrypt against the users table (or demo users in mock mode), `requireUser()`/`requireRole()` guards on every API route; roles: admin / practitioner / client.
+- **Auth** — cookie session (`leuk_session`), bcrypt against the users table (or demo users in mock mode), `requireUser()`/`requireRole()` guards on every API route; roles: admin / practitioner / client.
 - **Audit** — `lib/audit.ts` appends to `audit_events` on PHI reads/writes.
 - **Telehealth** — native WebRTC (STUN-only) with polling signaling; practitioner side hosts the AI Scribe panel that live-transcribes and drafts a note into the clinical record.
 - **`sql/`** — schema (21 tables), idempotent seed, and DB readme.

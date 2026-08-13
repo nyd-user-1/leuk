@@ -27,7 +27,7 @@ export function hasStripe(): boolean {
 // ── Connect marketplace (TASK-STRIPE-MARKETPLACE) ────────────────────────────
 
 /**
- * Liminal's application fee, in basis points. 10% is a TEST-MODE PLACEHOLDER —
+ * Leuk's application fee, in basis points. 10% is a TEST-MODE PLACEHOLDER —
  * the real pricing model (%, flat, subscription, or a mix) is an open business
  * decision. It lives here, once, so that when the number changes it changes in
  * exactly one place and no route can disagree with another about what we charge.

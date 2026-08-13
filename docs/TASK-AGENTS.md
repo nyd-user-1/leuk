@@ -11,7 +11,7 @@ and know how to work together."
 
 Agent definitions are markdown files with YAML frontmatter. Two registries:
 - `~/.claude/agents/<name>.md` — **user-level, cross-repo** (works in
-  liminal, 44b, hq). USE THIS ONE — the founder wants agents redeployable
+  leuk, 44b, hq). USE THIS ONE — the founder wants agents redeployable
   across repos (e.g. docs-agent on 44b later).
 - Frontmatter: `name`, `description` (when the lead should invoke it — this
   is the routing signal), `model` (opus default; fable only where flagged),
@@ -54,7 +54,7 @@ directly).
    FHIR directories, NPPES/CMS/DOL reference layers, manifest minting, the
    egress-recon patterns (HealthSparq rule), loaders via psql COPY.
    Education: `docs/MRF-INDEXES.md`, `ops/harvest/README.md`, the coverage
-   audit, memory `liminal-rate-signals` + `liminal-form5500-registry`.
+   audit, memory `leuk-rate-signals` + `leuk-form5500-registry`.
 2. **`quality-agent`** — data trustworthiness + the app surfaces that
    expose it: repo/matview correctness, query-performance forensics
    (measure before porting — the count(p.*) lesson), premise-checking
@@ -69,7 +69,7 @@ directly).
    fixes), filed as Linear issues. An empty verified-clean list is a valid
    outcome.
 5. **`ui-agent`** (NEW — founder explicitly wants this) — guardian of BOTH
-   design systems: Liminal's 44-primitive kit (`components/ui/*`,
+   design systems: Leuk's 44-primitive kit (`components/ui/*`,
    `/design-system` page, the Component Catalog in the Obsidian vault
    `~/Vaults/hq/Carepatron/Design System/`) and 44B's editorial/paper
    system (44b `CLAUDE.md` "Design system" section). Duties: primitives
@@ -77,7 +77,7 @@ directly).
    improvements, and UPDATE the catalog/design-system page when a pattern
    is promoted (e.g. the stacked DataTable). Education: both CLAUDE.mds,
    memory `feedback-primitives-first`, `feedback-table-overflow`,
-   `liminal-table-toolbar-variant`.
+   `leuk-table-toolbar-variant`.
 6. **`lead-agent`** (model: fable) — condensed identity, verbatim from the
    sitting lead: *Writes meticulous tranche briefs (enumerated tasks,
    acceptance criteria, seams, sql ranges, report protocol) and one-line
@@ -98,7 +98,7 @@ directly).
 - `docs/OPERATING-MODEL.md` — the loop written down (brief → kickoff →
   execute → report → review → redirect), the tranche numbering convention,
   the monitor pattern, and the kickoff-line template. Mirror to a Linear
-  Document. (Content seed: memory file `liminal-operating-model`.)
+  Document. (Content seed: memory file `leuk-operating-model`.)
 - Update `docs/TASK-DOCS-ENGINE.md` to add agent-file upkeep to its charter
   (definitions evolve via the same review loop as code).
 - File one Linear issue per agent created (project: Leuk for ui-agent,

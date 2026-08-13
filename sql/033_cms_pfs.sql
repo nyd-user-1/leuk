@@ -1,4 +1,4 @@
--- Liminal — 033: the free CMS benchmark layer. Our own CPT vocabulary
+-- Leuk — 033: the free CMS benchmark layer. Our own CPT vocabulary
 -- (`cpt_codes`), the PFS Relative Value File (`cms_rvu` + `cms_gpci` +
 -- `cms_pfs_config`), the public HCPCS Level II code set (`hcpcs_codes`), and
 -- the view that turns all of it into "% of Medicare" (`medicare_benchmark_ny`).
@@ -66,7 +66,7 @@ create table if not exists cpt_codes (
 );
 
 comment on table cpt_codes is
-  'Liminal-authored names for billing codes. Contains NO AMA descriptor text by design — bare codes are facts, descriptors are licensed. See scripts/cms/LICENSE_NOTE.md.';
+  'Leuk-authored names for billing codes. Contains NO AMA descriptor text by design — bare codes are facts, descriptors are licensed. See scripts/cms/LICENSE_NOTE.md.';
 comment on column cpt_codes.display_name is
   'Our own wording. Never paste CMS/AMA descriptor text here.';
 
@@ -267,12 +267,12 @@ comment on view medicare_benchmark_ny is
 -- CPT and HCPCS Level II are one namespace to a biller and two legal regimes to
 -- us. This view is the seam: `source` says which regime a name came from, so a
 -- future typeahead can render both while a licensing question can still be
--- answered per row. 'liminal' = our wording. 'cms' = official public text.
+-- answered per row. 'leuk' = our wording. 'cms' = official public text.
 create or replace view service_code_names as
 select
   code,
   display_name,
-  'liminal'::text as source
+  'leuk'::text as source
 from cpt_codes
 where active
 union all
@@ -284,7 +284,7 @@ from hcpcs_codes
 where termination_date is null;
 
 comment on view service_code_names is
-  'Unified code→name lookup. source=liminal (our CPT wording) | cms (official Level II descriptors).';
+  'Unified code→name lookup. source=leuk (our CPT wording) | cms (official Level II descriptors).';
 
 -- ── 8. Seed cpt_codes — the working behavioral-health set ──────────────────
 -- DRAFT COPY. Every string below is ours and is editable content, not final

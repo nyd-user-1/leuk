@@ -1,4 +1,4 @@
--- Liminal — provider profiles (008). Adds a persisted SEO slug to users +
+-- Leuk — provider profiles (008). Adds a persisted SEO slug to users +
 -- directory_providers (never the NPI — see docs-nppes-field-catalog.md), and
 -- the provider_profiles content model behind /providers/[slug]. Follows 001's
 -- conventions: uuid PKs, TIMESTAMPTZ, snake_case. Re-runnable (idempotent
@@ -40,16 +40,16 @@ CREATE TABLE IF NOT EXISTS provider_profiles (
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE provider_profiles IS 'Rich /providers/[slug] content for bookable Liminal practitioners, keyed 1:1 to users.id.';
+COMMENT ON TABLE provider_profiles IS 'Rich /providers/[slug] content for bookable Leuk practitioners, keyed 1:1 to users.id.';
 
 -- ── slugs — the 4 seeded practitioners + Shelley (added post-seed by the ─────
 -- booking session; her row may or may not exist yet — this UPDATE is a no-op
 -- until it does, and idempotent (WHERE slug IS NULL) once it lands).
-UPDATE users SET slug = 'brendan-stanton' WHERE email = 'brendan@liminal.demo' AND slug IS NULL;
-UPDATE users SET slug = 'priya-raman'     WHERE email = 'priya@liminal.demo'   AND slug IS NULL;
-UPDATE users SET slug = 'lena-whitfield'  WHERE email = 'lena@liminal.demo'    AND slug IS NULL;
-UPDATE users SET slug = 'marcus-bell'     WHERE email = 'marcus@liminal.demo'  AND slug IS NULL;
-UPDATE users SET slug = 'shelley-padgett' WHERE email = 'shelley@liminal.demo' AND slug IS NULL;
+UPDATE users SET slug = 'brendan-stanton' WHERE email = 'brendan@leuk.demo' AND slug IS NULL;
+UPDATE users SET slug = 'priya-raman'     WHERE email = 'priya@leuk.demo'   AND slug IS NULL;
+UPDATE users SET slug = 'lena-whitfield'  WHERE email = 'lena@leuk.demo'    AND slug IS NULL;
+UPDATE users SET slug = 'marcus-bell'     WHERE email = 'marcus@leuk.demo'  AND slug IS NULL;
+UPDATE users SET slug = 'shelley-padgett' WHERE email = 'shelley@leuk.demo' AND slug IS NULL;
 
 -- ── profiles — one INSERT ... SELECT per practitioner, keyed by email so ────
 -- this runs correctly regardless of insert order relative to the booking
@@ -83,8 +83,8 @@ ARRAY['Adults','Older adults'],
 ARRAY['English'],
 'Union Square, Manhattan · also available by video across New York State',
 ARRAY['Union Square','Gramercy','Chelsea','East Village','Greenwich Village','Flatiron','NoHo','Kips Bay','Murray Hill','SoHo','West Village','NoMad','Stuyvesant Town','Midtown East','Lower East Side','Tribeca'],
-'liminal_7h6ra17h6ra17h6r'
-FROM users WHERE email = 'brendan@liminal.demo'
+'leuk_7h6ra17h6ra17h6r'
+FROM users WHERE email = 'brendan@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO provider_profiles (
@@ -115,8 +115,8 @@ ARRAY['Adults'],
 ARRAY['English','Hindi','Tamil'],
 'Union Square, Manhattan · also available by video across New York State',
 ARRAY['Union Square','Flatiron','Gramercy','NoHo','Murray Hill','Chelsea','East Village','Kips Bay','NoMad','Midtown South','SoHo','West Village','Greenwich Village','Stuyvesant Town','Turtle Bay','Peter Cooper Village'],
-'liminal_5ziunj5ziunj5ziu'
-FROM users WHERE email = 'priya@liminal.demo'
+'leuk_5ziunj5ziunj5ziu'
+FROM users WHERE email = 'priya@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO provider_profiles (
@@ -148,7 +148,7 @@ ARRAY['English'],
 'Union Square, Manhattan · also available by video across New York and New Jersey',
 ARRAY['Union Square','Flatiron','Gramercy','Kips Bay','Murray Hill','Chelsea','East Village','NoHo','Stuyvesant Town','Peter Cooper Village','NoMad','Midtown East','West Village','SoHo','Hoboken, NJ','Jersey City, NJ'],
 'maya-2'
-FROM users WHERE email = 'lena@liminal.demo'
+FROM users WHERE email = 'lena@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO provider_profiles (
@@ -180,14 +180,14 @@ ARRAY['English'],
 'Union Square, Manhattan · also available by video across New York State',
 ARRAY['Union Square','East Village','NoHo','Chelsea','Gramercy','Flatiron','Murray Hill','Kips Bay','Greenwich Village','SoHo','West Village','NoMad','Lower East Side','Tribeca','Midtown South','Stuyvesant Town'],
 'maya-1'
-FROM users WHERE email = 'marcus@liminal.demo'
+FROM users WHERE email = 'marcus@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;
 
 -- Shelley Padgett — psychiatrist (medication management). Her user record is
 -- the booking lane's fixture; this INSERT ... SELECT is a no-op until it
 -- exists and picks it up automatically (idempotent) once it does. Her real
 -- Headway profile (care.headway.co/providers/shelley-padgett-2) 403'd on
--- fetch, so this is authored in Liminal's voice like the others, not copied.
+-- fetch, so this is authored in Leuk's voice like the others, not copied.
 INSERT INTO provider_profiles (
   user_id, role_title, pronouns, years_experience, intro_md, approach_md, expect_md,
   identify_as, style_is, training, license_type, licensed_in, insurance_accepted,
@@ -216,6 +216,6 @@ ARRAY['Adults'],
 ARRAY['English'],
 'Telehealth across New York State',
 ARRAY['Union Square','Gramercy','Flatiron','Murray Hill','Chelsea','East Village','NoHo','Kips Bay','NoMad','SoHo','West Village','Greenwich Village','Midtown East','Stuyvesant Town','Turtle Bay','Peter Cooper Village'],
-'liminal_e0mhvxe0mhvxe0mh'
-FROM users WHERE email = 'shelley@liminal.demo'
+'leuk_e0mhvxe0mhvxe0mh'
+FROM users WHERE email = 'shelley@leuk.demo'
 ON CONFLICT (user_id) DO NOTHING;

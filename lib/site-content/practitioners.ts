@@ -23,8 +23,8 @@ export interface PlaceholderPractitioner {
   hue: AvatarHue;
 }
 
-// Book CTAs point at the existing public booking route (/book/liminal).
-export const BOOK_HREF = "/book/liminal";
+// Book CTAs point at the existing public booking route (/book/leuk).
+export const BOOK_HREF = "/book/leuk";
 
 export const PLACEHOLDER_PRACTITIONERS: PlaceholderPractitioner[] = [
   {

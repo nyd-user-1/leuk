@@ -19,7 +19,7 @@ function authResponse(e: unknown): NextResponse | null {
 }
 
 /**
- * POST /api/photon/sync-patient — createPatient in Photon from a Liminal
+ * POST /api/photon/sync-patient — createPatient in Photon from a Leuk
  * clients row, storing the returned id on clients.photon_patient_id.
  * Idempotent: a client that already carries an id is a no-op.
  *
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const patientId = await createPhotonPatient({
-      externalId: client.id, // Liminal client id — the join back from webhooks
+      externalId: client.id, // Leuk client id — the join back from webhooks
       name: { first: client.firstName, last: client.lastName },
       dateOfBirth: client.dob!,
       sex: toPhotonSex(client.gender),

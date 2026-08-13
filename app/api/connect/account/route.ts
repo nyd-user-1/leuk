@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
         mcc: BEHAVIORAL_HEALTH_MCC,
         // Most solo therapists have no website; Stripe requires SOME description
         // of what is being sold. Generic on purpose — no PHI, no client detail.
-        product_description: "Outpatient behavioral health sessions billed through Liminal.",
+        product_description: "Outpatient behavioral health sessions billed through Leuk.",
       },
       // Internal id only. Never put PHI or client data in Stripe metadata.
-      metadata: { liminalUserId: user.id },
+      metadata: { leukUserId: user.id },
     });
 
     const row = await insertConnectAccount({

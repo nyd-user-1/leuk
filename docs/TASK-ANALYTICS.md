@@ -1,12 +1,12 @@
-# TASK — /analytics: the composable KPI board (hq system, Liminal skin)
+# TASK — /analytics: the composable KPI board (hq system, Leuk skin)
 
 The /dashboard build is NOT what was asked for. It stays as-is (Brendan will
 reference it — do not delete or rework it), and its DATA LAYER
 (lib/repos/dashboard.ts: counts, reltuples estimates, caching, role logic, AI
 briefing) is good and gets REUSED. What was wrong: it's a static page. The
 reference — hq's analytics — is a SYSTEM, and this task transplants the
-system to a new route, /analytics, in Liminal's design language (LIGHT.
-Liminal tokens and primitives. Forget hq's dark palette entirely.)
+system to a new route, /analytics, in Leuk's design language (LIGHT.
+Leuk tokens and primitives. Forget hq's dark palette entirely.)
 
 READ THE HQ CODE FIRST — this brief is a map, the code is the spec:
 - `~/Code/hq/app/ui/kpi-panel.tsx` — the metric library panel: search field,
@@ -21,7 +21,7 @@ READ THE HQ CODE FIRST — this brief is a map, the code is the spec:
   drag-in to add, per-card resize, remove.
 - `~/Code/hq/lib/fleet.ts` — MetricDef / MetricKind types.
 
-## What Liminal's version is
+## What Leuk's version is
 
 ### 1. Metric registry — `lib/analytics/metrics.ts`
 MetricDef: key, label, category, kind (stat | series | area | ranking |
@@ -79,7 +79,7 @@ Use the just-reskinned `SidePanel` (components/ui/side-panel.tsx — flyover,
 kicker prop) for BOTH:
 - **KPI library panel** (kicker "KPI LIBRARY"): search-50-metrics field,
   VIEWS section, categorized metric rows with shape glyph + kind + ON BOARD/
-  +ADD — image-faithful to hq's kpi-panel, Liminal-styled.
+  +ADD — image-faithful to hq's kpi-panel, Leuk-styled.
 - **Data dictionary panel** (kicker "DATA DICTIONARY"): clicking a card's
   source-table chip (or an "About" row in its kebab) opens the table's entry:
   plain-English description + joins (reuse lib/repos/admin.ts registry prose),

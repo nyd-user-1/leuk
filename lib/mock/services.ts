@@ -19,11 +19,11 @@ const at = "2026-06-01T09:00:00-04:00";
 // Practitioners beyond the two demo logins — mirror sql/002_seed.sql (same
 // uuids/hues). Foundation seeds only Brendan + Casey, so these are added here.
 const EXTRA_PRACTITIONERS: Array<[id: string, name: string, email: string, hue: AvatarHue, phone: string]> = [
-  [PRIYA_PRACTITIONER_ID, "Priya Raman", "priya@liminal.demo", "amber", "+1 212 555 0141"],
-  ["00000000-0000-4000-8000-000000001004", "Lena Whitfield", "lena@liminal.demo", "pink", "+1 212 555 0143"],
-  ["00000000-0000-4000-8000-000000001005", "Marcus Bell", "marcus@liminal.demo", "blue", "+1 212 555 0142"],
-  [SHELLEY_PRACTITIONER_ID, "Dr. Shelley Padgett", "shelley@liminal.demo", "teal", "+1 212 555 0146"],
-  [JASON_PRACTITIONER_ID, "Jason Hilario", "jason@liminal.demo", "pink", "+1 775 555 0161"],
+  [PRIYA_PRACTITIONER_ID, "Priya Raman", "priya@leuk.demo", "amber", "+1 212 555 0141"],
+  ["00000000-0000-4000-8000-000000001004", "Lena Whitfield", "lena@leuk.demo", "pink", "+1 212 555 0143"],
+  ["00000000-0000-4000-8000-000000001005", "Marcus Bell", "marcus@leuk.demo", "blue", "+1 212 555 0142"],
+  [SHELLEY_PRACTITIONER_ID, "Dr. Shelley Padgett", "shelley@leuk.demo", "teal", "+1 212 555 0146"],
+  [JASON_PRACTITIONER_ID, "Jason Hilario", "jason@leuk.demo", "pink", "+1 775 555 0161"],
 ];
 
 const services: Array<[string, string, number, number, string, boolean]> = [

@@ -60,7 +60,7 @@ fixed; don't fork it.
   (`isoDateOnly`/`isoDateTime` from `lib/format.ts`).
 - One H1 lives in the TopBar (`components/shell/topbar.tsx` `ROUTE_TITLES`)
   — the employer page renders an entity header in the rail, not a page H1.
-- `npm run dev` → port 3010, login `brendan@liminal.demo` / `demo`. Verify on
+- `npm run dev` → port 3010, login `brendan@leuk.demo` / `demo`. Verify on
   localhost:3010; do NOT deploy, do NOT commit (`git add` nothing — shared
   tree, the lead session stages selectively).
 - `npx tsc --noEmit` must pass when done.

@@ -13,7 +13,7 @@ import { CtaBand } from "@/components/site/cta-band";
 
 export const dynamic = "force-dynamic";
 
-const CAREERS_EMAIL = "mailto:careers@liminal.demo";
+const CAREERS_EMAIL = "mailto:careers@leuk.demo";
 
 export const metadata: Metadata = {
   title: "Careers · Leuk",
@@ -86,7 +86,7 @@ export default function CareersPage() {
         <CtaBand
           title="Don't see your role?"
           lede="We're always glad to hear from clinicians and builders who care about this problem. Reach out anyway."
-          primary={{ href: CAREERS_EMAIL, label: "careers@liminal.demo" }}
+          primary={{ href: CAREERS_EMAIL, label: "careers@leuk.demo" }}
         />
       </main>
       <MarketingFooter />

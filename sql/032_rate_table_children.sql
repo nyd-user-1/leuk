@@ -1,4 +1,4 @@
--- Liminal — 032: rate_table_child_mv — the rows a payer actually published.
+-- Leuk — 032: rate_table_child_mv — the rows a payer actually published.
 --
 -- WHAT A CHILD IS. One row per (billing ID, insurer, NPI, network, setting).
 -- That is the grain Cigna publishes at, and every one is a LITERAL row in their

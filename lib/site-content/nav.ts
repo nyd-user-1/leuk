@@ -63,7 +63,7 @@ export const FOOTER_COLUMNS: NavGroup[] = [
       { label: "Therapy", href: "/care/therapy" },
       { label: "Medication management", href: "/care/medication" },
       { label: "Therapy + medication", href: "/care/both" },
-      { label: "Book with Leuk", href: "/book/liminal" },
+      { label: "Book with Leuk", href: "/book/leuk" },
     ],
   },
   {

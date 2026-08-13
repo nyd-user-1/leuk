@@ -1,5 +1,5 @@
 // Leuk brand mark — a standalone amber rising-arch icon (filled with a pale
-// amber) next to the lowercase "liminal" wordmark, both resting on an amber
+// amber) next to the lowercase "leuk" wordmark, both resting on an amber
 // baseline rule. Variants: onNavy (sidebar, auth) · onLight (white surfaces).
 
 const sizes = {

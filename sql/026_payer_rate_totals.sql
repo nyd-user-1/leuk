@@ -1,4 +1,4 @@
--- Liminal — 026: payer_rate_totals (Insurers board, docs/TASK-ERD-PAGE.md V2).
+-- Leuk — 026: payer_rate_totals (Insurers board, docs/TASK-ERD-PAGE.md V2).
 --
 -- /admin/data's Insurers tab needs one row per RAW payer label (all 29, no
 -- NY-book/dollar-type filter — this is a total, not a rate-quality signal)

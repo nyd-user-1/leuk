@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "The strongest evidence in an underpayment dispute is the payer's own published in-network rate. That is exactly what the corpus is — an attestation, with a file date, tied to a real entity.",
 };
 
-const CONTACT = "mailto:partnerships@liminal.demo";
+const CONTACT = "mailto:partnerships@leuk.demo";
 
 // A live corpus number that counts up on scroll-into-view, or a visible
 // placeholder when a read is unavailable. Never a hardcoded number.

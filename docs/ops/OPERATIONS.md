@@ -23,7 +23,7 @@ rebuild — writes one row to **`sync_runs`**, all surfaced on
 
 ## 1. harvestd — the nightly data runner
 
-One launchd agent (`com.liminal.harvest`) fires `ops/harvest/runner.mjs` at
+One launchd agent (`com.leuk.harvest`) fires `ops/harvest/runner.mjs` at
 **01:04 every night**, wrapped in `caffeinate -is` so the machine stays awake
 until the work is done. The runner:
 
@@ -37,7 +37,7 @@ until the work is done. The runner:
 - **rebuilds the matviews last** — after the night's loads it runs the shared
   rebuild plan (§2) via `psql`, ledgered as job `daily`; skipped cleanly when
   nothing has loaded since the last good rebuild (`DAILY_FORCE=1` overrides);
-- **emails** `LIMINAL_OPS_EMAIL` and drops an in-app notification if anything
+- **emails** `LEUK_OPS_EMAIL` and drops an in-app notification if anything
   failed.
 
 ### Install / control — `install.sh`
@@ -224,8 +224,8 @@ Three layers over the one `sync_runs` ledger (health is judged in
   hasn't run in 26 h (the runner fires nightly, so a quiet day means it silently
   stopped). Shows the latest `daily` matview rebuild and the latest run of each
   harvest job.
-- **Deep — the ops email.** harvestd emails `LIMINAL_OPS_EMAIL` (via
-  `LIMINAL_RESEND_API_KEY`) on any failed step — the rebuild rides the same path
+- **Deep — the ops email.** harvestd emails `LEUK_OPS_EMAIL` (via
+  `LEUK_RESEND_API_KEY`) on any failed step — the rebuild rides the same path
   as every job — calling the Resend REST API directly (it's plain node, not the
   Next app). The demoted Vercel route, when a human runs it, uses the app's
   `sendOpsAlertEmail`.
@@ -252,9 +252,9 @@ didn't run — check `install.sh status` and the lid-physics caveat.
 | `DATABASE_URL` | everything | Neon connection string |
 | `CRON_SECRET` | `/api/cron/daily` | guards the manual/emergency rebuild route (unset ⇒ 503) |
 | `DAILY_FORCE` | `runner.mjs` | `=1` forces the nightly rebuild even if nothing loaded |
-| `LIMINAL_OPS_EMAIL` | harvestd (+ manual route) | where failure alerts go |
-| `LIMINAL_RESEND_API_KEY` | harvestd (+ manual route) | Resend API key for the alert email |
-| `LIMINAL_EMAIL_FROM` | harvestd | optional From: (defaults to a Resend sandbox sender) |
+| `LEUK_OPS_EMAIL` | harvestd (+ manual route) | where failure alerts go |
+| `LEUK_RESEND_API_KEY` | harvestd (+ manual route) | Resend API key for the alert email |
+| `LEUK_EMAIL_FROM` | harvestd | optional From: (defaults to a Resend sandbox sender) |
 
 ## Sources
 

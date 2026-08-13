@@ -1,7 +1,7 @@
 # TASK — Data-model index: every top-level entity we have, need, or are missing
 
 _Brief for a fresh session (read-heavy, write-one-doc). Deliverable:
-**docs/DATA-MODEL.md** — the single map of Liminal's data world, with Mermaid
+**docs/DATA-MODEL.md** — the single map of Leuk's data world, with Mermaid
 ERDs. Brendan: "we have networks, insurers, providers, plans, books, rates…
 I can't even imagine all you found via the MRFs and the API scans. I'd
 benefit from an index of all the top-level ERDs we need, have, or are

@@ -120,7 +120,7 @@ reload; the three cards' total height equals the list card's height at
 1440.
 
 ### 9. Verify + report (terse)
-Headless: POST `/api/auth/login` (brendan@liminal.demo / demo), carry the
+Headless: POST `/api/auth/login` (brendan@leuk.demo / demo), carry the
 cookie, load /workspace at 1440 and 390: **0 console errors, 0 page-level
 horizontal overflow**, exactly one H1, all acceptance greps pass (no
 "Briefing", no eyebrow strings, deleted blurbs absent). Commit locally

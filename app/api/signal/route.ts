@@ -38,8 +38,8 @@ interface Room {
   touchedAt: number;
 }
 
-const g = globalThis as typeof globalThis & { __liminalSignalRooms?: Map<string, Room> };
-const rooms = (g.__liminalSignalRooms ??= new Map<string, Room>());
+const g = globalThis as typeof globalThis & { __leukSignalRooms?: Map<string, Room> };
+const rooms = (g.__leukSignalRooms ??= new Map<string, Room>());
 
 const ROOM_TTL_MS = 60 * 60 * 1000; // idle rooms evaporate after an hour
 const PEER_TTL_MS = 15 * 1000; // a peer that stops polling is a ghost after 15s

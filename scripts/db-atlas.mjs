@@ -39,7 +39,7 @@ import { TABLE_GROUPS } from "../lib/table-atlas.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_MD = path.join(ROOT, "docs", "data", "DATABASE.md");
-const VAULT_DIR = path.join(os.homedir(), "Vaults", "hq", "liminal", "atlas");
+const VAULT_DIR = path.join(os.homedir(), "Vaults", "hq", "leuk", "atlas");
 const SYNC_PLAN = path.join(ROOT, "ops", "harvest", "sync-plan.mjs");
 const BIG_ROW_THRESHOLD = 500_000; // above this we trust the estimate, never count(*)
 const SAFE_IDENT = /^[a-z_][a-z0-9_]*$/;
@@ -196,9 +196,9 @@ function main(relations) {
 
   // ── DATABASE.md ──
   const L = [];
-  L.push("# Liminal Database Atlas", "");
+  L.push("# Leuk Database Atlas", "");
   L.push(`> **Generated** by \`scripts/db-atlas.mjs\` on ${genDate} — do not hand-edit. Re-run \`node --env-file=.env.local scripts/db-atlas.mjs\` to refresh. Row counts on tables above ${commas(BIG_ROW_THRESHOLD)} rows are planner estimates (\`≈\`), never \`count(*)\`.`, "");
-  L.push(`The live public schema holds **${relations.length}** relations — ${relations.filter((r) => r.kind === "table").length} tables and ${matviews.length} materialized views. Grouped by domain below; the graph of how they join is in the per-table Obsidian notes under \`~/Vaults/hq/liminal/atlas/\`.`, "");
+  L.push(`The live public schema holds **${relations.length}** relations — ${relations.filter((r) => r.kind === "table").length} tables and ${matviews.length} materialized views. Grouped by domain below; the graph of how they join is in the per-table Obsidian notes under \`~/Vaults/hq/leuk/atlas/\`.`, "");
 
   // Contents
   L.push("## Contents", "");
@@ -268,7 +268,7 @@ function main(relations) {
     N.push(`rows: ${rowLabel(rel).replace(/^≈ /, "~")}`);
     if (m?.sql) N.push(`sql: ${m.sql}`);
     if (m?.powers) N.push(`powers: ${m.powers}`);
-    N.push(`tags: [liminal-atlas]`);
+    N.push(`tags: [leuk-atlas]`);
     N.push(`generated: ${genDate}`);
     N.push("---", "");
     N.push(`# ${rel.name}`, "");
@@ -290,7 +290,7 @@ function main(relations) {
   }
 
   // Index note for the graph
-  const idx = ["---", "tags: [liminal-atlas]", `generated: ${genDate}`, "---", "", "# Liminal Atlas", "", `${relations.length} relations, generated ${genDate} by \`scripts/db-atlas.mjs\`. Full reference: \`docs/data/DATABASE.md\` in the repo.`, ""];
+  const idx = ["---", "tags: [leuk-atlas]", `generated: ${genDate}`, "---", "", "# Leuk Atlas", "", `${relations.length} relations, generated ${genDate} by \`scripts/db-atlas.mjs\`. Full reference: \`docs/data/DATABASE.md\` in the repo.`, ""];
   for (const g of GROUPS) {
     idx.push(`## ${g.title}`, "");
     for (const t of g.tables) if (liveNames.has(t.name)) idx.push(`- [[${t.name}]]`);

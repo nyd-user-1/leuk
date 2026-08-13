@@ -50,7 +50,7 @@ function row(
 }
 
 const clients: Client[] = [
-  row("01", DEMO_CLIENT_USER_ID, "Casey", "Morgan", "1994-03-18", "casey@liminal.demo", "+1 917 555 0182", "48 Carmine St, Apt 3B, New York, NY 10014", "Non-binary", "they/them", "active", ["portal", "anxiety", "weekly"], B),
+  row("01", DEMO_CLIENT_USER_ID, "Casey", "Morgan", "1994-03-18", "casey@leuk.demo", "+1 917 555 0182", "48 Carmine St, Apt 3B, New York, NY 10014", "Non-binary", "they/them", "active", ["portal", "anxiety", "weekly"], B),
   row("02", null, "Jordan", "Lee", "1988-11-02", "jordan.lee@example.com", "+1 646 555 0113", "210 E 14th St, New York, NY 10003", "Male", "he/him", "active", ["adhd", "monthly"], B),
   row("03", null, "Sam", "Whitaker", "1979-06-25", "sam.whitaker@example.com", "+1 718 555 0177", "77 Court St, Brooklyn, NY 11201", "Male", "he/him", "active", ["depression"], P),
   row("04", null, "Ava", "Delgado", "1991-01-09", "ava.delgado@example.com", "+1 347 555 0128", "133 Kent Ave, Brooklyn, NY 11249", "Female", "she/her", "active", ["anxiety", "superbill"], B),
@@ -77,7 +77,7 @@ registerFixtures("clients", (store) => {
       id: PRIYA_PRACTITIONER_ID,
       role: "practitioner",
       name: "Priya Raman",
-      email: "priya@liminal.demo",
+      email: "priya@leuk.demo",
       passwordHash: bcrypt.hashSync("demo", 10),
       avatarHue: "amber",
       phone: "+1 212 555 0141",

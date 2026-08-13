@@ -81,7 +81,7 @@ function buildFacts(groups: DictionaryGroup[], deltas: Deltas | null): string {
   return lines.join("\n");
 }
 
-const SYSTEM = `You are the in-house data lead for Liminal, a NY behavioral-health practice platform.
+const SYSTEM = `You are the in-house data lead for Leuk, a NY behavioral-health practice platform.
 You are briefing the founder on the state of the data platform. He built it and knows the domain — do not explain what an NPI is.
 
 Line 1: a headline for the briefing — at most ten words, no trailing period, front-page voice, specific to what the data shows tonight (not "Platform Update").

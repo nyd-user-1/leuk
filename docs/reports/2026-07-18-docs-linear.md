@@ -78,7 +78,7 @@ Each dual-homed (repo = source of truth, Linear = readable mirror).
 node --env-file=.env.local scripts/db-atlas.mjs
 → db-atlas: 71 relations (61 tables, 10 matviews), 25 unmapped.
   → docs/data/DATABASE.md
-  → 72 Obsidian notes in ~/Vaults/hq/liminal/atlas
+  → 72 Obsidian notes in ~/Vaults/hq/leuk/atlas
 ```
 
 - Introspects the live schema three cheap ways: `pg_class` (kind + reltuples
@@ -92,7 +92,7 @@ node --env-file=.env.local scripts/db-atlas.mjs
 - **Matview lineage is read from the cron's `VIEWS` array** in
   `app/api/cron/daily/route.ts`, not restated — all ten matviews resolve to their
   sql file and are correctly marked nightly-refreshed.
-- Emits per-table Obsidian notes to `~/Vaults/hq/liminal/atlas/` with
+- Emits per-table Obsidian notes to `~/Vaults/hq/leuk/atlas/` with
   `[[wiki-links]]` (+ join key) between joined tables, plus an `_atlas.md` index.
   The prose predecessors (`Session-Database Expansion.md`, `Database
   Transcript.md`) were left in place.

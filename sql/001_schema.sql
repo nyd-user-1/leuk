@@ -1,4 +1,4 @@
--- Liminal — schema (001). Matches BUILD_SPEC.md "Entity model (canonical)" exactly.
+-- Leuk — schema (001). Matches BUILD_SPEC.md "Entity model (canonical)" exactly.
 -- uuid PKs via gen_random_uuid(), TIMESTAMPTZ, CHECK-constrained enums, snake_case.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
-COMMENT ON TABLE sessions IS 'Cookie session tokens (liminal_session); rows die with their user.';
+COMMENT ON TABLE sessions IS 'Cookie session tokens (leuk_session); rows die with their user.';
 
 -- ── clients ───────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (

@@ -16,7 +16,7 @@
 // the remainder to the connected account. So:
 //
 //     charge.amount  −  application_fee.amount  =  transfer.amount
-//     (what the client paid)  (what Liminal keeps)  (what the therapist gets)
+//     (what the client paid)  (what Leuk keeps)  (what the therapist gets)
 
 import Stripe from "stripe";
 import { neon } from "@neondatabase/serverless";
@@ -103,7 +103,7 @@ const problems = [];
 
 if (charge.application_fee_amount == null) {
   problems.push(
-    "Charge carries no application_fee_amount. Liminal kept nothing — the platform fee was not applied.",
+    "Charge carries no application_fee_amount. Leuk kept nothing — the platform fee was not applied.",
   );
 }
 if (!charge.transfer_data?.destination) {
@@ -164,7 +164,7 @@ if (charge.application_fee_amount != null && transfer) {
 
   console.log(`\nSPLIT`);
   console.log(`  client paid        ${money(gross, charge.currency)}`);
-  console.log(`  Liminal fee        ${money(feeAmt, charge.currency)}   (${pct}% of gross)`);
+  console.log(`  Leuk fee        ${money(feeAmt, charge.currency)}   (${pct}% of gross)`);
   console.log(`  transfer moved     ${money(transfer.amount, transfer.currency)}   → ${transfer.destination}`);
   if (bt) {
     console.log(`  therapist KEEPS    ${money(bt.net, bt.currency)}   (connected bt ${bt.id}: amount ${money(bt.amount, bt.currency)} − fee ${money(bt.fee, bt.currency)})`);

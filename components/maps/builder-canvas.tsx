@@ -42,7 +42,7 @@ import type { CanvasDoc, CanvasEdges, CanvasNodeKind } from "@/lib/canvas";
 // library stays out of other bundles.
 
 const TEAL = "#3F8290";
-const DND_KIND = "application/liminal-canvas-kind";
+const DND_KIND = "application/leuk-canvas-kind";
 const NODE_W = 260;
 
 const KIND_META: Record<CanvasNodeKind, { label: string; icon: IconName; hint: string }> = {

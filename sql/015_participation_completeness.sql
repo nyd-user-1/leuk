@@ -1,4 +1,4 @@
--- Liminal — 015: data-completeness + coarse-directory support.
+-- Leuk — 015: data-completeness + coarse-directory support.
 --
 -- Some payer directories publish the full Plan-Net signal (network + accepting-
 -- new-patients), others are bare. Healthfirst's PractitionerRole carries NO

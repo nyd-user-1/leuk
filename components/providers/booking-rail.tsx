@@ -25,7 +25,7 @@ import type { Payer, Service } from "@/lib/types";
 //
 // Inactive state: rather than a dead "coming soon", this offers Leuk itself
 // — deliberately not a named clinician. Naming one made a promise the booking
-// flow doesn't keep (/book/liminal lets the client pick), and it read as though
+// flow doesn't keep (/book/leuk lets the client pick), and it read as though
 // we'd matched this specific provider to that specific therapist. The generic
 // hand-off plus the brand mark says what's true: Leuk will route you.
 // A "claim this profile" link is offered to the actual provider alongside it.
@@ -137,7 +137,7 @@ export function BookingRail({
 }) {
   const service = services[0];
   // Directory (inactive) rail: "Book with Leuk" opens the wizard in a dialog
-  // rather than navigating to /book/liminal.
+  // rather than navigating to /book/leuk.
   const [bookOpen, setBookOpen] = useState(false);
 
   // Bookable days: tomorrow..DAYS_AHEAD whose weekday has an availability rule.

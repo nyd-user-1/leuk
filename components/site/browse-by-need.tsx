@@ -25,7 +25,7 @@ export function BrowseByNeed() {
       <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-center lg:gap-16">
         <Reveal>
           <img
-            src={`${ILLO}/liminal-13.avif`}
+            src={`${ILLO}/leuk-13.avif`}
             alt="A watercolour illustration — two people walk a small dog along a stream at golden hour, mid-conversation."
             width={2560}
             height={1396}

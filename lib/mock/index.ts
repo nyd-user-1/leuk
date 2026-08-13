@@ -120,7 +120,7 @@ function createStore(): MockStore {
       id: DEMO_PRACTITIONER_ID,
       role: "admin", // staff superuser — passes practitioner + admin guards
       name: "Brendan Stanton",
-      email: "brendan@liminal.demo",
+      email: "brendan@leuk.demo",
       passwordHash: DEMO_PASSWORD_HASH,
       avatarHue: "teal",
       phone: null,
@@ -134,7 +134,7 @@ function createStore(): MockStore {
       id: DEMO_CLIENT_USER_ID,
       role: "client",
       name: "Casey Morgan",
-      email: "casey@liminal.demo",
+      email: "casey@leuk.demo",
       passwordHash: DEMO_PASSWORD_HASH,
       avatarHue: "amber",
       phone: null,
@@ -151,15 +151,15 @@ function createStore(): MockStore {
 }
 
 type Globals = typeof globalThis & {
-  __liminalMockStore?: MockStore;
-  __liminalMockFixtures?: Set<string>;
+  __leukMockStore?: MockStore;
+  __leukMockFixtures?: Set<string>;
 };
 const g = globalThis as Globals;
 
 /** The process-wide mock store singleton. */
 export function mockStore(): MockStore {
-  if (!g.__liminalMockStore) g.__liminalMockStore = createStore();
-  return g.__liminalMockStore;
+  if (!g.__leukMockStore) g.__leukMockStore = createStore();
+  return g.__leukMockStore;
 }
 
 /**
@@ -168,9 +168,9 @@ export function mockStore(): MockStore {
  * lib/mock/<domain>.ts regardless of import order or HMR.
  */
 export function registerFixtures(name: string, seed: (store: MockStore) => void): void {
-  if (!g.__liminalMockFixtures) g.__liminalMockFixtures = new Set();
-  if (g.__liminalMockFixtures.has(name)) return;
-  g.__liminalMockFixtures.add(name);
+  if (!g.__leukMockFixtures) g.__leukMockFixtures = new Set();
+  if (g.__leukMockFixtures.has(name)) return;
+  g.__leukMockFixtures.add(name);
   seed(mockStore());
 }
 

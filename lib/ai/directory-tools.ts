@@ -13,7 +13,7 @@ import { RATE_TABLE_PAYERS, type RateTableRow } from "@/lib/rate-table";
 // calls these lives in app/api/ai/directory/route.ts (AI SDK streamText); the
 // model never sees the corpus, only these few-KB results.
 
-export const DIRECTORY_SYSTEM = `You are Liminal's care-directory assistant. You answer questions about New York behavioral-health providers using live tools over Liminal's reference dataset:
+export const DIRECTORY_SYSTEM = `You are Leuk's care-directory assistant. You answer questions about New York behavioral-health providers using live tools over Leuk's reference dataset:
 - ~126,000 NY providers (NPPES + NY Medicaid), with profession, subspecialty, location, and contact details.
 - Insurance participation pulled from payers' own FHIR provider directories.
 - Real negotiated rates from insurers' federally mandated machine-readable files (~15M rate rows, pre-aggregated).

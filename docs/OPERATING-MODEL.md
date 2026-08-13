@@ -22,7 +22,7 @@ and a seam:
 | `quality-agent` | opus | Data trustworthiness + the surfaces that expose it |
 | `docs-agent` | opus | Institutional knowledge — Linear structure + the three documents |
 | `review-agent` | opus | Adversarial engineering review of a named commit range |
-| `ui-agent` | opus | Guardian of both design systems (Liminal kit + 44B paper) |
+| `ui-agent` | opus | Guardian of both design systems (Leuk kit + 44B paper) |
 | `security-agent` | opus | PHI/HIPAA + auth guards + secret hygiene, both repos |
 | `ops-agent` | opus | The automation fleets — harvestd + matview cron, tripwires, migration sequencing |
 | `research-agent` | opus | Discovery spikes that end in a sized, buildable brief |
@@ -83,7 +83,7 @@ and a seam:
   story + technical spec + not-in-v1). Premise-checking tickets are first-class.
 - **Verification means exercised.** "Verified" is never "the script exited 0" — it
   is the behavior reproduced end-to-end (distinct-NPI counts reconciled, the
-  surface rendered, the endpoint hit). Look at output, not exit codes. Liminal
+  surface rendered, the endpoint hit). Look at output, not exit codes. Leuk
   headless gotcha: POST `/api/auth/login` and carry the cookie; `networkidle`
   never settles under HMR.
 
@@ -94,7 +94,7 @@ the harvest runner log when a queue is live, and reviews the moment work lands
 rather than on a fixed schedule. The lead kicks the runner early when a queue is
 hot instead of waiting for 01:04 — but never races a live run (check
 `.harvest/runner/lock.json`) and never schedules the runner *after* the 04:12
-matview cron (that ordering is load-bearing; see memory `liminal-harvestd`).
+matview cron (that ordering is load-bearing; see memory `leuk-harvestd`).
 
 ## The kickoff (founder correction, 2026-07-20)
 
@@ -153,7 +153,7 @@ report format, escalation rules — stays in the agent file, not the kickoff.
 
 ---
 
-*Mirror of the seed memory `liminal-operating-model`. Dual-homed: this repo file is
+*Mirror of the seed memory `leuk-operating-model`. Dual-homed: this repo file is
 the source of truth; the Linear Document is the readable mirror (docs-agent keeps
 them in step).*
 

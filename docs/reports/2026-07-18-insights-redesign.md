@@ -84,7 +84,7 @@ billing TINs 31,233 · directory NPIs 106,497) read off the inventory the page
 
 ## Verification (rendered and looked at)
 
-Headless at :3010, admin cookie login (`brendan@liminal.demo`), playwright-core →
+Headless at :3010, admin cookie login (`brendan@leuk.demo`), playwright-core →
 system Chrome:
 
 - **All seven sections render**; presence-checked strings incl. "Coverage &

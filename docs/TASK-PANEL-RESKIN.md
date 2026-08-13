@@ -17,7 +17,7 @@ stop and reconsider (adding OPTIONAL props is fine; requiring changes is not).
 
 ## Translation, not transplant
 Do NOT copy Linear's dark `#0f1011` chrome into the light app shell verbatim —
-it would read as a foreign object. Adopt the ANATOMY in Liminal's tokens
+it would read as a foreign object. Adopt the ANATOMY in Leuk's tokens
 (globals.css vars; bg-canvas/border-border/shadow-menu etc.):
 - Flyover presentation: panel floats over the page with a visible inset ring
   + elevated shadow and a small gap from the viewport edge (Linear-style

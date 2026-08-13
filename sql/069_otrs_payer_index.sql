@@ -1,4 +1,4 @@
--- Liminal — 069: payer-leading index on org_tin_rate_summary.
+-- Leuk — 069: payer-leading index on org_tin_rate_summary.
 --
 -- Pivot-on-node reads the rollup BY PAYER (an insurer re-rooted to the top
 -- orgs in its book); the existing unique key leads with tin, so payer reads

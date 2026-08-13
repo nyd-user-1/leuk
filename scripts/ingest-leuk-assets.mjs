@@ -1,12 +1,12 @@
 /**
- * Compress liminal illustration PNGs to AVIF and upload them to Vercel Blob.
+ * Compress leuk illustration PNGs to AVIF and upload them to Vercel Blob.
  *
  * Usage:
- *   node --env-file=.env.local scripts/ingest-liminal-assets.mjs
+ *   node --env-file=.env.local scripts/ingest-leuk-assets.mjs
  *
- * Source:  public/liminal-1a.png, public/liminal-2.png … public/liminal-11.png
+ * Source:  public/leuk-1a.png, public/leuk-2.png … public/leuk-11.png
  * Encode:  sharp → AVIF (quality 60), dimensions preserved
- * Land at: assets/liminal-1a.avif … assets/liminal-11.avif  (public, stable path)
+ * Land at: assets/leuk-1a.avif … assets/leuk-11.avif  (public, stable path)
  *
  * Adapted from the sports project's ingest-blob-photos.mjs upload loop.
  */
@@ -21,13 +21,13 @@ const PREFIX = 'assets/'
 const QUALITY = 60
 
 // The set the user asked for: 1a, then 2 through 11.
-const NAMES = ['liminal-1a', ...Array.from({ length: 10 }, (_, i) => `liminal-${i + 2}`)]
+const NAMES = ['leuk-1a', ...Array.from({ length: 10 }, (_, i) => `leuk-${i + 2}`)]
 
 async function main() {
   const token = process.env.BLOB_READ_WRITE_TOKEN
   if (!token) {
     console.error('Missing BLOB_READ_WRITE_TOKEN. Run with:')
-    console.error('  node --env-file=.env.local scripts/ingest-liminal-assets.mjs')
+    console.error('  node --env-file=.env.local scripts/ingest-leuk-assets.mjs')
     process.exit(1)
   }
 

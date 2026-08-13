@@ -1,4 +1,4 @@
--- Liminal — external provider directory (003). Public open-data ingest +
+-- Leuk — external provider directory (003). Public open-data ingest +
 -- referrals + provider applications. Follows 001 conventions: uuid PKs via
 -- gen_random_uuid(), TIMESTAMPTZ, CHECK-constrained enums, snake_case.
 --

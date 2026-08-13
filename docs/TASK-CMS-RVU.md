@@ -90,7 +90,7 @@ long-acting injectable antipsychotics.
   flag if present. Full file, not a subset. Idempotent upsert on code.
 - `scripts/cms/ingest-hcpcs.mjs`.
 - Unified lookup: view `service_code_names` (sql/033) = `cpt_codes` rows
-  (source 'liminal', our wording) UNION `hcpcs_codes` rows (source 'cms',
+  (source 'leuk', our wording) UNION `hcpcs_codes` rows (source 'cms',
   official text) → (code, display_name, source). One surface for future
   typeahead; the NLM Clinical Tables API stays a dev-time lookup convenience
   only (it is Level II only — verified 90791→0 hits).
@@ -105,7 +105,7 @@ long-acting injectable antipsychotics.
 - `scripts/cms/LICENSE_NOTE.md`: AMA license evaluated 2026-07-16 and
   deliberately deferred ($1,050/yr upfront + usage-report royalties; "user"
   definition captures downstream report consumers). Revisit trigger: external
-  providers onboarding to Liminal for coding workflows needing the full
+  providers onboarding to Leuk for coding workflows needing the full
   searchable CPT vocabulary with official descriptors. Until then: own
   descriptors only, bare codes as keys, no AMA descriptor text stored or
   displayed. Record the asymmetry: HCPCS Level II descriptors are public and

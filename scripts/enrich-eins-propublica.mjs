@@ -82,7 +82,7 @@ async function get(ein) {
     let res;
     try {
       res = await fetch(URL(ein), {
-        headers: { "user-agent": "liminal-rate-research/1.0 (+brendan@nysgpt.com)" },
+        headers: { "user-agent": "leuk-rate-research/1.0 (+brendan@nysgpt.com)" },
         signal: AbortSignal.timeout(20000),
       });
     } catch (e) {

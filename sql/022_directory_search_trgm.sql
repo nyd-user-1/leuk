@@ -1,4 +1,4 @@
--- Liminal — 022: complete the trigram coverage for provider search.
+-- Leuk — 022: complete the trigram coverage for provider search.
 --
 -- searchProviders (lib/repos/directory.ts) ORs ILIKE over five columns:
 -- name, city, profession, subspecialty, primary_taxonomy. sql/005 indexed the

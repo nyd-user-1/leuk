@@ -103,7 +103,7 @@ linking to `/orgs/[tin]` — coordinate with whoever owns
 - Do NOT touch `lib/repos/rate-signals.ts` — the rates-perf terminal owns
   it. (Its `cohortsForTins` seq-scan will later move onto
   `org_tin_rosters`; that swap is a separate coordinated change, NYS-52.)
-- Dev server: `npm run dev` → :3010, login brendan@liminal.demo / demo.
+- Dev server: `npm run dev` → :3010, login brendan@leuk.demo / demo.
   Verify on localhost, do not deploy.
 
 ## Acceptance criteria

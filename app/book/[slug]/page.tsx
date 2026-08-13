@@ -2,10 +2,13 @@ import { listPayers } from "@/lib/repos/policies";
 import { listPractitioners, listServices } from "@/lib/repos/services";
 import { BookClient } from "./book-client";
 
+// Pre-rename blob object name on purpose — the pathname is a storage key, and
+// the object was never re-uploaded under `leuk-`. See the note in
+// app/(app)/design-system/page.tsx.
 const LOGO = "https://c1vijjkvyt1skkfe.public.blob.vercel-storage.com/logos/brand/liminal-dark.png";
 
 // Public booking page (no auth). Slug = a practitioner id (their personal
-// booking link) or anything else ("liminal") → the demo practice, where the
+// booking link) or anything else ("leuk") → the demo practice, where the
 // client picks a practitioner.
 
 export default async function BookPage({

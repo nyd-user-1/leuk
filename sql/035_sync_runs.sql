@@ -1,4 +1,4 @@
--- Liminal — 035: sync_runs, the maintenance log (NYS-84).
+-- Leuk — 035: sync_runs, the maintenance log (NYS-84).
 --
 -- WHAT A ROW IS. One invocation of a scheduled maintenance job — today the
 -- daily derived-view refresh at /api/cron/daily, tomorrow whatever else earns a

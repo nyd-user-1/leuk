@@ -12,7 +12,7 @@ import { Icon, type IconName } from "@/components/ui/icons";
 // Generic over what a record's cards ARE: the host passes a catalog. The client
 // board is the first caller; /orgs and the provider rail are meant to follow.
 
-export const CARD_DRAG_TYPE = "application/liminal-record-card";
+export const CARD_DRAG_TYPE = "application/leuk-record-card";
 
 /** A record's card sections, in the order the library lists them. */
 export type CardCategory = "Care" | "Money" | "Records";

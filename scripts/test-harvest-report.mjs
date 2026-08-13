@@ -7,10 +7,10 @@
 //
 // Usage: node --env-file=.env.local scripts/test-harvest-report.mjs
 
-const url = process.env.LIMINAL_APP_URL;
+const url = process.env.LEUK_APP_URL;
 const secret = process.env.CRON_SECRET;
 if (!url || !secret) {
-  console.error("Need LIMINAL_APP_URL and CRON_SECRET in the environment (use --env-file=.env.local).");
+  console.error("Need LEUK_APP_URL and CRON_SECRET in the environment (use --env-file=.env.local).");
   process.exit(1);
 }
 

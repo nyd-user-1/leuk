@@ -10,7 +10,7 @@ import { GENERIC_LINE_ITEM_NAME, applicationFeeCents, getStripe } from "@/lib/st
 /**
  * Marketplace checkout — the money path this whole tranche exists for.
  *
- * A DESTINATION CHARGE: the client pays Liminal, Stripe moves the balance to the
+ * A DESTINATION CHARGE: the client pays Leuk, Stripe moves the balance to the
  * therapist's connected account, and `application_fee_amount` is what we keep.
  * The charge lives on the platform, so the platform is the merchant of record
  * and disputes land on us (controller.losses.payments = application).

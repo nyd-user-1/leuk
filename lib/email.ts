@@ -1,23 +1,23 @@
 import { Resend } from "resend";
 import { formatCents, formatDateLong, formatTime } from "@/lib/format";
 
-// Transactional email via Resend. Lazy singleton keyed on LIMINAL_RESEND_API_KEY
-// (the "LIMINAL_" prefix avoids clobbering any host-level RESEND_API_KEY) so
+// Transactional email via Resend. Lazy singleton keyed on LEUK_RESEND_API_KEY
+// (the "LEUK_" prefix avoids clobbering any host-level RESEND_API_KEY) so
 // importing this module never throws when the key is absent — sendEmail
 // no-ops (returns false) and the app keeps working without email.
 //
 // Emails carry scheduling logistics + portal links only — never clinical
 // content (message bodies, form answers, notes).
 //
-// From-address: LIMINAL_EMAIL_FROM. Until a domain is verified in Resend the
+// From-address: LEUK_EMAIL_FROM. Until a domain is verified in Resend the
 // default is Resend's shared dev sender, which only delivers to the account
 // owner's inbox — fine for development, set the env var in production.
 
-export const EMAIL_FROM = process.env.LIMINAL_EMAIL_FROM ?? "Leuk <onboarding@resend.dev>";
+export const EMAIL_FROM = process.env.LEUK_EMAIL_FROM ?? "Leuk <onboarding@resend.dev>";
 
 let client: Resend | null = null;
 export function resend(): Resend | null {
-  const key = process.env.LIMINAL_RESEND_API_KEY;
+  const key = process.env.LEUK_RESEND_API_KEY;
   if (!key) return null;
   if (!client) client = new Resend(key);
   return client;
@@ -25,7 +25,7 @@ export function resend(): Resend | null {
 
 /** Absolute origin for links in emails (env override → Vercel prod URL → dev). */
 export function appBaseUrl(): string {
-  if (process.env.LIMINAL_BASE_URL) return process.env.LIMINAL_BASE_URL.replace(/\/$/, "");
+  if (process.env.LEUK_BASE_URL) return process.env.LEUK_BASE_URL.replace(/\/$/, "");
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   return "http://localhost:3010";
 }
@@ -143,7 +143,7 @@ export async function sendPasswordEmail(opts: {
 
 // ── ops alerts ────────────────────────────────────────────────────────────────
 // Internal plumbing alerts (failed nightly sync), not patient mail. Gated on
-// LIMINAL_OPS_EMAIL so nothing fires unless an operator inbox is configured;
+// LEUK_OPS_EMAIL so nothing fires unless an operator inbox is configured;
 // carries table/step names only — no PHI lives anywhere near these jobs.
 
 export async function sendOpsAlertEmail(opts: {
@@ -151,7 +151,7 @@ export async function sendOpsAlertEmail(opts: {
   intro: string;
   failures: Array<{ step: string; error: string }>;
 }): Promise<boolean> {
-  const to = process.env.LIMINAL_OPS_EMAIL;
+  const to = process.env.LEUK_OPS_EMAIL;
   if (!to) return false;
   const rows = opts.failures
     .map(

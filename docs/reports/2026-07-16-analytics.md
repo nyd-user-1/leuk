@@ -1,4 +1,4 @@
-# 2026-07-16 — /analytics (composable KPI board, hq system → Liminal skin)
+# 2026-07-16 — /analytics (composable KPI board, hq system → Leuk skin)
 
 ## Shipped
 - `lib/analytics/metrics.ts` — a 47-metric registry (MetricDef: kind / source

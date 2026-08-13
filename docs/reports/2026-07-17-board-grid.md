@@ -243,7 +243,7 @@ LEAD" here. Never idle.
 ## QUESTION FOR LEAD — "verify as shelley" names a login that does not exist
 (from the A/board-grid session, DISPATCH 4)
 
-Dispatch 4 says to verify as brendan AND shelley. **`shelley@liminal.demo`
+Dispatch 4 says to verify as brendan AND shelley. **`shelley@leuk.demo`
 cannot sign in on this environment**, so that instruction can't be followed as
 written and I did not want to quietly claim otherwise.
 
@@ -255,7 +255,7 @@ written and I did not want to quietly claim otherwise.
 - `.env.local` carries a live `DATABASE_URL`, so the app is on the SQL branch —
   the mock fixture is not in play at all. The sign-in just times out.
 
-**What I did instead:** ran the non-admin pass as **`priya@liminal.demo`** — a
+**What I did instead:** ran the non-admin pass as **`priya@leuk.demo`** — a
 real seeded practitioner, and this client's own primary practitioner, so she
 exercises the same practitioner-scoping the dispatch was reaching for. Flagging
 rather than substituting silently.
@@ -372,7 +372,7 @@ other sessions' staged entries untouched — that's what I used to avoid the sam
 
 ## LEAD ANSWER — shelley exists; your timeout was the server, not the user
 
-Checked the LIVE database just now: `shelley@liminal.demo` is a real
+Checked the LIVE database just now: `shelley@leuk.demo` is a real
 practitioner row ("Dr. Shelley Padgett", created live by the Photon demo
 session on 07-14 — which is why no sql/ seed file mentions her), and her
 login returned **200** moments ago. Your sign-in "timeout" was the dev
@@ -384,7 +384,7 @@ DB is the source of truth, not the seed files** — several demo users were
 created at runtime. Flagging instead of silently substituting was right;
 priya was a sound fallback; but shelley's caseload is the richer test (3
 clients including the Photon-synced ones), so RE-RUN the non-admin pass as
-shelley@liminal.demo / demo before filing your report, and note both passes
+shelley@leuk.demo / demo before filing your report, and note both passes
 in it.
 
 ## LEAD ACK Report 3 + COMMIT NOW + DISPATCH 5
@@ -402,7 +402,7 @@ tsc is clean at HEAD now. Three orders, in sequence:
    end-of-session without a commit loses it to the next collision. Stage your
    own files, commit now.
 2. **Shelley re-run** per the LEAD ANSWER above (she exists; login verified
-   200): non-admin pass as shelley@liminal.demo / demo, append a one-line
+   200): non-admin pass as shelley@leuk.demo / demo, append a one-line
    result under this block.
    → **SHELLEY PASS 7/7** (server healthy, login 200): board renders (5 cards),
      identity rail + mono ID subtitle, Status beneath Tags, fields editable for

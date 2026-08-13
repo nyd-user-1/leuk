@@ -8,11 +8,11 @@ brand
 
 **Primary (the home page's job): New Yorkers seeking mental health care.** Often anxious, overwhelmed, or in a hard moment; short on patience for phone tag and waitlists. They need to trust the care is real and licensed, confirm it takes their insurance, and get to a booked appointment quickly. Their context is a phone at night or a laptop between obligations.
 
-**Secondary: New York clinicians and practices to recruit** onto Liminal's practice-management + EHR platform. They care about a full calendar, less paperwork, and a directory that sends them clients. On the home page they get one concentrated band; depth lives on the dedicated provider page.
+**Secondary: New York clinicians and practices to recruit** onto Leuk's practice-management + EHR platform. They care about a full calendar, less paperwork, and a directory that sends them clients. On the home page they get one concentrated band; depth lives on the dedicated provider page.
 
 ## Product Purpose
 
-Liminal is an all-in-one mental-health practice-management + EHR platform, fronted by a public directory of 116k+ New York providers. The home page's success = a patient searches, finds an in-network provider, and books same-week; secondarily, a provider clicks through to join. It exists to make finding real, covered, same-week mental health care feel possible instead of exhausting.
+Leuk is an all-in-one mental-health practice-management + EHR platform, fronted by a public directory of 116k+ New York providers. The home page's success = a patient searches, finds an in-network provider, and books same-week; secondarily, a provider clicks through to join. It exists to make finding real, covered, same-week mental health care feel possible instead of exhausting.
 
 ## Brand Personality
 

@@ -1,4 +1,4 @@
--- Liminal — 034: organizations, the NPI-2 org book (NYS-41).
+-- Leuk — 034: organizations, the NPI-2 org book (NYS-41).
 --
 -- WHAT A ROW IS. One healthcare ORGANIZATION (NPPES entity_type 2 — a company,
 -- not a person), keyed on its NPI. This is the first table that names the

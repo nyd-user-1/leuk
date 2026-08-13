@@ -113,7 +113,7 @@ interface CardDef extends Omit<LibraryCard, "key" | "title"> {
 // The board's layout is per USER per RECORD TYPE — one layout for every client,
 // not one per client (a practitioner arranges their working view once). Card
 // KEYS only: no client data ever reaches localStorage.
-const BOARD_KEY = "liminal-record:client:board";
+const BOARD_KEY = "leuk-record:client:board";
 
 /** The board a client opens with — a working view, not everything there is.
  *  The rest of the catalog waits in the Add-card library. */

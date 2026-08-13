@@ -1,4 +1,4 @@
--- Liminal — 025: the organization layer (NYS-41 + NYS-27 + NYS-52 as one).
+-- Leuk — 025: the organization layer (NYS-41 + NYS-27 + NYS-52 as one).
 --
 -- Provider platforms (Headway ~13.6k NPIs, Alma-scale groups, hospital
 -- systems) are the missing entity between providers and payers. The anchor

@@ -1,4 +1,4 @@
-# PAYER RESEARCH — Liminal
+# PAYER RESEARCH — Leuk
 
 **Companion to `docs/PAYER-HANDOFF.md`.**
 That file is *how the machine works* (schema, drivers, measured API facts).
@@ -155,7 +155,7 @@ a structural inevitability of carve-outs.
    withholds) rather than falsifying it. Had MVP also been empty, that would have been
    a second independent datapoint in the carve-out direction. It wasn't.
 
-### What follows for Liminal
+### What follows for Leuk
 
 - **Cigna/Evernorth = the only complete public commercial BH source among national
   carriers** (96% of matched Cigna NPIs sit in Evernorth networks; 12,752 matched
@@ -197,9 +197,9 @@ worst slice of it:
   **MISSING** from directories entirely — the mirror-image failure of the carve-out omission
   problem.
 
-### What this means for Liminal
+### What this means for Leuk
 
-Liminal's homepage promises *"filter by your insurance, see your cost before you book."*
+Leuk's homepage promises *"filter by your insurance, see your cost before you book."*
 **That promise is exactly what these audits are destroying industry-wide.**
 
 Our differentiator cannot be *having* network data — everyone has it and it's wrong. It has
@@ -334,7 +334,7 @@ NUCC **Taxonomy** = provider *type* (psychiatrist, therapist). NUCC **Characteri
 **⚠️ It's a VOCABULARY, not a populated dataset. NOT in NPPES.** We must collect values via
 **provider self-attestation** — but coded to a national standard from day one, so it's
 payer-interoperable.
-**This is what should back `/care/[topic]` pages.** Free CSV from nucc.org. Liminal is
+**This is what should back `/care/[topic]` pages.** Free CSV from nucc.org. Leuk is
 non-commercial → no license request needed.
 
 ### Transparency in Coverage (MRF) — the back door around gated directories

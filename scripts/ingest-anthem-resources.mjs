@@ -164,7 +164,7 @@ const RES = {
 // ── runner ────────────────────────────────────────────────────────────────────
 async function runOne(name) {
   const cfg = RES[name], spec = SPECS[name];
-  const ckPath = path.join(os.tmpdir(), `liminal-anthem-${name}.json`);
+  const ckPath = path.join(os.tmpdir(), `leuk-anthem-${name}.json`);
   const done = RESUME && fs.existsSync(ckPath) ? new Set(JSON.parse(fs.readFileSync(ckPath, "utf8"))) : new Set();
   let items = await cfg.enumerate();
   items = items.filter((i) => !done.has(i));

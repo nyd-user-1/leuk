@@ -14,8 +14,8 @@ from this file cold. Companion references, all in-repo:
 
 ## Mission
 
-Liminal becomes the Headway/Alma money model with a moat they don't have:
-**clients pay Liminal, Liminal pays the therapist (connected account), Liminal
+Leuk becomes the Headway/Alma money model with a moat they don't have:
+**clients pay Leuk, Leuk pays the therapist (connected account), Leuk
 keeps an application fee — and our 14.5M-row attested-rate corpus prices it.**
 Proof point already measured (NPI 1588146039, Padgett): payers pay the SAME
 clinician differently under Headway's TIN vs Orenda's TIN (Empire 90791:
@@ -46,7 +46,7 @@ you'd make direct" is a sales weapon no competitor can print.
    across clinicians (digest §2) — don't design around it.
 6. **Embedded components ARE tonight's UI** (they work on Express-config
    accounts): account_onboarding + notification_banner + account_management
-   (+ balances/payouts where trivial) rendered inside Liminal via
+   (+ balances/payouts where trivial) rendered inside Leuk via
    AccountSession + `@stripe/connect-js`. Account Links kept as fallback path.
 7. **Resend emails are in scope tonight** — webhook-driven, reusing the
    existing Resend wiring.

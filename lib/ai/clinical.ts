@@ -24,7 +24,7 @@ export type { ClinicalCompletion } from "@/lib/ai/bedrock";
 // NEVER LOG PHI — same rule as the Bedrock module: model id, latency, token
 // counts only; never prompt or completion text.
 
-const DEV_MODEL = process.env.LIMINAL_CLINICAL_AI_MODEL ?? "claude-opus-4-8";
+const DEV_MODEL = process.env.LEUK_CLINICAL_AI_MODEL ?? "claude-opus-4-8";
 
 function anthropicDevAvailable(): boolean {
   return process.env.NODE_ENV !== "production" && !!process.env.ANTHROPIC_API_KEY;

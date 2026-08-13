@@ -129,7 +129,7 @@ Combine into a single section with three tabs: **Agents · Reports · Rules**.
 
 ## Verification
 
-Headless at **1440 and 1280**, practitioner login `brendan@liminal.demo` / `demo`:
+Headless at **1440 and 1280**, practitioner login `brendan@leuk.demo` / `demo`:
 
 - the gauge row renders three cards **immediately above "Coverage & growth"**
 - each tab shows **exactly 3×2 plus View more**

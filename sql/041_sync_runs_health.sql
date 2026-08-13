@@ -1,4 +1,4 @@
--- Liminal — 041: two ledger fixes so /insights tells the truth about harvests.
+-- Leuk — 041: two ledger fixes so /insights tells the truth about harvests.
 --
 -- Both land against sync_runs (sql/035). They exist because the health the card
 -- shows was computed against assumptions that only hold for the Vercel matview

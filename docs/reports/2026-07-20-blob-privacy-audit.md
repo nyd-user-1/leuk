@@ -231,7 +231,7 @@ blobs in the store Production actually writes to: 10
 URL host of that store: peudpngwdxsymrzx.public.blob.vercel-storage.com
   -> subdomain marker: PUBLIC
   pathnames under clients/ : 0
-  sample pathname SHAPE    : assets/liminal-10.avif
+  sample pathname SHAPE    : assets/leuk-10.avif
 Same store as local BLOB_READ_WRITE_TOKEN (store_AiBVM9…)? NO
 ```
 

@@ -150,7 +150,7 @@ headers intact below it; the identity blocks are not H1s, so nothing doubled up.
 
 ## Verification
 
-Headless Chrome, real cookie login (`brendan@liminal.demo`), dev server on :3010,
+Headless Chrome, real cookie login (`brendan@leuk.demo`), dev server on :3010,
 at **1440 × 900** and **1280 × 800**. Both widths, every claim below measured in
 the DOM rather than inferred.
 
@@ -166,7 +166,7 @@ the DOM rather than inferred.
 | No horizontal overflow | `scrollWidth == innerWidth` on every page, both widths, and with the sheet open |
 | Title truncation | none, all 14 titles, both widths |
 
-Theme: Liminal renders light-only on these surfaces — there is no dark-theme
+Theme: Leuk renders light-only on these surfaces — there is no dark-theme
 toggle to exercise, so the both-themes half of the verification standard does not
 apply here.
 

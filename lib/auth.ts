@@ -8,10 +8,10 @@ import { mockId, mockStore } from "@/lib/mock";
 import type { AvatarHue, Role, User } from "@/lib/types";
 
 // Cookie-session auth. With a DB: users + sessions tables, bcrypt hashes.
-// Without: the seeded demo users in lib/mock (brendan@liminal.demo /
-// casey@liminal.demo, password "demo") and an in-memory sessions map.
+// Without: the seeded demo users in lib/mock (brendan@leuk.demo /
+// casey@leuk.demo, password "demo") and an in-memory sessions map.
 
-export const SESSION_COOKIE = "liminal_session";
+export const SESSION_COOKIE = "leuk_session";
 
 // Automatic logoff (HIPAA Security Rule §164.312(a)(2)(iii)). Two independent
 // clocks, both enforced server-side — the cookie is only a bearer token:

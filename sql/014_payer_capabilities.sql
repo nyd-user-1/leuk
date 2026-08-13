@@ -1,4 +1,4 @@
--- Liminal — 014: payer capability + probe metadata on payer_sources.
+-- Leuk — 014: payer capability + probe metadata on payer_sources.
 --
 -- Task 2A harvests many payer Plan-Net directories, each with different auth,
 -- pagination, IG version, and bulk-export support. Record what we detect by

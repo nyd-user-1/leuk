@@ -1,4 +1,4 @@
--- Liminal — 027: rate_table_mv (the published-rates table, /published-rates).
+-- Leuk — 027: rate_table_mv (the published-rates table, /published-rates).
 --
 -- WHAT A ROW IS. Not a person, not a company: a row is ONE INSURER'S PRICE LIST
 -- FOR ONE BILLING GROUP — the party that insurer contracts with and pays. Grain

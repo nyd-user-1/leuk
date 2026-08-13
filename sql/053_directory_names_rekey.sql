@@ -1,4 +1,4 @@
--- Liminal — 053: directory names re-key (NYS-26 §re-key + the NYS-45 names
+-- Leuk — 053: directory names re-key (NYS-26 §re-key + the NYS-45 names
 -- piggyback; sql number granted in TASK-DATA-T3).
 --
 -- Three-step procedure; this file is step (ii). Steps (i)/(iii) are shell:

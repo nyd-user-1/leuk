@@ -1,4 +1,4 @@
--- Liminal — 036: let rate_table_child_mv refresh without locking the app (NYS-84).
+-- Leuk — 036: let rate_table_child_mv refresh without locking the app (NYS-84).
 --
 -- THE BUG. sql/032 gives rate_table_child_mv a unique index and says, in a
 -- comment, that "the index exists so REFRESH CONCURRENTLY works". It does not,

@@ -19,11 +19,11 @@ INSERT INTO forms (id, title, description, schema, status) VALUES
    ]}','published'),
   ('00000000-0000-4000-8000-000000010004','Consent to Treatment & Privacy','Please review and sign before your first visit.',
    '{"blocks":[
-     {"id":"intro","type":"info","label":"This form documents your consent to be evaluated and treated by your Liminal care team, and your acknowledgment of our privacy practices.","required":false},
+     {"id":"intro","type":"info","label":"This form documents your consent to be evaluated and treated by your Leuk care team, and your acknowledgment of our privacy practices.","required":false},
      {"id":"full_name","type":"text","label":"Full legal name","required":true},
      {"id":"date","type":"date","label":"Date","required":true},
-     {"id":"consent_treatment","type":"checkbox","label":"I consent to psychiatric and/or therapeutic evaluation and treatment by my care team at Liminal.","required":true},
-     {"id":"privacy_ack","type":"checkbox","label":"I have received and reviewed Liminal''s Notice of Privacy Practices describing how my health information may be used and disclosed.","required":true},
+     {"id":"consent_treatment","type":"checkbox","label":"I consent to psychiatric and/or therapeutic evaluation and treatment by my care team at Leuk.","required":true},
+     {"id":"privacy_ack","type":"checkbox","label":"I have received and reviewed Leuk''s Notice of Privacy Practices describing how my health information may be used and disclosed.","required":true},
      {"id":"revoke_ack","type":"checkbox","label":"I understand I may revoke this consent in writing at any time, except to the extent my care team has already relied on it.","required":true},
      {"id":"signature","type":"signature","label":"Signature","required":true}
    ]}','published'),
@@ -36,9 +36,9 @@ INSERT INTO forms (id, title, description, schema, status) VALUES
      {"id":"consent_telehealth","type":"checkbox","label":"I consent to receive psychiatric and/or therapy services by live video or audio telehealth.","required":true},
      {"id":"signature","type":"signature","label":"Signature","required":true}
    ]}','published'),
-  ('00000000-0000-4000-8000-000000010006','Release of Information','Authorize Liminal to send or request records on your behalf.',
+  ('00000000-0000-4000-8000-000000010006','Release of Information','Authorize Leuk to send or request records on your behalf.',
    '{"blocks":[
-     {"id":"intro","type":"info","label":"Use this form to authorize Liminal to release your records to, or request records from, another person or organization.","required":false},
+     {"id":"intro","type":"info","label":"Use this form to authorize Leuk to release your records to, or request records from, another person or organization.","required":false},
      {"id":"client_name","type":"text","label":"Client full legal name","required":true},
      {"id":"dob","type":"date","label":"Date of birth","required":true},
      {"id":"recipient","type":"textarea","label":"Name, organization, and contact information of who information will be released to or obtained from","required":true},
@@ -49,9 +49,9 @@ INSERT INTO forms (id, title, description, schema, status) VALUES
    ]}','published'),
   ('00000000-0000-4000-8000-000000010007','Financial Policy & Card-on-File Authorization','Please review our financial policy and authorize a card on file.',
    '{"blocks":[
-     {"id":"policy","type":"info","label":"Payment is due at time of service. Cancellations or reschedules within 24 hours of an appointment, and no-shows, are billed a $75 fee. Liminal is out-of-network with most insurers; we can provide a superbill for self-submission. A valid card is kept on file (collected securely through our payment portal, never through this form) for copays, coinsurance, and fees.","required":false},
+     {"id":"policy","type":"info","label":"Payment is due at time of service. Cancellations or reschedules within 24 hours of an appointment, and no-shows, are billed a $75 fee. Leuk is out-of-network with most insurers; we can provide a superbill for self-submission. A valid card is kept on file (collected securely through our payment portal, never through this form) for copays, coinsurance, and fees.","required":false},
      {"id":"policy_ack","type":"checkbox","label":"I have read and agree to the financial policy above, including the $75 late-cancellation/no-show fee.","required":true},
-     {"id":"card_auth","type":"checkbox","label":"I authorize Liminal to keep a card on file and charge it for copays, coinsurance, and no-show fees per this policy.","required":true},
+     {"id":"card_auth","type":"checkbox","label":"I authorize Leuk to keep a card on file and charge it for copays, coinsurance, and no-show fees per this policy.","required":true},
      {"id":"cardholder_name","type":"text","label":"Name on card","required":true},
      {"id":"signature","type":"signature","label":"Signature","required":true}
    ]}','published'),

@@ -1,4 +1,4 @@
--- Liminal — 031: the rest of the NPPES dissemination assets + the NUCC code set.
+-- Leuk — 031: the rest of the NPPES dissemination assets + the NUCC code set.
 --
 -- sql/030 loaded the identity spine (nppes_npi, nppes_other_names). This adds
 -- the two reference files that ship in the same monthly zip but answer

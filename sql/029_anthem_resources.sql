@@ -1,4 +1,4 @@
--- Liminal — 029: the rest of Anthem's Plan-Net directory (NYS-53 sub-issues).
+-- Leuk — 029: the rest of Anthem's Plan-Net directory (NYS-53 sub-issues).
 --
 -- We already harvest PractitionerRole. This lands the other five resource types
 -- the API exposes, populated by scripts/ingest-anthem-resources.mjs:

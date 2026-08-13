@@ -11,7 +11,7 @@ import { Icon, IconSquare, type IconName } from "@/components/ui/icons";
 // API, same desktop behavior.
 //
 // ANATOMY (hq's Linear-tech-specs drawer, ~/Code/hq/app/ui/landing/spec-drawer.tsx,
-// translated into Liminal's tokens rather than transplanted):
+// translated into Leuk's tokens rather than transplanted):
 //   • Flyover, not a slab. The panel insets from the viewport by 12px and wears
 //     rounded-card + an INSET 1px ring + a high shadow (--shadow-panel), so it
 //     reads as a card flying over the page instead of a wall bolted to its edge.

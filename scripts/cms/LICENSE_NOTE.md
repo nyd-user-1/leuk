@@ -68,7 +68,7 @@ nothing for the exact codes our rate corpus is made of.
 
 ## Revisit trigger
 
-Reopen the license question when **external providers onboard to Liminal for
+Reopen the license question when **external providers onboard to Leuk for
 coding workflows** — i.e. when someone needs to *search the full CPT vocabulary
 by official descriptor* to pick a code to bill, rather than read a benchmark for
 codes we already name. Our own wording is sufficient for naming ~14 known

@@ -12,7 +12,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tag } from "@/components/ui/tag";
 import { ThemeToggle } from "@/components/marketing/theme-toggle";
-import { BRANDS, useBrand } from "@/lib/brand";
+import { BRAND } from "@/lib/brand";
 import type { PublicResult } from "@/app/api/directory/public-search/route";
 import { titleCase } from "@/lib/format";
 
@@ -704,7 +704,6 @@ function MyPortalMenu() {
 // Mobile menu — full-screen sheet with collapsible sections (Headway pattern).
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const brand = useBrand();
   if (!open || typeof document === "undefined") return null;
   const link = (href: string, label: string) => (
     <Link
@@ -719,8 +718,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-surface md:hidden">
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6">
-        <Link href="/" aria-label={`${BRANDS[brand.id].name} home`} onClick={onClose}>
-          <img src={BRANDS[brand.id].logoDark} alt={BRANDS[brand.id].name} className="h-11 w-auto" />
+        <Link href="/" aria-label={`${BRAND.name} home`} onClick={onClose}>
+          <img src={BRAND.logoDark} alt={BRAND.name} className="h-11 w-auto" />
         </Link>
         <IconButton icon="x" label="Close menu" onClick={onClose} />
       </div>
@@ -757,7 +756,6 @@ export function Nav({ ground = "bg-primary-wash" }: { ground?: string } = {}) {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
-  const brand = useBrand();
   const [open, setOpen] = useState<MenuKey | null>(null);
   const [cat, setCat] = useState("therapists");
   const [caretX, setCaretX] = useState(0);
@@ -908,12 +906,12 @@ export function Nav({ ground = "bg-primary-wash" }: { ground?: string } = {}) {
                 (brighter/warmer pigment) rises up through the watercolor on hover.
                 No motion — the base mark stays put. */}
             <img
-              src={dark ? BRANDS[brand.id].logoLight : BRANDS[brand.id].logoDark}
-              alt={BRANDS[brand.id].name}
+              src={dark ? BRAND.logoLight : BRAND.logoDark}
+              alt={BRAND.name}
               className={`block h-11 w-auto transition-all duration-200 ${dark ? "brightness-125" : ""}`}
             />
             <img
-              src={dark ? BRANDS[brand.id].logoLight : BRANDS[brand.id].logoDark}
+              src={dark ? BRAND.logoLight : BRAND.logoDark}
               alt=""
               aria-hidden
               className={`pointer-events-none absolute left-0 top-0 block h-11 w-auto saturate-[1.25] ${dark ? "brightness-125" : "brightness-110"} [clip-path:inset(100%_0_0_0)] transition-[clip-path] duration-[600ms] ease-out group-hover:[clip-path:inset(0_0_0_0)]`}

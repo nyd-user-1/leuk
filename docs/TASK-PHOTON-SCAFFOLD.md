@@ -1,6 +1,6 @@
 # TASK — Photon e-prescribing: sandbox plumbing, credential probe, webhook stub
 
-Photon (photon.health) is the e-prescribing platform Liminal will integrate.
+Photon (photon.health) is the e-prescribing platform Leuk will integrate.
 This task is the FOUNDATION ONLY: server-side auth plumbing, a
 prove-the-credentials probe, and a stub webhook endpoint. No prescribing UI,
 no patient sync, no database writes. The pattern is the same one we used for
@@ -93,7 +93,7 @@ dashboard-config change, not new code.
 
 - The prescribe UI embed (Photon elements, `NEXT_PUBLIC_PHOTON_*`) — that is
   the next task, once this plumbing is proven. Touch no UI files at all.
-- Patient creation/sync, order/prescription reads or writes, any Liminal DB
+- Patient creation/sync, order/prescription reads or writes, any Leuk DB
   writes, any new tables.
 - Registering the webhook in the Photon dashboard (Brendan does that; note
   in your report the exact URL to register:

@@ -1,4 +1,4 @@
--- Liminal — 046: finish the network canonicalization (NYS-144).
+-- Leuk — 046: finish the network canonicalization (NYS-144).
 --
 -- sql/044 seeded the hand-proven NY book (41 canonicals) but left 1,092 of the
 -- 1,133 raw FHIR networks untouched — "41" read as if NY had 41 networks. The

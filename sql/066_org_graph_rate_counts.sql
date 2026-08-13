@@ -1,4 +1,4 @@
--- Liminal — 066: rate-count rollups for the org relationship map (2026-07-23).
+-- Leuk — 066: rate-count rollups for the org relationship map (2026-07-23).
 --
 -- Ruling: the map's chips no longer summarize spreads. A payer×code cell
 -- shows the ONE published rate when there is one, else the COUNT of distinct

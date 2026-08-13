@@ -1,4 +1,4 @@
--- Liminal — 017: provider_rate_signals (Transparency-in-Coverage negotiated rates).
+-- Leuk — 017: provider_rate_signals (Transparency-in-Coverage negotiated rates).
 --
 -- The corroboration layer's second, independent kind of evidence. A negotiated
 -- rate proves a CONTRACT existed on the file date — money, not paperwork. It is

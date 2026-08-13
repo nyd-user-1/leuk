@@ -1,4 +1,4 @@
--- Liminal — demo seed (002). Re-runnable: fixed uuids + ON CONFLICT DO NOTHING.
+-- Leuk — demo seed (002). Re-runnable: fixed uuids + ON CONFLICT DO NOTHING.
 -- "Today" for this dataset is 2026-07-04 (Sat); appointments span 2026-06-22 → 2026-07-17.
 -- Uuid scheme: 00000000-0000-4000-8000-0000000TT0NN (TT = table code, NN = row).
 --
@@ -8,16 +8,16 @@
 
 -- ── users (01): 1 admin-practitioner, 3 practitioners, 1 portal client ────────
 INSERT INTO users (id, role, name, email, password_hash, avatar_hue, phone, timezone) VALUES
-  ('00000000-0000-4000-8000-000000001001','admin','Brendan Stanton','brendan@liminal.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','teal','+1 212 555 0140','America/New_York'),
-  ('00000000-0000-4000-8000-000000001002','practitioner','Priya Raman','priya@liminal.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','amber','+1 212 555 0141','America/New_York'),
-  ('00000000-0000-4000-8000-000000001004','practitioner','Lena Whitfield','lena@liminal.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','pink','+1 212 555 0143','America/New_York'),
-  ('00000000-0000-4000-8000-000000001005','practitioner','Marcus Bell','marcus@liminal.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','blue','+1 212 555 0142','America/New_York'),
-  ('00000000-0000-4000-8000-000000001003','client','Casey Morgan','casey@liminal.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','pink','+1 917 555 0182','America/New_York')
+  ('00000000-0000-4000-8000-000000001001','admin','Brendan Stanton','brendan@leuk.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','teal','+1 212 555 0140','America/New_York'),
+  ('00000000-0000-4000-8000-000000001002','practitioner','Priya Raman','priya@leuk.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','amber','+1 212 555 0141','America/New_York'),
+  ('00000000-0000-4000-8000-000000001004','practitioner','Lena Whitfield','lena@leuk.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','pink','+1 212 555 0143','America/New_York'),
+  ('00000000-0000-4000-8000-000000001005','practitioner','Marcus Bell','marcus@leuk.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','blue','+1 212 555 0142','America/New_York'),
+  ('00000000-0000-4000-8000-000000001003','client','Casey Morgan','casey@leuk.demo','$2b$12$u6VE5SYM19B.rkbXiFOR2.nuQR8hx3JTov74mALdnh9p0Y0JAYLl.','pink','+1 917 555 0182','America/New_York')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── clients (02): 17, varied statuses/tags; Casey has the portal login ────────
 INSERT INTO clients (id, user_id, first_name, last_name, dob, email, phone, address, gender, pronouns, status, tags, primary_practitioner_id) VALUES
-  ('00000000-0000-4000-8000-000000002001','00000000-0000-4000-8000-000000001003','Casey','Morgan','1994-03-18','casey@liminal.demo','+1 917 555 0182','48 Carmine St, Apt 3B, New York, NY 10014','Non-binary','they/them','active','{portal,anxiety,weekly}','00000000-0000-4000-8000-000000001001'),
+  ('00000000-0000-4000-8000-000000002001','00000000-0000-4000-8000-000000001003','Casey','Morgan','1994-03-18','casey@leuk.demo','+1 917 555 0182','48 Carmine St, Apt 3B, New York, NY 10014','Non-binary','they/them','active','{portal,anxiety,weekly}','00000000-0000-4000-8000-000000001001'),
   ('00000000-0000-4000-8000-000000002002',NULL,'Jordan','Lee','1988-11-02','jordan.lee@example.com','+1 646 555 0113','210 E 14th St, New York, NY 10003','Male','he/him','active','{adhd,monthly}','00000000-0000-4000-8000-000000001001'),
   ('00000000-0000-4000-8000-000000002003',NULL,'Sam','Whitaker','1979-06-25','sam.whitaker@example.com','+1 718 555 0177','77 Court St, Brooklyn, NY 11201','Male','he/him','active','{depression}','00000000-0000-4000-8000-000000001002'),
   ('00000000-0000-4000-8000-000000002004',NULL,'Ava','Delgado','1991-01-09','ava.delgado@example.com','+1 347 555 0128','133 Kent Ave, Brooklyn, NY 11249','Female','she/her','active','{anxiety,superbill}','00000000-0000-4000-8000-000000001001'),
@@ -134,7 +134,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO forms (id, title, description, schema, status) VALUES
   ('00000000-0000-4000-8000-000000010001','New Client Intake','Demographics, history, and consent — please complete before your first visit.',
    '{"blocks":[
-     {"id":"intro","type":"info","label":"Welcome to Liminal Psychiatry. Your answers are confidential and reviewed only by your care team.","required":false},
+     {"id":"intro","type":"info","label":"Welcome to Leuk Psychiatry. Your answers are confidential and reviewed only by your care team.","required":false},
      {"id":"full_name","type":"text","label":"Full legal name","required":true},
      {"id":"dob","type":"date","label":"Date of birth","required":true},
      {"id":"gender","type":"select","label":"Gender","options":["Female","Male","Non-binary","Prefer to self-describe","Prefer not to say"],"required":false},

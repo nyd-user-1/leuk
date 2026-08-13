@@ -89,7 +89,7 @@ export function AccountMenu({ user, collapsed = false }: { user: SessionUser; co
         onClick={() => router.push("/design-system")}
         trailing={<Badge variant="info">New</Badge>}
       />
-      {user.email === "brendan@liminal.demo" && (
+      {user.email === "brendan@leuk.demo" && (
         <MenuItem icon="grid" label="Data" onClick={() => router.push("/admin/data")} />
       )}
       <MenuItem
@@ -105,7 +105,7 @@ export function AccountMenu({ user, collapsed = false }: { user: SessionUser; co
         icon="message"
         label="Help"
         onClick={() => {
-          window.location.href = "mailto:support@liminal.health";
+          window.location.href = "mailto:support@leuk.health";
         }}
         trailing={<Icon name="chevron-right" size={16} className="text-text-muted" />}
       />

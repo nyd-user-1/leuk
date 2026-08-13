@@ -1,12 +1,12 @@
-# Liminal — Build Spec (canonical; every agent reads this first)
+# Leuk — Build Spec (canonical; every agent reads this first)
 
-All-in-one practice management + EHR for healthcare/wellness professionals, branded **Liminal** (Liminal Psychiatry). Feature parity targets: Carepatron / SimplePractice. Surfaces: appointment scheduling (drag-and-drop calendar, public booking links), clinical documentation (SOAP/DAP templates + AI charting assistant), telehealth (1-on-1 video), billing & payments (invoices, Stripe), client portal (records, intake forms, secure messaging). Compliance posture: HIPAA/GDPR/PIPEDA — v1 gestures are: RBAC guards on every API route, append-only `audit_events` on PHI reads/writes, session cookies `httpOnly+secure+sameSite`, no PHI in logs, soft-delete on clinical data.
+All-in-one practice management + EHR for healthcare/wellness professionals, branded **Leuk** (Leuk Psychiatry). Feature parity targets: Carepatron / SimplePractice. Surfaces: appointment scheduling (drag-and-drop calendar, public booking links), clinical documentation (SOAP/DAP templates + AI charting assistant), telehealth (1-on-1 video), billing & payments (invoices, Stripe), client portal (records, intake forms, secure messaging). Compliance posture: HIPAA/GDPR/PIPEDA — v1 gestures are: RBAC guards on every API route, append-only `audit_events` on PHI reads/writes, session cookies `httpOnly+secure+sameSite`, no PHI in logs, soft-delete on clinical data.
 
 **Definition of done:** working v1 that runs locally on mock fixtures with zero env vars; attaching a NeonDB (`DATABASE_URL`) + running `sql/*.sql` makes it real. No unnecessary code, no speculative abstraction.
 
 ## Design system
 
-The component spec is `/Users/brendanstanton/Vaults/hq/Carepatron/Design System/Component Catalog.md` — §1 tokens, **§1b Liminal theme (USE THESE VALUES)**, §2 index, §3 + §3b component specs, sibling notes for screens. Visual language: Carepatron's layouts re-skinned Liminal — light canvas `#F2F3F6`, white surfaces, **navy sidebar `#1C2440`** (active band `#2B3557`), **teal primary `#3F8290`** (hover `#35707C`, weak `#B7D8DD`), **amber accent `#F0AE55`** (`#C58A2E` on white), ink `#212A47`. Status: success `#16A34A`/`#DCFCE7`, warning `#B7791F`/`#FBE8C9`, danger `#DC2626`/`#FEE2E2`, info tint `#EDE9FD`→ use teal-100 `#E3F0F2`. Scrim `rgba(18,13,40,.5)`. Video stage `#111019`. Radius 8/12/full. Type: Inter; 28/700 page titles, 19/600 card titles, 15 body, 14/500 labels, 13 captions.
+The component spec is `/Users/brendanstanton/Vaults/hq/Carepatron/Design System/Component Catalog.md` — §1 tokens, **§1b Leuk theme (USE THESE VALUES)**, §2 index, §3 + §3b component specs, sibling notes for screens. Visual language: Carepatron's layouts re-skinned Leuk — light canvas `#F2F3F6`, white surfaces, **navy sidebar `#1C2440`** (active band `#2B3557`), **teal primary `#3F8290`** (hover `#35707C`, weak `#B7D8DD`), **amber accent `#F0AE55`** (`#C58A2E` on white), ink `#212A47`. Status: success `#16A34A`/`#DCFCE7`, warning `#B7791F`/`#FBE8C9`, danger `#DC2626`/`#FEE2E2`, info tint `#EDE9FD`→ use teal-100 `#E3F0F2`. Scrim `rgba(18,13,40,.5)`. Video stage `#111019`. Radius 8/12/full. Type: Inter; 28/700 page titles, 19/600 card titles, 15 body, 14/500 labels, 13 captions.
 
 ## Stack + conventions
 
@@ -14,7 +14,7 @@ Next 16 App Router · React 19 · TypeScript strict · Tailwind v4 (`@import "ta
 
 - API routes: `app/api/*/route.ts`, `NextResponse.json`, `export const dynamic = "force-dynamic"`, manual body validation. Every route calls `requireUser()`/`requireRole()` from `@/lib/auth`.
 - Data: `lib/repos/<domain>.ts` per domain. Each repo function: if `hasDb` → tagged-template `sql\`...\`` (copy `tariffs/src/lib/db.ts` Proxy-lazy pattern), else → `lib/mock/<domain>.ts` fixtures (in-memory, mutable within process so demo CRUD works). Never crash without DATABASE_URL.
-- Auth: cookie session (`liminal_session`, httpOnly). With DB: users table + bcrypt. Without DB: demo users auto-available — `brendan@liminal.demo` (practitioner/admin) and `casey@liminal.demo` (client), password `demo`. `requireRole('practitioner'|'admin'|'client')` guard per 44b's pattern.
+- Auth: cookie session (`leuk_session`, httpOnly). With DB: users table + bcrypt. Without DB: demo users auto-available — `brendan@leuk.demo` (practitioner/admin) and `casey@leuk.demo` (client), password `demo`. `requireRole('practitioner'|'admin'|'client')` guard per 44b's pattern.
 - Client components only where interactivity demands; server components default.
 
 ## Borrow map (adapt, don't import cross-repo; copy code in)

@@ -14,7 +14,7 @@ data layer.
   `ops/harvest/sync-plan.mjs` (visible in `git show 0a98c7c -- ops/harvest/sync-plan.mjs`).
 - Verify against the LIVE matview in Neon: definition matches
   (`pg_matviews`), then run one refresh and confirm row count > 0.
-  Trap (memory `liminal-postgres-neon-traps`): expression indexes silently
+  Trap (memory `leuk-postgres-neon-traps`): expression indexes silently
   break `REFRESH CONCURRENTLY` — if the unique index isn't plain-column,
   say so in the report rather than "fixing" it tonight.
 - Do NOT restore `lib/repos/networks.ts` rate reads or any `/networks` UI —

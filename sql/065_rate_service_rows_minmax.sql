@@ -1,4 +1,4 @@
--- Liminal — 065: rate_service_rows_mv grows min_rate / max_rate.
+-- Leuk — 065: rate_service_rows_mv grows min_rate / max_rate.
 --
 -- WHY. The Services tab rendered "2 rates" as a chip wherever a cell carries
 -- several distinct published rates (NYS-64: billing_code_modifier is dropped at

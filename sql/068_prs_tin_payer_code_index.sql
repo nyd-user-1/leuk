@@ -1,4 +1,4 @@
--- Liminal — 068: provider_rate_signals (tin, payer, billing_code) index.
+-- Leuk — 068: provider_rate_signals (tin, payer, billing_code) index.
 --
 -- Enables the org map's rate drill: clicking a "78 rates" chip lists the
 -- actual distinct published prices for ONE (tin, payer, code) cell, with

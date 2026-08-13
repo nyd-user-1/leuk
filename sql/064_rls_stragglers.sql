@@ -4,7 +4,7 @@
 -- (https://ep-….apirest.…/neondb/rest/v1). That endpoint is a SECOND door into
 -- this database — it bypasses the app entirely and grants read/write on any
 -- table WITHOUT row-level security to any Neon-Auth-authenticated caller.
--- Nothing in Liminal uses it (no references to the Data API, Neon Auth, or
+-- Nothing in Leuk uses it (no references to the Data API, Neon Auth, or
 -- Stack anywhere in app/ or lib/), so it is pure attack surface.
 --
 -- `clients`, `notes`, `appointments`, `invoices`, `messages` and `users`

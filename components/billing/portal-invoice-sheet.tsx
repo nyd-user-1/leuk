@@ -26,7 +26,7 @@ import type { InvoiceStatus } from "@/lib/types";
 // therapist goes live — no flag to flip.
 
 /** Survives the Stripe redirect so the return leg knows which invoice to watch. */
-export const PAYING_INVOICE_KEY = "liminal:paying-invoice";
+export const PAYING_INVOICE_KEY = "leuk:paying-invoice";
 
 export interface PortalInvoice {
   id: string;
@@ -202,7 +202,7 @@ export function PortalInvoiceSheet({
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="truncate text-[22px] font-semibold tracking-[-0.01em] text-text">{invoice.number}</p>
-                <p className="mt-1 text-[13px] text-text-muted">Leuk Psychiatry · hello@liminal.demo</p>
+                <p className="mt-1 text-[13px] text-text-muted">Leuk Psychiatry · hello@leuk.demo</p>
               </div>
               {s && <Badge variant={s.variant}>{s.label}</Badge>}
             </div>

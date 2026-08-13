@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDataPage() {
   const user = await requireUser();
-  if (user.email !== "brendan@liminal.demo") notFound();
+  if (user.email !== "brendan@leuk.demo") notFound();
 
   const { groups, insurers } = await adminPageData();
   return <AdminDataTabs groups={groups} insurers={insurers} />;

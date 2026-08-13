@@ -55,7 +55,7 @@ export default async function HomeTwo() {
       <section className="relative bg-primary-wash lg:flex lg:min-h-[calc(100svh-64px)] lg:items-center">
         <div className="pointer-events-none absolute top-[47%] right-0 z-0 hidden w-[52vw] -translate-y-1/2 lg:block">
           <img
-            src={`${ILLO}/liminal_e0mhvxe0mhvxe0mh-mint.avif`}
+            src={`${ILLO}/leuk_e0mhvxe0mhvxe0mh-mint.avif`}
             alt="A watercolour illustration — a person wrapped in a knit blanket sits on a bench by a still lake at dawn, holding a warm mug."
             width={2816}
             height={1536}
@@ -106,7 +106,7 @@ export default async function HomeTwo() {
           {/* mobile illustration */}
           <div className="mt-10 lg:hidden">
             <img
-              src={`${ILLO}/liminal_e0mhvxe0mhvxe0mh-mint.avif`}
+              src={`${ILLO}/leuk_e0mhvxe0mhvxe0mh-mint.avif`}
               alt="A watercolour illustration — a person wrapped in a knit blanket sits on a bench by a still lake at dawn, holding a warm mug."
               width={2816}
               height={1536}
@@ -207,7 +207,7 @@ export default async function HomeTwo() {
         primary={{ href: "/providers", label: "Find your provider" }}
         secondary={{ href: "/care/therapy", label: "See how care works" }}
         illo={{
-          src: `${ILLO}/liminal-landscape_w68hevw68hevw68h.avif`,
+          src: `${ILLO}/leuk-landscape_w68hevw68hevw68h.avif`,
           alt: "A watercolour illustration — a small figure walks a path through a wildflower meadow toward soft morning light.",
           width: 2560,
           height: 1396,

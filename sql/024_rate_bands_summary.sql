@@ -1,4 +1,4 @@
--- Liminal — 024: rate band summaries (Know Your Rates precompute).
+-- Leuk — 024: rate band summaries (Know Your Rates precompute).
 --
 -- provider_rate_signals grew 1.04M -> 9.0M rows and the live percentile_cont
 -- aggregates in lib/repos/rate-signals.ts (bandNumbers + getCheckedBooks) went

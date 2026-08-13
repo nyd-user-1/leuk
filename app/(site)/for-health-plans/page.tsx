@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "A statewide network of verified mental health providers with measured outcomes, clean claims, and reporting your clinical team can act on.",
 };
 
-const PARTNER_EMAIL = "mailto:partnerships@liminal.demo";
+const PARTNER_EMAIL = "mailto:partnerships@leuk.demo";
 
 async function getNetworkSize(): Promise<number | null> {
   try {

@@ -14,7 +14,7 @@ dying driver, and clear the small data-quality backlog.
   card that shipped tonight; follow its composition style)
 - `components/ui/data-table.tsx` header — the DataTable contract
 - Linear **NYS-100** — the quality bar for recording a finished feature
-- Dev server: port 3010, login `brendan@liminal.demo` / `demo`. Headless
+- Dev server: port 3010, login `brendan@leuk.demo` / `demo`. Headless
   verification gotcha: POST `/api/auth/login` with the credentials, carry the
   cookie; `networkidle` never settles under Turbopack HMR — assert on HTML
   content, and if a page hangs, probe with curl first (a wedged shared dev

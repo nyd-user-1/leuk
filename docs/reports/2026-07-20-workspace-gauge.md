@@ -145,7 +145,7 @@ its own "Copy as Markdown". Its diff in this tranche is zero lines.
 
 ## Verification
 
-Headless Chromium, real login as `brendan@liminal.demo` (admin role — the whole
+Headless Chromium, real login as `brendan@leuk.demo` (admin role — the whole
 ecosystem column is admin-gated), against the running dev server on :3010. Every
 row below is an assertion the drive printed, not an impression.
 

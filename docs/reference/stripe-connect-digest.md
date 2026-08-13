@@ -1,7 +1,7 @@
 # Stripe Connect — Account Management docs digest
 
-Research spike for the Liminal marketplace build (clients pay Liminal → Liminal pays
-therapists as connected accounts → Liminal keeps an application fee). Read against
+Research spike for the Leuk marketplace build (clients pay Leuk → Leuk pays
+therapists as connected accounts → Leuk keeps an application fee). Read against
 the founder-approved tonight build: **Accounts v1 with controller properties**
 (`controller[stripe_dashboard][type]=express`, `controller[fees][payer]=application`,
 `controller[losses][payments]=application`), **destination charges** first,
@@ -177,7 +177,7 @@ Source: https://docs.stripe.com/connect/handling-api-verification.md
 
 ---
 
-## 4. SaaS billing via Connect — charging therapists Liminal's own fee
+## 4. SaaS billing via Connect — charging therapists Leuk's own fee
 
 **Cleanest for tonight (v1):** take the platform's cut as `application_fee_amount` on
 each charge (destination charge: on the platform PaymentIntent alongside
@@ -233,7 +233,7 @@ Source: https://docs.stripe.com/connect/integrate-billing-connect.md
   Source: https://docs.stripe.com/connect/supported-embedded-components/account-onboarding.md
 - **Direct vs destination dispute liability.** On **direct** charges the *connected
   account* handles disputes; on **destination** charges the *platform* does. Our
-  destination-first plan means Liminal owns disputes/refunds against its balance.
+  destination-first plan means Leuk owns disputes/refunds against its balance.
   Source: https://docs.stripe.com/connect/end-to-end-saas-platform.md?platform=web
 - **Account links are single-use, short-lived, must not be emailed/texted.**
   Source: https://docs.stripe.com/connect/end-to-end-saas-platform.md?platform=web

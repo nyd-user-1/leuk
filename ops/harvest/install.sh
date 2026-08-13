@@ -16,7 +16,7 @@
 # lid open or clamshell-with-display: it runs at 01:04 every night, hands off.
 set -euo pipefail
 
-LABEL=com.liminal.harvest
+LABEL=com.leuk.harvest
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DOMAIN="gui/$(id -u)"

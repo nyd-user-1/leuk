@@ -10,7 +10,7 @@ import { CtaBand } from "@/components/site/cta-band";
 
 export const dynamic = "force-dynamic";
 
-const PRESS_EMAIL = "mailto:press@liminal.demo";
+const PRESS_EMAIL = "mailto:press@leuk.demo";
 
 export const metadata: Metadata = {
   title: "Press · Leuk",
@@ -64,7 +64,7 @@ export default function PressPage() {
         <CtaBand
           title="Let's talk."
           lede="Send us a note and we'll route it to the right person, usually within a day."
-          primary={{ href: PRESS_EMAIL, label: "press@liminal.demo" }}
+          primary={{ href: PRESS_EMAIL, label: "press@leuk.demo" }}
         />
       </main>
       <MarketingFooter />

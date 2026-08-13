@@ -305,7 +305,7 @@ The date is mandatory — especially for MetroPlus (Feb 2024).
 
 ### Design
 
-Existing Liminal design system only — tokens, type scale, spacing, palette
+Existing Leuk design system only — tokens, type scale, spacing, palette
 (`app/globals.css` vars: bg-canvas, bg-surface, border-border, rounded-card,
 shadow-card). No new colors, fonts, or libraries. No charts, no gauges, no
 percentile, no benchmark score. A table. The restraint IS the argument: a
@@ -334,7 +334,7 @@ rates is a fact.
 
 ## Done when
 
-1. `localhost:3010/published-rates` (signed in as brendan@liminal.demo /
+1. `localhost:3010/published-rates` (signed in as brendan@leuk.demo /
    demo) loads the full Cigna corpus (~12.5k rows), >50% showing a real
    name, first paint under ~2s warm. **[shipped: 38,716 rows across the six
    payers; 36,167 named = 93.4% after STEP 1b (Empire 100%, Cigna 89.7%);
@@ -346,7 +346,7 @@ rates is a fact.
    headers are one row; the PAGE never scrolls horizontally (only the table
    scrolls, inside its own container — if the page scrolls, a flex ancestor
    is missing `min-w-0`).
-5. It looks like Liminal, not a dashboard template.
+5. It looks like Leuk, not a dashboard template.
 6. `node scripts/backfill-tin-names.mjs` reported before/after coverage, and
    sql/027 exists with the unique index + refresh-order comment.
 

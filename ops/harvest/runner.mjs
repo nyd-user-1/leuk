@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// liminal harvestd — the nightly wake-up that runs every due data job.
+// leuk harvestd — the nightly wake-up that runs every due data job.
 //
 // launchd fires this at 01:04 local (ops/harvest/install.sh), wrapped in
 // `caffeinate -is` so the machine stays awake for the duration. It replaces
@@ -7,7 +7,7 @@
 // manifests dropped into .harvest/mrf/manifests/queue/ become jobs
 // automatically, every run is ledgered to sync_runs (the same table the
 // Vercel matview cron writes, so /workspace shows both), failures email
-// LIMINAL_OPS_EMAIL, and Farmer John (a Linear bot, app/api/harvest/report)
+// LEUK_OPS_EMAIL, and Farmer John (a Linear bot, app/api/harvest/report)
 // files or updates a ticket per failed/suspect job. If the Mac slept through
 // 01:04, launchd runs the job on next wake and the interval math below
 // self-heals — nothing is ever "missed", only late.
@@ -200,8 +200,8 @@ export async function suspectFastSuccess(job, ledgerJob, ms) {
 
 // ── failure email (Resend REST — this is plain node, not the Next app) ────────
 async function emailFailures(results) {
-  const key = process.env.LIMINAL_RESEND_API_KEY;
-  const to = process.env.LIMINAL_OPS_EMAIL;
+  const key = process.env.LEUK_RESEND_API_KEY;
+  const to = process.env.LEUK_OPS_EMAIL;
   // A 'suspect' run exited 0 but is not trusted (NYS-124) — it needs a human as
   // much as an outright failure does, so it alerts too.
   const failed = results.filter((r) => !r.ok || r.suspect);
@@ -218,7 +218,7 @@ async function emailFailures(results) {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: process.env.LIMINAL_EMAIL_FROM ?? "Leuk <onboarding@resend.dev>",
+        from: process.env.LEUK_EMAIL_FROM ?? "Leuk <onboarding@resend.dev>",
         to,
         subject: `Harvest runner — ${failed.length} of ${results.length} jobs need attention`,
         html: `<p>Overnight run on ${today()}. Logs live in .harvest/runner/logs/.</p>${blocks}`,
@@ -238,7 +238,7 @@ async function emailFailures(results) {
 // every other machine caller in this app already uses. The route itself
 // no-ops when nothing is flagged, so it's safe to call every run.
 async function reportFailuresToLinear(results) {
-  const url = process.env.LIMINAL_APP_URL;
+  const url = process.env.LEUK_APP_URL;
   const secret = process.env.CRON_SECRET;
   if (!url || !secret) return;
   try {

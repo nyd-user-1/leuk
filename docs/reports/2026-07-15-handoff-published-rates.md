@@ -67,7 +67,7 @@ session. A fresh clone + `sql/` gives empty tables. Loaders are in `sql/README.m
 
 ## Not done, from the genesis brief
 
-1. **Nobody has seen it.** The original plan was to show Liminal Psychiatry the
+1. **Nobody has seen it.** The original plan was to show Leuk Psychiatry the
    same night and watch the reaction. Two sessions on the artifact instead.
 2. **It is behind sign-in.** The genesis doc says "public, no login" three times;
    a derived brief contradicted itself and auth won. That blocks self-serve

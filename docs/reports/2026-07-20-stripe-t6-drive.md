@@ -107,8 +107,8 @@ the branch the portal Pay button falls back from. **I deliberately did not click
 the portal Pay button** — it would fall through to the pre-marketplace mock path
 and settle the live invoice, destroying the payable state PART 2 needs.
 
-**Login** works for both roles: `brendan@liminal.demo` → `role=admin` (accepted
-by `requireRole("practitioner")` per `lib/auth.ts`), `casey@liminal.demo` →
+**Login** works for both roles: `brendan@leuk.demo` → `role=admin` (accepted
+by `requireRole("practitioner")` per `lib/auth.ts`), `casey@leuk.demo` →
 `role=client`.
 
 **Screenshots (2 of the required set are reachable now):**
@@ -152,7 +152,7 @@ INV-2026-9003: status=sent  total=$150.00  payments=0  splits=0
    response, so the Resend message id is never captured or logged. "Capture
    Resend message ids" is therefore not satisfiable from our side — in PART 2 I
    will pull ids from the Resend API post-send. Separately worth watching in
-   PART 2: recipients are demo addresses (`casey@`/`brendan@liminal.demo`); if
+   PART 2: recipients are demo addresses (`casey@`/`brendan@leuk.demo`); if
    the Resend sending domain isn't verified, sends to non-owner addresses may 403
    and be swallowed as `false`. (Lead ruled: do not edit `lib/email.ts` — shared
    file, out of my seam; logging the capture-the-id fix as a polish finding.)
@@ -237,8 +237,8 @@ controller.losses.payments       = application
 controller.requirement_collection = stripe      (Stripe collects — the default, as intended)
 controller.type                   = application
 business_profile.mcc              = 8099
-business_profile.product_description = "Outpatient behavioral health sessions billed through Liminal."
-metadata = { liminalUserId: … }                 (internal id only — no PHI)
+business_profile.product_description = "Outpatient behavioral health sessions billed through Leuk."
+metadata = { leukUserId: … }                 (internal id only — no PHI)
 ```
 
 **Idempotency confirmed:** a second `POST /api/connect/account` returned
@@ -550,7 +550,7 @@ and ready to run.
 # PART 3 — THE LOOP IS PROVEN (end to end, on the real route)
 
 The founder completed onboarding at ~07:52. Everything below was then driven
-unattended. **A client paid Liminal, Liminal kept 10%, the therapist's connected
+unattended. **A client paid Leuk, Leuk kept 10%, the therapist's connected
 account got the rest, and Stripe's own API confirms it.**
 
 ## The ids (prominent — the earnings agent needs the `py_`)
@@ -628,7 +628,7 @@ Transfer tr_3TvC5u…          amount 150.00 USD  → acct_1TvBKiJvfwWFuhCf
 
 SPLIT
   client paid        150.00 USD
-  Liminal fee         15.00 USD   (10.00% of gross)
+  Leuk fee         15.00 USD   (10.00% of gross)
   transfer moved     150.00 USD   → acct_1TvBKiJvfwWFuhCf
   therapist KEEPS    135.00 USD   (connected bt txn_1TvC5y…: amount 150.00 − fee 15.00)
   ✓ transfer = full gross 15000
@@ -659,7 +659,7 @@ connected bt.fee       =  1500   ← our application fee lands here
 connected bt.net       = 13500   ← what the therapist actually keeps
 ```
 
-The economics are exactly right ($135 to the therapist, 10% to Liminal); only
+The economics are exactly right ($135 to the therapist, 10% to Leuk); only
 the script's model was wrong. Two bugs fixed in `scripts/qa/verify-split.mjs`
 (my seam):
 
@@ -706,19 +706,19 @@ Pulled from the Resend API (our `sendEmail` discards the response, so the ids ar
 not in our logs — the PART 1 flag stands):
 
 ```
-e45bdde7-447a-4c34-b0ac-b9540eca75d8  → brendan@liminal.demo
+e45bdde7-447a-4c34-b0ac-b9540eca75d8  → brendan@leuk.demo
     "You've been paid $135.00 — INV-2026-9003"     created 07:58:37.399Z  last_event: bounced
-8f223edf-8665-4b2e-910c-8fe5158ccf4a  → casey@liminal.demo
+8f223edf-8665-4b2e-910c-8fe5158ccf4a  → casey@leuk.demo
     "Receipt — $150.00 paid on INV-2026-9003"      created 07:58:37.239Z  last_event: bounced
 ```
 
 Both fired from the webhook within ~1s of settlement, from
-`Liminal Psychiatry <billing@nysgpt.com>`. **The subject lines prove the split
+`Leuk Psychiatry <billing@nysgpt.com>`. **The subject lines prove the split
 math independently**: the therapist is told **$135.00** (net) and the client
 **$150.00** (gross), with the client receipt correctly omitting the fee per the
 lead's ruling.
 
-**But `last_event: bounced` on both** — `@liminal.demo` is not a real domain, so
+**But `last_event: bounced` on both** — `@leuk.demo` is not a real domain, so
 nothing was delivered. Exactly the risk flagged in PART 1. For a demo
 environment this is expected and harmless; it is recorded so nobody later reads
 "emails sent" as "emails received". Real delivery is unverified and cannot be
@@ -788,7 +788,7 @@ stripe_connect_accounts     1                1     ← KEPT, deliberately
 
 ## Final verdict
 
-**T6 PASSES.** A client paid Liminal $150.00, Liminal kept $15.00 (10.00%), and
+**T6 PASSES.** A client paid Leuk $150.00, Leuk kept $15.00 (10.00%), and
 $135.00 landed in the therapist's connected account — confirmed against Stripe's
 own API, not our logs. Both proof events arrived on their correct scopes and were
 recorded green, with zero unprocessed and zero errored events across the drive.
@@ -799,7 +799,7 @@ recorded green, with zero unprocessed and zero errored events across the drive.
    Route owner's seam. Fix by backfilling from `transfer.created`.
 
 2. **T5 emails bounce on demo addresses.** Both send correctly with right
-   amounts; `@liminal.demo` isn't real, so `last_event: bounced`. Real
+   amounts; `@leuk.demo` isn't real, so `last_event: bounced`. Real
    deliverability remains unverified and can't be verified against demo
    addresses.
 
@@ -885,14 +885,14 @@ subject  "You've been paid $135.00 — INV-2026-9003"
          Your payout    $135.00     (bold)
 ```
 
-"Platform fee" is the honest label: it names the money as Liminal's, not as a
+"Platform fee" is the honest label: it names the money as Leuk's, not as a
 cost of moving the card. The client receipt correctly shows only
 `Invoice` + `Amount paid $150.00` with no fee line, per the lead's ruling.
 
 **Chrome we do NOT control — Stripe's embedded `payment_details` — calls the
 same $15 "Processing fees"**, and that string is Stripe's own copy inside the
 iframe, not reachable via the appearance API. So on the Earnings page a therapist
-sees Liminal's revenue presented as if it were card-processing cost.
+sees Leuk's revenue presented as if it were card-processing cost.
 
 Both numbers are right; only the naming conflicts. Two observations for the
 pricing/copy fork rather than a defect to fix:

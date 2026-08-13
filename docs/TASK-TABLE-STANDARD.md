@@ -9,7 +9,7 @@ This doc is the full spec; the screenshots it refers to are described inline._
 
 - App: Next 16 App Router · React 19 · Tailwind v4. Conventions in `CLAUDE.md`
   and `BUILD_SPEC.md`. Dev: `npm run dev` → **localhost:3010**, sign in
-  `brendan@liminal.demo` / `demo`. Verify in the browser (headless is fine)
+  `brendan@leuk.demo` / `demo`. Verify in the browser (headless is fine)
   before reporting; `npx tsc --noEmit` must stay clean.
 - **Reuse the design system** (`components/ui/*`, browse `/design-system`).
   The changes below go into the `Table` primitive

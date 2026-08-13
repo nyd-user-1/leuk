@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// azimutt-export.mjs — emit docs/liminal-schema.azimutt.json for import into
+// azimutt-export.mjs — emit docs/leuk-schema.azimutt.json for import into
 // Azimutt (azimutt.app). READ-ONLY introspection of the live Neon schema, in the
 // exact same spirit as scripts/db-atlas.mjs. It never writes to the database.
 //
@@ -22,12 +22,12 @@
 // never given a second, inferred edge, and no table-pair is connected twice.
 //
 // Output shape mirrors Azimutt's legacy JSON importer (the shape the existing
-// docs/liminal-schema.azimutt.json already imports cleanly):
+// docs/leuk-schema.azimutt.json already imports cleanly):
 //   { tables:   [{ schema, table, columns:[{name,type,nullable}], primaryKey:{name,columns}, comment }],
 //     relations:[{ name, src:{schema,table,column}, ref:{schema,table,column} }] }
 //
-// Only docs/liminal-schema.azimutt.json is written (overwritten). The
-// docs/liminal-schema.authoritative.azimutt.json variant is left untouched.
+// Only docs/leuk-schema.azimutt.json is written (overwritten). The
+// docs/leuk-schema.authoritative.azimutt.json variant is left untouched.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -36,7 +36,7 @@ import { neon } from "@neondatabase/serverless";
 import { TABLE_GROUPS } from "../lib/table-atlas.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = path.join(ROOT, "docs", "liminal-schema.azimutt.json");
+const OUT = path.join(ROOT, "docs", "leuk-schema.azimutt.json");
 const SCHEMA = "public";
 const SAFE_IDENT = /^[a-z_][a-z0-9_]*$/;
 

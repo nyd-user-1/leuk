@@ -1,4 +1,4 @@
--- Liminal — 021: provider_rate_summary (one row per NPI, pre-aggregated).
+-- Leuk — 021: provider_rate_summary (one row per NPI, pre-aggregated).
 -- Backbone for the ranked provider rate-directory AND the recruiting footprint:
 -- reading this ~34k-row matview is instant vs scanning the 8.8M-row fact table.
 -- After each rate load: REFRESH MATERIALIZED VIEW CONCURRENTLY provider_rate_summary;

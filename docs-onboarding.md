@@ -1,10 +1,10 @@
-# Liminal — session onboarding (evergreen)
+# Leuk — session onboarding (evergreen)
 
 You are one of several Claude sessions working this repo, usually in parallel. Read this once, then do the task you were given. `CLAUDE.md` (auto-loaded) is binding — this file adds the operational context it doesn't cover.
 
 ## Orient (do these, cheaply, before coding)
 1. `git log --oneline -10` and `git status --short` — learn what recently shipped and, critically, **what other sessions have uncommitted in the shared tree. Never stage, commit, revert, or edit files you didn't change** (staging is always explicit file lists; `git add -A` is forbidden).
-2. The dev server runs at `http://localhost:3010` against **live Neon** (`.env.local`) — data persists; delete any test rows you create. Logins: `brendan@liminal.demo` (practitioner) / `casey@liminal.demo` (client), password `demo`.
+2. The dev server runs at `http://localhost:3010` against **live Neon** (`.env.local`) — data persists; delete any test rows you create. Logins: `brendan@leuk.demo` (practitioner) / `casey@leuk.demo` (client), password `demo`.
 3. UI work? Open `/design-system` (signed in) — the live gallery of all ~44 primitives and ~30 feature components. **Hover any card to copy its exact import line**; the "Copy manifest" button (if present) copies the full inventory. Compose these; creating a new component requires saying so explicitly in your report.
 
 ## Standing rules not to re-derive

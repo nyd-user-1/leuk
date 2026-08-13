@@ -94,7 +94,7 @@ source+freshness footer (bottom) are both in frame.
 - `07-propagation-rates.png` — /rates scrolled: sticky header sits correctly below the toolbar (no v2 props forced on it).
 - `08-propagation-directory.png` — /directory index layout intact (select column, sortable headers, Filter·Columns·Export·Refresh).
 
-## Verification (headless, real login `brendan@liminal.demo`)
+## Verification (headless, real login `brendan@leuk.demo`)
 - Rendered /workspace and clicked through all five Operations tabs — screenshots in the
   session scratchpad (`ws-harvest`, `ws-history`, `ws-reports`, `ws-queue`, `ws-anthem`,
   `final-harvest`, `final-ds-v2`).
@@ -106,7 +106,7 @@ source+freshness footer (bottom) are both in frame.
   column, sortable headers, and the Filter·Columns·Export·Refresh cluster all intact.
 - My workspace tables emit **zero** React key warnings.
 - `tsc --noEmit`: **0 errors**.
-- Liminal is a light-only surface (no `prefers-color-scheme` response; fixed
+- Leuk is a light-only surface (no `prefers-color-scheme` response; fixed
   navy/teal/amber tokens), so the dark-theme pass renders identically — "both themes"
   doesn't apply here.
 

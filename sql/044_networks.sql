@@ -1,4 +1,4 @@
--- Liminal — 044: the canonical NETWORK entity (NYS-49).
+-- Leuk — 044: the canonical NETWORK entity (NYS-49).
 --
 -- Both federal disclosures assert the same fact — a provider's membership in
 -- an insurance network — in different vocabularies: the payer FHIR directory

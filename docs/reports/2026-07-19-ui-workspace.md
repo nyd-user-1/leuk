@@ -1,6 +1,6 @@
 # 2026-07-19 — ui-agent: /workspace founder redesign (TASK-WORKSPACE-V2)
 
-All nine tasks landed. Headless verify (brendan@liminal.demo, admin) at 1440 and
+All nine tasks landed. Headless verify (brendan@leuk.demo, admin) at 1440 and
 390: **0 console errors, 0 page-level horizontal overflow, exactly one H1**
 ("Workspace", TopBar). Acceptance greps pass — no "Briefing", no eyebrow strings,
 section blurbs absent from the body.

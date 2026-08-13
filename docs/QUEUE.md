@@ -198,7 +198,7 @@ components/rates/* or docs/UI-PUSH-2026-07-18.md (other session's).
 
 - **Stale memory:** "01:04-runner-before-04:12-cron ordering load-bearing" is
   OBSOLETE post-NYS-130 (runner does the rebuild via psql; Vercel cron =
-  manual/emergency). Fix liminal-harvestd, liminal-operating-model, the
+  manual/emergency). Fix leuk-harvestd, leuk-operating-model, the
   OPERATING-MODEL.md standing decision, and the Linear Operations Runbook
   Document (a reader on the old version hunts for a 04:12 cron that's gone).
 - **Registry lag (NYS-115, quality-agent seam):** 8 relations render
@@ -227,7 +227,7 @@ components/rates/* or docs/UI-PUSH-2026-07-18.md (other session's).
   Blocks 2p-anthem re-mint loads only; nothing else waits on it.
 - **NEW task (founder):** Azimutt schema export is useless without relational
   lines (DB declares no FKs → Azimutt draws nothing). Dispatch docs-agent:
-  `scripts/azimutt-export.mjs` emitting docs/liminal-schema.azimutt.json WITH
+  `scripts/azimutt-export.mjs` emitting docs/leuk-schema.azimutt.json WITH
   inferred relations from lib/table-atlas.mjs join knowledge + key conventions
   (npi/tin/ein/insurer/network/code). Dispatch as soon as the founder's
   decision review wraps.

@@ -60,7 +60,7 @@ behaves for a direct visit.
      Insurance/network summary, Credential, Gender, Address, Phone,
      License, Practice, In-practice-since, NPI + verify, Source), laid out
      as a real page, not a `<dl>` in a drawer. **Most Directory rows are
-     external NPPES/Medicaid-sourced records with no Liminal account** —
+     external NPPES/Medicaid-sourced records with no Leuk account** —
      thin data is the common case, not the exception. `components/providers/
      provider-panel.tsx` already solved exactly this problem for the public
      marketing site (a provider profile page that reads as complete with as

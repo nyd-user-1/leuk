@@ -28,6 +28,6 @@ _Updated 2026-07-15: five-resource harvest now RUNNING concurrently (see Decisio
 ## Gotchas
 - Watchers track by PID (harvest 51524, babysitter 5186), NOT `pgrep -f` — a pattern match self-matches the watcher's own command line (first watcher b4lq8wuke hit this; killed + relaunched).
 - Row counts LAG mid-run: 500-row batch-flush, so a phase shows 0 rows until item 500.
-- Checkpoints in `os.tmpdir()/liminal-anthem-<resource>.json`; `--resume` honors them.
+- Checkpoints in `os.tmpdir()/leuk-anthem-<resource>.json`; `--resume` honors them.
 - Anthem = Provider Directory scope only — no rates/TIN/member data; `patient360`/`fhir.anthem.com` forbidden.
 - Pushes STOOD DOWN per Brendan — commits local only. Shared `main` also carries another session's 4 unpushed "Published rates" commits.

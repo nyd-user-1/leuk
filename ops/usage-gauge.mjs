@@ -409,7 +409,7 @@ function main() {
   const widths = [26, 4, 5, 10, 18, 4, 12];
   const line = (cells) => cells.map((c, i) => String(c).padEnd(widths[i])).join("  ");
   const out = [];
-  out.push("Liminal fleet fuel gauge  ·  " + new Date(now).toLocaleString());
+  out.push("Leuk fleet fuel gauge  ·  " + new Date(now).toLocaleString());
   out.push("─".repeat(88));
   out.push(" ".repeat(9) + line(head)); // 9 = verdict col (8) + gap, so header aligns with data
   out.push("─".repeat(88));

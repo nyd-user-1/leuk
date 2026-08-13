@@ -177,8 +177,8 @@ registerFixtures("notes", (store) => {
   // scheme). Register them for author display if no sibling fixture has —
   // never overwrite existing rows.
   const authors = [
-    { id: T("1001"), name: "Brendan Stanton", email: "brendan.seed@liminal.demo", avatarHue: "teal" as const },
-    { id: T("1002"), name: "Priya Raman", email: "priya@liminal.demo", avatarHue: "amber" as const },
+    { id: T("1001"), name: "Brendan Stanton", email: "brendan.seed@leuk.demo", avatarHue: "teal" as const },
+    { id: T("1002"), name: "Priya Raman", email: "priya@leuk.demo", avatarHue: "amber" as const },
   ];
   for (const a of authors) {
     if (store.users.has(a.id)) continue;

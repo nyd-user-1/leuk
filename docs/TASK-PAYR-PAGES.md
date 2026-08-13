@@ -12,7 +12,7 @@ transparency: `/payr-pricing-data/` (rate benchmarking + claims analytics),
 leverage), `/payer-provider-disputes/` (underpayment/denial dispute
 advocacy). Fetch and study all three before designing.
 
-Build **Liminal's version**: a small public marketing family that makes the
+Build **Leuk's version**: a small public marketing family that makes the
 same three arguments — know your rates, negotiate from evidence, dispute
 with the payer's own numbers — with one decisive difference: **Payr shows
 one illustrative example; we show the live corpus.** Our credibility IS the
@@ -51,7 +51,7 @@ existing pattern has a place for them.
    the NYS-35 lane — not a specific plan × provider × code answer, which is
    where exact-rate-first bites).
 5. **Original copy.** Payr's pages are structural reference only. Write in
-   Liminal's voice (see PRODUCT.md: hushed, grounded, assured; serif voice
+   Leuk's voice (see PRODUCT.md: hushed, grounded, assured; serif voice
    for the human moments, grotesque structure for the credible ones). Zero
    copied sentences.
 6. **Real CTAs only.** Link to destinations that exist (the provider
@@ -89,7 +89,7 @@ Payr's job: sell renegotiation services. Ours: **arm the clinician**.
 - A concrete, real contrast: the same service, different payers, the spread
   between them (real medians, labeled). This is the "why you're
   underpaid" moment — made of data, not adjectives.
-- What a Liminal practice gets: their payer mix beside the market (describe
+- What a Leuk practice gets: their payer mix beside the market (describe
   the product truthfully — the /rates surfaces exist; don't overpromise
   features that don't).
 - CTA: for-providers page / contact.
@@ -191,5 +191,5 @@ patterns they carry, distilled:
 9. **GFE/estimate card** (patient-facing estimate composition) — patient
    lens; relevant to Find-my-plan framing, not a claim we make yet.
 
-These are INSPIRATION for structure and moments — Liminal's visual system
+These are INSPIRATION for structure and moments — Leuk's visual system
 (warm paper, watercolor, our tokens) still governs every pixel.

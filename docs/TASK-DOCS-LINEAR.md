@@ -87,7 +87,7 @@ brief with the founder's approval; execute it top to bottom. Your mission:
    Everything automated, in one place: the 01:04 harvestd (jobs.json set,
    manifest drop-folder + prefix rules, retries, KILL SWITCH, ledger, email),
    the 04:12 Vercel matview cron (10 views + ANALYZE, CRON_SECRET), the
-   /insights sync-health card + bell + `LIMINAL_OPS_EMAIL`, how to check
+   /insights sync-health card + bell + `LEUK_OPS_EMAIL`, how to check
    health (green card + two silent emails = worked), how to add/disable a
    job, `install.sh on|off|status|run`, the lock file, log locations,
    the lid-physics caveat. Sources: `ops/harvest/README.md`, the cron route
@@ -109,11 +109,11 @@ brief with the founder's approval; execute it top to bottom. Your mission:
      refresh registry), and which page/repo consumes each table. Reuse the
      grouping/meaning metadata that already exists in `lib/repos/admin.ts`
      (`platformInventory` — it powers /insights' Observatory and /admin/data).
-   - Also emit per-table Obsidian notes to `~/Vaults/hq/liminal/atlas/` with
+   - Also emit per-table Obsidian notes to `~/Vaults/hq/leuk/atlas/` with
      `[[wiki-links]]` between joined tables (FK + known join keys: npi, ein/
      tin, payer) so the founder's graph view shows the schema. (Old artifacts
      `~/Vaults/hq/Session-Database Expansion.md` and
-     `~/Vaults/hq/liminal/Database Transcript.md` are prose predecessors —
+     `~/Vaults/hq/leuk/Database Transcript.md` are prose predecessors —
      leave them; yours supersedes.)
    - Register it as a weekly job: add to `ops/harvest/jobs.json` —
      `{"id":"db-atlas","every":"week","run":"node --env-file=.env.local scripts/db-atlas.mjs","timeoutMinutes":20,"attempts":1,"memo":"Regenerate docs/data/DATABASE.md + Obsidian atlas from the live schema."}`.
@@ -145,7 +145,7 @@ brief with the founder's approval; execute it top to bottom. Your mission:
 - **You OWN**: `docs/**` EXCEPT `docs/MRF-INDEXES.md` (data terminal's) and
   `docs/reports/*` written by others; ALL Linear structural writes (projects,
   milestones, documents, moves, closes); `scripts/db-atlas.mjs`;
-  `ops/harvest/jobs.json` (your one additive entry); `~/Vaults/hq/liminal/atlas/`.
+  `ops/harvest/jobs.json` (your one additive entry); `~/Vaults/hq/leuk/atlas/`.
 - **DO NOT TOUCH**: `app/**`, `components/**`, `lib/**` (read freely, write
   never), `scripts/` other than db-atlas.mjs, `sql/**`, `.harvest/**`.
 
@@ -155,7 +155,7 @@ brief with the founder's approval; execute it top to bottom. Your mission:
   main` before every push. Push = deploy; docs and scripts are safe to push
   when complete.
 - The DB is LIVE — your atlas generator is read-only; keep it that way.
-- Verify at :3010 (login brendan@liminal.demo / demo) anything you must see
+- Verify at :3010 (login brendan@leuk.demo / demo) anything you must see
   (NYS-98 close-check). Headless gotcha: sign in by POSTing
   `/api/auth/login`, carry the cookie; `networkidle` never settles under HMR.
 

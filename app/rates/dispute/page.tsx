@@ -131,7 +131,7 @@ export default async function RosterDisputePrintPage({
         </div>
 
         <p className="mt-8 border-t border-border pt-4 text-[12.5px] leading-relaxed text-text-muted">
-          Prepared from {payer}&rsquo;s own published Transparency-in-Coverage file as of the dates shown. Liminal does
+          Prepared from {payer}&rsquo;s own published Transparency-in-Coverage file as of the dates shown. Leuk does
           not submit this on your behalf — send it to the payer&rsquo;s provider-data or network-management contact.
           Keep a copy: the file date above is what makes the claim checkable.
         </p>

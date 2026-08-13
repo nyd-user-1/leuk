@@ -1,7 +1,7 @@
 # Stripe Connect — T6 end-to-end drive
 
 The exact drive that proves TASK-STRIPE-MARKETPLACE tranche 1 works: a client
-pays Liminal, Liminal keeps 10%, the therapist's connected account gets the
+pays Leuk, Leuk keeps 10%, the therapist's connected account gets the
 rest — and Stripe's own API confirms it, not our logs.
 
 Written 2026-07-20 by qa-agent against the live tree. Everything below the
@@ -99,10 +99,10 @@ Casey Morgan's three existing invoices are **all `paid`**, so the portal had
 nothing payable and T4 had nothing to click. Seeded exactly one row:
 
 ```
-INV-2026-9003   $150.00   status=sent   → Casey Morgan <casey@liminal.demo>
+INV-2026-9003   $150.00   status=sent   → Casey Morgan <casey@leuk.demo>
   invoice id   00000000-0000-4000-8000-000000009003
   appointment  33d613d6-2d32-4844-965e-673df96a349b (completed 2026-06-15)
-  therapist    Brendan Stanton <brendan@liminal.demo>
+  therapist    Brendan Stanton <brendan@leuk.demo>
   expected 10% split: fee $15.00 · therapist $135.00
 ```
 
@@ -132,7 +132,7 @@ Three choices in that row are load-bearing; don't "tidy" them:
 - **`status` must be `sent`.** The portal filters drafts out
   (`app/portal/invoices/page.tsx`), so a draft is invisible to Casey.
 
-`brendan@liminal.demo` is `role=admin`, which `requireRole("practitioner")`
+`brendan@leuk.demo` is `role=admin`, which `requireRole("practitioner")`
 accepts (`lib/auth.ts:241`) — so the same login both creates the connected
 account and owns the session being billed. That's what makes the demo coherent.
 
@@ -159,7 +159,7 @@ fine. If your CLI version rejects `--forward-connect-to`, run a second
 
 ### 1 — Provider creates the account
 
-Sign in `brendan@liminal.demo` / `demo` → Settings → **Get paid** → create.
+Sign in `brendan@leuk.demo` / `demo` → Settings → **Get paid** → create.
 
 Expect: `POST /api/connect/account` 200; a row in `stripe_connect_accounts`
 with `charges_enabled=false`; the card moves to the embedded onboarding state.
@@ -199,7 +199,7 @@ can still be blocked. Do not offer checkout until it is true.
 
 ### 3 — Client pays
 
-Sign in `casey@liminal.demo` / `demo` → `/portal/invoices` → `INV-2026-9003`
+Sign in `casey@leuk.demo` / `demo` → `/portal/invoices` → `INV-2026-9003`
 → **Pay now** → card `4000 0000 0000 0077` (primary — funds land in the
 available balance immediately, so the transfer/payout side verifies without a
 pending wait), any future expiry / CVC / ZIP.
@@ -219,7 +219,7 @@ It finds the PaymentIntent, retrieves it **from Stripe**, and prints:
 
 - `PaymentIntent` status + amount
 - `Charge` — amount, `application_fee_amount`, `transfer_data.destination`, `transfer`
-- `ApplicationFee` object — what Liminal actually kept
+- `ApplicationFee` object — what Leuk actually kept
 - `Transfer` object — amount and destination account
 - the arithmetic: `charge.amount − application_fee = transfer.amount`, and the
   fee as a percentage (must be 10.00%)
@@ -254,7 +254,7 @@ For `INV-2026-9003` the expected result is:
 
 ```
 client paid        150.00 USD
-Liminal fee         15.00 USD   (10.00% of gross)
+Leuk fee         15.00 USD   (10.00% of gross)
 therapist receives 135.00 USD   → acct_…
 ✓ 15000 − 1500 = 13500
 VERDICT: split verified end to end — Stripe and our ledger agree.

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "You can't negotiate a rate you can't see. The payer already published theirs. See the market median for a session, by payer, and walk into the conversation with evidence.",
 };
 
-const CONTACT = "mailto:partnerships@liminal.demo";
+const CONTACT = "mailto:partnerships@leuk.demo";
 
 export default async function PayerNegotiationPage() {
   const spread = await get90837Spread();

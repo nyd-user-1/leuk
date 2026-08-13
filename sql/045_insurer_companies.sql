@@ -1,4 +1,4 @@
--- Liminal — 045: the NAIC company backbone (NYS-143).
+-- Leuk — 045: the NAIC company backbone (NYS-143).
 --
 -- NYS-48's `insurers` is the BRAND grain (aetna, oxford…) — correct for
 -- display, but a brand holds several licensed companies. This is the COMPANY

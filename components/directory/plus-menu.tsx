@@ -8,7 +8,7 @@ import { RATE_TABLE_PAYERS } from "@/lib/rate-table";
 // search, back arrow, and breadcrumb). The insurance drill-downs (vehicle →
 // coverage → driver) are replaced with directory ones: sample questions,
 // rates-by-insurer (insurer → service), and find-providers (role → borough).
-// Same CSS var names as the source; ChatInput's root maps them to Liminal
+// Same CSS var names as the source; ChatInput's root maps them to Leuk
 // tokens, and this renders inside it.
 
 const SERVICES = [

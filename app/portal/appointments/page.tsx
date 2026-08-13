@@ -44,7 +44,7 @@ export default async function PortalAppointmentsPage() {
 
   return (
     <>
-      <AppointmentsList appointments={rows} bookHref={`/book/${client.primaryPractitionerId ?? "liminal"}`} />
+      <AppointmentsList appointments={rows} bookHref={`/book/${client.primaryPractitionerId ?? "leuk"}`} />
     </>
   );
 }

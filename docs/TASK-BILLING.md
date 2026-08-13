@@ -12,7 +12,7 @@ seat, not a stretch on a loaded window. Opus is fine.
 > portal invoice UI, `lib/email.ts`'s `sendInvoiceEmail`/`sendPaymentReceipt`).
 > Build Carepatron-parity billing: Stripe Checkout for invoices + card
 > payments, and superbill PDF generation for out-of-network reimbursement
-> (jspdf is already a 44b dep pattern; check liminal's deps). Report per the
+> (jspdf is already a 44b dep pattern; check leuk's deps). Report per the
 > standard protocol, STOP.
 
 ## The one hard constraint (non-negotiable — HIPAA)

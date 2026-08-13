@@ -19,7 +19,7 @@ import { formatCents } from "@/lib/format";
 export type MoneySplit = {
   /** What the client was charged, in cents. */
   grossCents: number;
-  /** Liminal's application fee, in cents. */
+  /** Leuk's application fee, in cents. */
   feeCents: number;
   /** What lands in the therapist's connected account, in cents. */
   netCents: number;
@@ -148,7 +148,7 @@ export async function sendTherapistPaid(opts: {
 
 /**
  * Practice-facing alert when Stripe opens a dispute. Internal ops mail, not
- * patient mail — falls back to LIMINAL_OPS_EMAIL and no-ops when neither an
+ * patient mail — falls back to LEUK_OPS_EMAIL and no-ops when neither an
  * explicit recipient nor an operator inbox is configured.
  *
  * Disputes are deadline-driven, so the respond-by date leads.
@@ -162,7 +162,7 @@ export async function sendDisputeAlert(opts: {
   dueBy?: string | null;
   invoiceNumber?: string | null;
 }): Promise<boolean> {
-  const to = opts.to ?? process.env.LIMINAL_OPS_EMAIL;
+  const to = opts.to ?? process.env.LEUK_OPS_EMAIL;
   if (!to) return false;
   const deadline = opts.dueBy ? utcDateLong(opts.dueBy) : null;
   return sendEmail({

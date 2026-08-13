@@ -1,4 +1,4 @@
--- Liminal — 004: NPPES as a second provider directory source.
+-- Leuk — 004: NPPES as a second provider directory source.
 --
 -- The Medicaid feed (keti-qx5t) only lists Medicaid-enrolled providers and
 -- can't isolate psychiatrists / psychiatric NPs. NPPES (the national NPI

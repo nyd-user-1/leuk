@@ -1,4 +1,4 @@
--- Liminal — 043: the canonical INSURER entity (NYS-48, fed by NYS-104's DFS
+-- Leuk — 043: the canonical INSURER entity (NYS-48, fed by NYS-104's DFS
 -- reference in sql/042).
 --
 -- One row per carrier brand, with parent ownership as a self-reference
