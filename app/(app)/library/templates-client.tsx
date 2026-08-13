@@ -173,7 +173,7 @@ function ChipMenu({
   );
 }
 
-export function TemplatesIndex() {
+export function TemplatesIndex({ isAdmin = false }: { isAdmin?: boolean }) {
   const toast = useToast();
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
@@ -189,6 +189,12 @@ export function TemplatesIndex() {
   const [using, setUsing] = useState(false);
   const [openNoteId, setOpenNoteId] = useState<string | null>(null);
   const [openForm, setOpenForm] = useState<(Form & { responseCount: number }) | null>(null);
+  // Operations → SignNow action modal ("sign" = in-app signing session, "send"
+  // = email a signature invite).
+  const [actionDoc, setActionDoc] = useState<{ slug: string; title: string; mode: "send" | "sign" } | null>(null);
+  const [sendEmail, setSendEmail] = useState("");
+  const [sendName, setSendName] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     fetch("/api/templates")
@@ -337,6 +343,34 @@ export function TemplatesIndex() {
 
   const comingSoon = () => toast("Coming soon.", "info");
 
+  // Operations doc → SignNow: "sign" opens an in-app signing session in a new
+  // tab; "send" emails the signer an invite.
+  const submitAction = async () => {
+    if (!actionDoc || !sendEmail.trim()) return;
+    setSending(true);
+    try {
+      const endpoint = actionDoc.mode === "sign" ? "sign" : "send";
+      const res = await fetch(`/api/library/operations/${actionDoc.slug}/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: sendEmail.trim(), name: sendName.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Something went wrong.");
+      if (actionDoc.mode === "sign") {
+        window.open(json.link, "_blank", "noopener,noreferrer");
+        toast(`Opening the signing session for "${actionDoc.title}".`, "success");
+      } else {
+        toast(`Sent "${actionDoc.title}" to ${sendEmail.trim()} for signature.`, "success");
+      }
+      setActionDoc(null);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Something went wrong.", "danger");
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Kebab shared by every card. Rename shows only on cards you created (duplicate
   // a built-in, then rename the copy — the Figma "duplicate to rename" scheme).
   const cardMenu = (
@@ -362,6 +396,7 @@ export function TemplatesIndex() {
     Prompts: "violet",
     Worksheets: "teal",
     Handouts: "blue",
+    Operations: "red",
   };
 
   // Each card: a category tag (first) + one secondary tag, bottom-left. `statusLabel`
@@ -422,6 +457,50 @@ export function TemplatesIndex() {
     menu: cardMenu(`Actions for ${title}`, { canRename: true, onDuplicate: comingSoon, onRename: comingSoon, onDelete: comingSoon }),
   });
 
+  // Operations documents (admin-only) — real PDFs served off disk via the
+  // admin-gated /api/library/operations route; open inline in a new tab.
+  const opsDoc = (slug: string, title: string, description: string): LibItem => ({
+    id: `ops-${slug}`,
+    title,
+    description,
+    date: "Jul 2026",
+    category: "Operations",
+    statusLabel: "PDF",
+    tag: <Tag hue="grey">PDF</Tag>,
+    onOpen: () => {
+      setSendName("");
+      setSendEmail("");
+      setActionDoc({ slug, title, mode: "sign" });
+    },
+    menu: (
+      <KebabMenu label={`Actions for ${title}`}>
+        <MenuItem
+          icon="edit"
+          label="Open & sign"
+          onClick={() => {
+            setSendName("");
+            setSendEmail("");
+            setActionDoc({ slug, title, mode: "sign" });
+          }}
+        />
+        <MenuItem
+          icon="send"
+          label="Send for signature"
+          onClick={() => {
+            setSendName("");
+            setSendEmail("");
+            setActionDoc({ slug, title, mode: "send" });
+          }}
+        />
+        <MenuItem
+          icon="note"
+          label="View PDF"
+          onClick={() => window.open(`/api/library/operations/${slug}`, "_blank", "noopener,noreferrer")}
+        />
+      </KebabMenu>
+    ),
+  });
+
   const dateFor = (i: number) => PLACEHOLDER_DATES[i % PLACEHOLDER_DATES.length];
   const loremItems = (category: string) =>
     LOREM_CARDS.map((l, i) => scaffoldItem(l.name, l.name, l.meta, "Placeholder", dateFor(i), category));
@@ -452,6 +531,19 @@ export function TemplatesIndex() {
     { key: "worksheets", title: "Worksheets", onNew: comingSoon, items: sortAZ(loremItems("Worksheets")) },
     { key: "handouts", title: "Handouts", onNew: comingSoon, items: sortAZ(loremItems("Handouts")) },
   ].sort((a, b) => a.title.localeCompare(b.title));
+
+  // Operations — admin-only governance docs. Appended AFTER the A–Z sort so it
+  // sits last (deliberately last, not alphabetical), and only for the admin.
+  if (isAdmin) {
+    SECTIONS.push({
+      key: "operations",
+      title: "Operations",
+      onNew: comingSoon,
+      items: [
+        opsDoc("hipaa-policy", "HIPAA Compliance Policy", "Practice HIPAA policies & procedures."),
+      ],
+    });
+  }
 
   const allCategories = SECTIONS.map((s) => s.title);
   const allStatuses = [...new Set(SECTIONS.flatMap((s) => s.items.map((it) => it.statusLabel)))].sort();
@@ -656,6 +748,57 @@ export function TemplatesIndex() {
       )}
 
       {openNoteId && <NoteSheet noteId={openNoteId} onClose={() => setOpenNoteId(null)} defaultBig />}
+
+      {/* Operations → open an in-app signing session, or email a signature invite */}
+      {actionDoc && (
+        <Modal
+          open
+          onClose={() => setActionDoc(null)}
+          title={actionDoc.mode === "sign" ? `Sign "${actionDoc.title}"` : `Send "${actionDoc.title}" for signature`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setActionDoc(null)}>
+                Cancel
+              </Button>
+              <Button onClick={submitAction} loading={sending} disabled={!sendEmail.trim()}>
+                {actionDoc.mode === "sign" ? "Open signing session" : "Send via SignNow"}
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <p className="text-[15px] text-text-body">
+              {actionDoc.mode === "sign" ? (
+                <>
+                  Opens a secure SignNow signing session for{" "}
+                  <span className="font-semibold text-text">{actionDoc.title}</span> in a new tab — the
+                  signer signs in the browser and the completed PDF returns to your SignNow account.
+                  The signer can&apos;t be the SignNow account owner.
+                </>
+              ) : (
+                <>
+                  SignNow emails the signer a secure link to review and sign{" "}
+                  <span className="font-semibold text-text">{actionDoc.title}</span>. The completed,
+                  countersigned PDF returns to your SignNow account.
+                </>
+              )}
+            </p>
+            <Field
+              label="Signer name"
+              value={sendName}
+              onChange={(e) => setSendName(e.target.value)}
+              placeholder="e.g. Jordan Rivera"
+            />
+            <Field
+              label="Signer email"
+              required
+              value={sendEmail}
+              onChange={(e) => setSendEmail(e.target.value)}
+              placeholder="signer@example.com"
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

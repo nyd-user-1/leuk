@@ -36,6 +36,11 @@ const CSP = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Bundle the admin-only Operations PDFs (served off-disk by the
+  // /api/library/operations route) into that function's trace on Vercel.
+  outputFileTracingIncludes: {
+    "/api/library/operations/[slug]": ["./assets/operations/**"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: [{ key: "Content-Security-Policy-Report-Only", value: CSP }] }];
   },
