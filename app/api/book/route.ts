@@ -140,6 +140,11 @@ export async function POST(req: Request) {
   const phone = s("phone");
   const payerId = s("payerId"); // "" = self-pay/cash, no policy created
 
+  // Attribution only — never authorization. The MCP server sets this header so
+  // its bookings are countable (sql/075 widened booked_via); a forged header
+  // buys nothing, because the route grants exactly the same thing either way.
+  const viaMcp = req.headers.get("x-booked-via") === "mcp";
+
   if (!practitionerId || !serviceId) {
     return NextResponse.json({ error: "Pick a service." }, { status: 400 });
   }
@@ -193,8 +198,8 @@ export async function POST(req: Request) {
       locationId: location?.id ?? null,
       startsAt: localDate(date, startMin).toISOString(),
       endsAt: localDate(date, startMin + service.durationMin).toISOString(),
-      bookedVia: "link",
-      notesBrief: "Booked via public booking link",
+      bookedVia: viaMcp ? "mcp" : "link",
+      notesBrief: viaMcp ? "Booked through an assistant (MCP)" : "Booked via public booking link",
     });
     await logEvent({
       actorId: null,

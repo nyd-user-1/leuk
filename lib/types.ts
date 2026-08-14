@@ -80,7 +80,7 @@ export type AppointmentStatus =
   | "completed"
   | "cancelled"
   | "no_show";
-export type BookedVia = "staff" | "portal" | "link";
+export type BookedVia = "staff" | "portal" | "link" | "mcp";
 
 export interface Appointment {
   id: string;
