@@ -51,6 +51,7 @@ type ProviderRow = {
   primary_taxonomy?: string | null;
   subspecialty?: string | null;
   taxonomies?: string[] | null;
+  focus?: string[] | null;
   credential?: string | null;
   gender?: string | null;
   license_state?: string | null;
@@ -81,6 +82,7 @@ function toProvider(r: ProviderRow): DirectoryProvider {
     primaryTaxonomy: r.primary_taxonomy ?? null,
     subspecialty: r.subspecialty ?? null,
     taxonomies: r.taxonomies ?? null,
+    focus: r.focus ?? [],
     credential: r.credential ?? null,
     gender: r.gender ?? null,
     licenseState: r.license_state ?? null,
@@ -153,6 +155,8 @@ export async function searchProviders(opts: {
   county?: string;
   profession?: string;
   subspecialty?: string;
+  /** Any of these focus tags (see providerFacets().focus). */
+  focus?: string[];
   gender?: string;
   providerType?: string; // "therapist" | "psychiatrist" | "prescriber"
   prescribersOnly?: boolean;
@@ -180,7 +184,7 @@ export async function searchProviders(opts: {
   // dedup — and its result only drifts when ingest runs. Memo it briefly.
   const isDefaultListing =
     hasDb && (!q || q.length === 1) && !zip5 && !opts.city && !opts.county && !opts.profession &&
-    !opts.subspecialty && !opts.gender && !prescribers && !therapists &&
+    !opts.subspecialty && !opts.focus?.length && !opts.gender && !prescribers && !therapists &&
     !opts.insurancePayer && !opts.includeInactive && !opts.sort && page === 1 && pageSize === PAGE_SIZE;
   if (isDefaultListing && defaultListingMemo && Date.now() - defaultListingMemo.at < 60_000) {
     return defaultListingMemo.page;
@@ -227,6 +231,10 @@ export async function searchProviders(opts: {
     if (opts.subspecialty) {
       where.push(`subspecialty = $${p++}`);
       params.push(opts.subspecialty);
+    }
+    if (opts.focus?.length) {
+      where.push(`focus && $${p++}`);
+      params.push(opts.focus);
     }
     if (opts.gender) {
       where.push(`gender = $${p++}`);
@@ -393,6 +401,7 @@ function filterProviders(
     county?: string;
     profession?: string;
     subspecialty?: string;
+    focus?: string[];
     gender?: string;
     providerType?: string;
     prescribersOnly?: boolean;
@@ -417,6 +426,7 @@ function filterProviders(
     if (opts.county && r.county !== opts.county) return false;
     if (opts.profession && r.profession !== opts.profession) return false;
     if (opts.subspecialty && r.subspecialty !== opts.subspecialty) return false;
+    if (opts.focus?.length && !opts.focus.some((f) => (r.focus ?? []).includes(f))) return false;
     if (opts.gender && r.gender !== opts.gender) return false;
     if (prescribers && !PRESCRIBER_PROFS.includes(r.profession ?? "")) return false;
     if (therapists && !THERAPIST_PROFS.includes(r.profession ?? "")) return false;
@@ -592,16 +602,17 @@ function filterPrograms(list: DirectoryProgram[], opts: { q?: string; county?: s
 }
 
 /** Distinct filter facet values (cities, counties, professions, subspecialties) for filter chips. */
-export async function providerFacets(): Promise<{ cities: string[]; counties: string[]; professions: string[]; subspecialties: string[] }> {
+export async function providerFacets(): Promise<{ cities: string[]; counties: string[]; professions: string[]; subspecialties: string[]; focus: string[] }> {
   if (hasDb) {
     // Four independent facet queries — one flight, not four sequential trips.
-    const [ci, c, pr, ss] = (await Promise.all([
+    const [ci, c, pr, ss, fo] = (await Promise.all([
       sql`SELECT DISTINCT initcap(lower(city)) AS city FROM directory_providers WHERE city IS NOT NULL AND deactivated_at IS NULL ORDER BY city`,
       sql`SELECT DISTINCT county FROM directory_providers WHERE county IS NOT NULL AND deactivated_at IS NULL ORDER BY county`,
       sql`SELECT DISTINCT profession FROM directory_providers WHERE profession IS NOT NULL AND deactivated_at IS NULL ORDER BY profession`,
       sql`SELECT subspecialty, count(*)::int n FROM directory_providers WHERE subspecialty IS NOT NULL AND deactivated_at IS NULL GROUP BY subspecialty ORDER BY n DESC`,
-    ])) as [Array<{ city: string }>, Array<{ county: string }>, Array<{ profession: string }>, Array<{ subspecialty: string }>];
-    return { cities: ci.map((r) => r.city), counties: c.map((r) => r.county), professions: pr.map((r) => r.profession), subspecialties: ss.map((r) => r.subspecialty) };
+      sql`SELECT f AS focus, count(*)::int n FROM directory_providers, unnest(focus) f WHERE deactivated_at IS NULL GROUP BY f ORDER BY n DESC`,
+    ])) as [Array<{ city: string }>, Array<{ county: string }>, Array<{ profession: string }>, Array<{ subspecialty: string }>, Array<{ focus: string }>];
+    return { cities: ci.map((r) => r.city), counties: c.map((r) => r.county), professions: pr.map((r) => r.profession), subspecialties: ss.map((r) => r.subspecialty), focus: fo.map((r) => r.focus) };
   }
   const list = [...mockStore().directoryProviders.values()];
   return {
@@ -609,6 +620,7 @@ export async function providerFacets(): Promise<{ cities: string[]; counties: st
     counties: unique(list.map((r) => r.county)),
     professions: unique(list.map((r) => r.profession)),
     subspecialties: unique(list.map((r) => r.subspecialty ?? null)),
+    focus: unique(list.flatMap((r) => r.focus ?? [])),
   };
 }
 

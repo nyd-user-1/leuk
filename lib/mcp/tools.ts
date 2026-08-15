@@ -63,6 +63,8 @@ function toCard(p: DirectoryProvider) {
     name: providerDisplayName(p.name, p.entityType ?? null),
     profession: p.profession,
     subspecialty: p.subspecialty ?? null,
+    // What their NUCC codes say they focus on — every code, not just the first.
+    focus: p.focus?.length ? p.focus : undefined,
     credential: p.credential ?? null,
     city: city(p.city),
     county: p.county,
@@ -80,6 +82,8 @@ export type FindProvidersInput = {
   zip?: string;
   profession?: string;
   subspecialty?: string;
+  /** Any of these focus tags — exact values from directory_filters.providers.focus. */
+  focus?: string[];
   provider_type?: "therapist" | "psychiatrist" | "prescriber";
   insurance_payer?: string;
   prefer_accepting?: boolean;
@@ -87,7 +91,7 @@ export type FindProvidersInput = {
   page?: number;
 };
 
-// ── Conditions ───────────────────────────────────────────────────────────────
+// ── Topics ───────────────────────────────────────────────────────────────────
 //
 // The directory (NPPES + Medicaid) records WHO is licensed to do what — not
 // what anyone treats. There is no "anxiety" anywhere in 116,000 rows, so a
@@ -100,6 +104,7 @@ type ConditionRule = {
   label: string;
   provider_type?: FindProvidersInput["provider_type"];
   subspecialty?: string;
+  focus?: string[];
   profession?: string;
   explain: string;
 };
@@ -111,26 +116,40 @@ export const CONDITION_RULES: ConditionRule[] = [
     explain: "Anxiety is treated by talk therapy first (CBT and related), so this searches licensed therapists — psychologists, social workers, counsellors, family therapists." },
   { match: /\b(depress|low mood|sad(ness)?|hopeless|mdd)\b/i, label: "depression", provider_type: "therapist",
     explain: "Depression is treated by therapists and, when medication is wanted, prescribers; this searches therapists. Add provider_type 'prescriber' for medication." },
-  { match: /\b(ocd|obsessive|compulsi)\w*/i, label: "OCD", provider_type: "therapist", subspecialty: "Cognitive & Behavioral",
-    explain: "OCD responds best to CBT/ERP, so this narrows to therapists with a cognitive-behavioral subspecialty." },
+  { match: /\b(ocd|obsessive|compulsi)\w*/i, label: "OCD", focus: ["Cognitive & Behavioral"],
+    explain: "OCD responds best to CBT/ERP, so this narrows to clinicians whose codes carry a Cognitive & Behavioral focus." },
   { match: /\b(ptsd|trauma|abuse|assault|veteran)\w*/i, label: "trauma / PTSD", provider_type: "therapist",
     explain: "Trauma and PTSD are treated by licensed therapists; this searches those. Ask about EMDR or trauma-focused CBT when you call." },
   { match: /\b(adhd|attention deficit|hyperactiv)\w*/i, label: "ADHD", provider_type: "prescriber",
     explain: "ADHD evaluation and medication sit with psychiatrists and psychiatric NPs, so this searches prescribers; therapists help with skills alongside." },
   { match: /\b(bipolar|mania|manic|schizo|psychosis|psychotic)\w*/i, label: "bipolar / psychosis", provider_type: "psychiatrist",
     explain: "Bipolar and psychotic disorders need a psychiatrist for diagnosis and medication, so this searches psychiatrists." },
-  { match: /\b(addict|substance|alcohol|drink|drug|opioid|opiate|sober|recovery|suboxone|detox)\w*/i, label: "addiction / substance use", subspecialty: "Addiction Psychiatry",
-    explain: "This searches addiction-specialised clinicians. find_programs also lists OMH/OASAS treatment programs, which are often the better route." },
+  { match: /\b(addict|substance|alcohol|drink|drug|opioid|opiate|sober|recovery|suboxone|detox)\w*/i, label: "addiction / substance use", focus: ["Addiction (Substance Use Disorder)", "Addiction Psychiatry", "Addiction Medicine", "Rehabilitation, Substance Use Disorder"],
+    explain: "This searches clinicians whose codes carry an addiction focus — counsellors, psychiatrists and addiction-medicine physicians. find_programs also lists OMH/OASAS treatment programs, which are often the better route." },
   { match: /\b(eating|anorexi|bulimi|binge|arfid)\w*/i, label: "eating disorder", provider_type: "therapist",
     explain: "Eating disorders are treated by specialised therapists (often with a medical team); this searches therapists — ask about eating-disorder experience when you call." },
-  { match: /\b(autis|asd|asperger|developmental|aba)\w*/i, label: "autism / developmental", subspecialty: "Intellectual & Developmental Disabilities",
-    explain: "This narrows to clinicians with a developmental-disabilities subspecialty; behavior analysts (ABA) are a separate profession you can filter on." },
-  { match: /\b(child|children|kid|teen|adolescen|pediatric|paediatric|son|daughter)\w*/i, label: "child / adolescent", subspecialty: "Child & Adolescent Psychiatry",
-    explain: "This narrows to child-and-adolescent specialists. Psychologists with a 'Clinical Child & Adolescent' subspecialty are the therapy-side equivalent." },
+  { match: /\b(autis|asd|asperger|developmental|aba)\w*/i, label: "autism / developmental", focus: ["Intellectual & Developmental Disabilities"],
+    explain: "This narrows to clinicians with a developmental-disabilities focus; behavior analysts (ABA) are a separate profession you can filter on." },
+  { match: /\b(child|children|kid|teen|adolescen|pediatric|paediatric|son|daughter)\w*/i, label: "child / adolescent", focus: ["Child & Adolescent Psychiatry", "Clinical Child & Adolescent", "Adolescent and Children Mental Health", "Psychiatric/Mental Health, Child & Adolescent", "Psychiatric/Mental Health, Child & Family", "School", "Developmental - Behavioral Pediatrics", "Adolescent Medicine"],
+    explain: "This narrows to clinicians whose codes carry a child-and-adolescent focus — child psychiatrists, child psychologists, school psychologists." },
   { match: /\b(couple|marri|marital|relationship|family therapy|divorce)\w*/i, label: "couples / family", profession: "Marriage & Family Therapist",
-    explain: "Couples and family work is the domain of marriage-and-family therapists; this filters to that profession." },
+    explain: "Couples and family work is the domain of marriage-and-family therapists; this filters to that profession. Clinicians tagged 'Family' focus are the next circle out." },
   { match: /\b(grief|bereave|loss of|mourning|widow)\w*/i, label: "grief", provider_type: "therapist",
     explain: "Grief counselling is provided by licensed therapists; this searches those." },
+  { match: /\b(older adult|elderly|senior|geriatr|dementia|aging|ageing|memory)\w*/i, label: "older adults", focus: ["Geriatric Psychiatry", "Adult Development & Aging", "Psychiatric/Mental Health, Geropsychiatric", "Gerontology", "Geriatric Medicine"],
+    explain: "This narrows to clinicians whose codes carry a geriatric / aging focus." },
+  { match: /\b(group therapy|support group|group session)\w*/i, label: "group therapy", focus: ["Group Psychotherapy"],
+    explain: "This narrows to clinicians with a group-psychotherapy focus." },
+  { match: /\b(psychoanaly|analyst)\w*/i, label: "psychoanalysis", focus: ["Psychoanalysis"],
+    explain: "This narrows to clinicians with a psychoanalysis focus." },
+  { match: /\b(cbt|cognitive.behavio|dbt|behavio(u)?r(al)? therap)\w*/i, label: "CBT / behavioral", focus: ["Cognitive & Behavioral"],
+    explain: "This narrows to clinicians whose codes carry a Cognitive & Behavioral focus." },
+  { match: /\b(forensic|court|custody|legal|competenc)\w*/i, label: "forensic", focus: ["Forensic Psychiatry", "Forensic"],
+    explain: "This narrows to clinicians with a forensic focus." },
+  { match: /\b(sleep|insomnia|nightmare|apnea|narcolep)\w*/i, label: "sleep", focus: ["Sleep Medicine"],
+    explain: "This narrows to clinicians whose codes carry a Sleep Medicine focus — insomnia and other sleep disorders." },
+  { match: /\b(chronic pain|pain management|pain psych|fibromyalg)\w*/i, label: "chronic pain", focus: ["Pain Medicine", "Psychosomatic Medicine"],
+    explain: "This narrows to clinicians with a pain-medicine or psychosomatic focus." },
 ];
 
 /** If the free text names a condition, turn it into filters and an explanation. */
@@ -145,10 +164,11 @@ export async function runFindProviders(input: FindProvidersInput) {
 
   // A condition in the free text becomes filters; the words themselves would
   // match nothing (or, worse, only clinics with the condition in their name).
-  const cond = !input.profession && !input.subspecialty && !input.provider_type ? interpretCondition(input.q) : null;
+  const cond = !input.profession && !input.subspecialty && !input.provider_type && !input.focus?.length ? interpretCondition(input.q) : null;
   const q = cond ? undefined : input.q;
   const providerType = cond?.provider_type ?? input.provider_type;
   const subspecialty = cond?.subspecialty ?? input.subspecialty;
+  const focus = cond?.focus ?? input.focus;
   const profession = cond?.profession ?? input.profession;
 
   const [res, bookable] = await Promise.all([
@@ -159,6 +179,7 @@ export async function runFindProviders(input: FindProvidersInput) {
     zip: input.zip,
     profession,
     subspecialty,
+    focus,
     providerType,
     insurancePayer: input.insurance_payer,
     // Ranking, NOT filtering. Most NPPES rows carry no acceptance flag, so a
@@ -180,9 +201,9 @@ export async function runFindProviders(input: FindProvidersInput) {
     ...(cond
       ? {
           interpreted_as: {
-            condition: cond.label,
-            filters: { provider_type: providerType ?? null, subspecialty: subspecialty ?? null, profession: profession ?? null },
-            why: `${cond.explain} The directory does not record what anyone treats — confirm the specialty when you call.`,
+            topic: cond.label,
+            filters: { provider_type: providerType ?? null, focus: focus ?? null, subspecialty: subspecialty ?? null, profession: profession ?? null },
+            why: `${cond.explain} Focus tags come from the clinician's own registered taxonomy codes — confirm when you call.`,
           },
         }
       : {}),
@@ -321,9 +342,12 @@ export async function runDirectoryFilters() {
       subspecialties: prov.subspecialties.slice(0, 40),
       cities: prov.cities.slice(0, 120),
       provider_type: ["therapist", "psychiatrist", "prescriber"],
-      // Free-text conditions find_providers understands. It maps each to the
-      // license types / subspecialties that treat it and explains the mapping.
-      conditions: CONDITION_RULES.map((r) => r.label),
+      // What clinicians' NUCC codes say they focus on (all codes, sql/076).
+      // Exact values for find_providers.focus.
+      focus: prov.focus,
+      // Free-text topics find_providers understands in q. Each maps to focus
+      // tags / license types and the result explains the mapping.
+      topics: CONDITION_RULES.map((r) => r.label),
     },
     // `insurance_payer` on find_providers takes the SLUG, not the display name.
     insurance_payers: payers.slice(0, 40).map((p) => ({ slug: p.slug, name: p.name, providers: p.providerCount })),

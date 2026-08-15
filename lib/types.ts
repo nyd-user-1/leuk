@@ -375,6 +375,8 @@ export interface DirectoryProvider {
   primaryTaxonomy?: string | null;
   subspecialty?: string | null;
   taxonomies?: string[] | null;
+  /** NUCC specialisations across ALL the clinician's codes — what they focus on (sql/076). */
+  focus?: string[];
   credential?: string | null;
   gender?: string | null;
   licenseState?: string | null;
