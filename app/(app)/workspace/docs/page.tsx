@@ -1,8 +1,9 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BoardTabs } from "@/components/shell/board-tabs";
 import { requireUser } from "@/lib/auth";
+import { localToolsEnabled } from "@/lib/local-tools";
 import { DocsGallery, type DocMeta } from "./docs-gallery";
 
 // The Docs tab — every markdown file under docs/ as a card, grouped by its
@@ -55,6 +56,7 @@ async function readDocs(): Promise<DocMeta[]> {
 }
 
 export default async function WorkspaceDocsPage() {
+  if (!localToolsEnabled()) notFound();
   const user = await requireUser();
   if (user.role !== "admin") redirect("/workspace");
 

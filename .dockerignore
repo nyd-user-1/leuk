@@ -1,0 +1,38 @@
+# Build context hygiene. Without this the context is ~10 GB and the upload to
+# the daemon takes longer than the build.
+#
+# .harvest alone is 4 GB of downloaded MRF and NPPES payloads, and .next/dev is
+# 5 GB of Turbopack cache. Neither belongs anywhere near an image.
+
+.harvest
+.next
+node_modules
+.git
+.github
+.claude
+.vercel
+
+# Never ship a credential. The build reads .env.local through a BuildKit
+# secret mount instead, so it is present during `next build` and in no layer.
+.env
+.env.*
+!.env.example
+
+# Local scratch
+uploads/*
+!uploads/.gitkeep
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
+.env.local.bak-*
+
+# The whole docs tree, unconditionally. It is 18 MB of internal memos, and the
+# only routes that read it are local developer tools that 404 in a deployed
+# build (lib/local-tools.ts). An earlier version of this file excluded
+# docs/reports while the Dockerfile copied docs/ in — two rules disagreeing
+# about the same directory, which resolves differently depending on pattern
+# order. Excluding all of it is the version with one answer.
+docs
+scripts/qa
+ops/reports
+*.md

@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthError, requireRole } from "@/lib/auth";
+import { localToolsDisabled, localToolsEnabled } from "@/lib/local-tools";
 
 // One docs/ markdown file, for the /workspace Docs gallery editor. Admin-only
 // (the docs tree is the founder's), read/written straight off docs/. The path
@@ -33,6 +34,7 @@ type Params = { params: Promise<{ path: string[] }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { path } = await params;
     const abs = pathFor(path);
@@ -53,6 +55,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { path } = await params;
     const abs = pathFor(path);

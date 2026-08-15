@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthError, requireRole } from "@/lib/auth";
+import { localToolsDisabled, localToolsEnabled } from "@/lib/local-tools";
 import { RULES } from "@/lib/rules";
 
 export const runtime = "nodejs";
@@ -23,6 +24,7 @@ const pathFor = (id: string) => join(process.cwd(), "docs", "rules", `${id}.md`)
 
 export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { id } = await params;
     const rule = ruleFor(id);
@@ -42,6 +44,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { id } = await params;
     const rule = ruleFor(id);

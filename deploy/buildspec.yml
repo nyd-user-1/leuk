@@ -1,0 +1,68 @@
+# CodeBuild runs this. It is the only file the build server reads.
+#
+# Two things worth understanding before editing:
+#
+# 1. THE BUILD NEEDS THE DATABASE. `next build` prerenders the sitemap, which
+#    queries the directory. With no DATABASE_URL the repos fall back to the mock
+#    store and bake fake URLs into a real sitemap — a build that "succeeds" and
+#    ships wrong data. So the env secret is pulled here and handed to Docker as
+#    a BuildKit secret, which means it is present during the build and in no
+#    layer of the image.
+#
+# 2. THE CACHE IS THE DIFFERENCE BETWEEN 8 MINUTES AND 2. Pulling the previous
+#    image and passing it as --cache-from lets Docker reuse the npm install
+#    layer whenever package-lock.json has not changed, which is most builds.
+
+version: 0.2
+
+env:
+  variables:
+    DOCKER_BUILDKIT: "1"
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to ECR"
+      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${ECR_URI%/*}"
+      # CODEBUILD_RESOLVED_SOURCE_VERSION is empty for an S3 source, so the tag
+      # falls back to the build id. Either way every image gets a unique tag as
+      # well as :latest — "roll back to the previous image" needs a name.
+      - export IMAGE_TAG="${CODEBUILD_RESOLVED_SOURCE_VERSION:-${CODEBUILD_BUILD_NUMBER}}"
+      - echo "Image tag $IMAGE_TAG"
+      - echo "Fetching build-time env"
+      # The secret is a JSON object; the Dockerfile expects dotenv. jq -r
+      # @sh quotes values so a password containing spaces or $ survives.
+      - |
+        aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text \
+          | jq -r 'to_entries[] | "\(.key)=\(.value)"' > .env.local || {
+            echo "WARNING: no secret found; building without a database.";
+            echo "The prerendered sitemap will contain mock data." >&2;
+            : > .env.local; }
+      - wc -l < .env.local | xargs echo "env vars for build:"
+      - docker pull "$ECR_URI:latest" || echo "no previous image; cold build"
+
+  build:
+    commands:
+      - echo "Building $ECR_URI:$IMAGE_TAG"
+      - |
+        docker build \
+          --secret id=envlocal,src=.env.local \
+          --cache-from "$ECR_URI:latest" \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          -t "$ECR_URI:$IMAGE_TAG" \
+          -t "$ECR_URI:latest" \
+          .
+      # Never leave a credential in the build workspace, even one that is
+      # discarded with the container.
+      - shred -u .env.local 2>/dev/null || rm -f .env.local
+
+  post_build:
+    commands:
+      - echo "Pushing"
+      - docker push "$ECR_URI:$IMAGE_TAG"
+      - docker push "$ECR_URI:latest"
+      - |
+        DIGEST=$(aws ecr describe-images --repository-name "${ECR_URI##*/}" \
+          --image-ids imageTag="$IMAGE_TAG" --query 'imageDetails[0].imageDigest' --output text)
+        echo "IMAGE $ECR_URI:$IMAGE_TAG"
+        echo "DIGEST $DIGEST"

@@ -3,6 +3,7 @@ import os from "node:os";
 import { join } from "node:path";
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthError, requireRole } from "@/lib/auth";
+import { localToolsDisabled, localToolsEnabled } from "@/lib/local-tools";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ function titleOf(md: string, name: string): string {
 
 export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { name } = await params;
     const path = pathFor(name);
@@ -47,6 +49,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    if (!localToolsEnabled()) return localToolsDisabled();
     await requireRole("admin");
     const { name } = await params;
     const path = pathFor(name);

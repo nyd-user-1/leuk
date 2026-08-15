@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { TagHue } from "@/components/ui/tag";
 import { formatDate, isoDateTime } from "@/lib/format";
 import type { LeadReport } from "@/lib/repos/lead-reports";
+import { localToolsEnabled } from "@/lib/local-tools";
 import { RULE_CATEGORY, RULES } from "@/lib/rules";
 import { EcoSection } from "./section";
 import { WorkbenchGrid, type DocCard } from "./workbench-grid";
@@ -60,7 +61,38 @@ function lede(md: string): string {
     : "A cross-terminal digest — open to read and annotate.";
 }
 
+/** Deployed builds: the database-backed half of the section, on its own. */
+function ReportsOnly({ reports }: { reports: LeadReport[] }) {
+  if (!reports.length) return null;
+  return (
+    <EcoSection
+      title="Reports"
+      info="The nightly cross-terminal digest. Agents and Rules read local files and are available only on a development server."
+    >
+      <WorkbenchGrid
+        agents={[]}
+        rules={[]}
+        reports={reports.map((r) => ({
+          key: r.reportDate,
+          title: r.title,
+          description: lede(r.bodyMd),
+          date: formatDate(`${r.reportDate}T12:00:00`),
+          endpoint: `/api/insights/report/${r.reportDate}`,
+          sheetLabel: "Report",
+          doc: r.bodyMd,
+        }))}
+      />
+    </EcoSection>
+  );
+}
+
 export async function Workbench({ reports }: { reports: LeadReport[] }) {
+  // Agents and Rules read the developer's own disk — ~/.claude/agents and the
+  // docs/rules tree. Neither exists in a deployed build, so the section is
+  // omitted there rather than rendering cards that 500 when opened. Reports
+  // come from the database and survive on their own; see lib/local-tools.ts.
+  if (!localToolsEnabled()) return <ReportsOnly reports={reports} />;
+
   const [agentDocs, ruleDocs] = await Promise.all([
     Promise.all(AGENTS.map((a) => docFile(join(os.homedir(), ".claude", "agents", `${a.name}-agent.md`)))),
     Promise.all(RULES.map((r) => docFile(join(process.cwd(), "docs", "rules", `${r.id}.md`)))),
