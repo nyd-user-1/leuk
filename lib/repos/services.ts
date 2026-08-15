@@ -333,6 +333,26 @@ export async function listPractitioners(): Promise<PractitionerLite[]> {
     .map((u) => ({ id: u.id, name: u.name, avatarHue: u.avatarHue, slug: u.slug, photoUrl: headshotFor(u.id) }));
 }
 
+/**
+ * Who the public may book: clinicians only. The admin account is a user with a
+ * calendar, not a clinician, and must never be offered as one — the MCP roster
+ * and the public booking page both read this, not listPractitioners().
+ */
+export async function listBookablePractitioners(): Promise<PractitionerLite[]> {
+  if (hasDb) {
+    const rows = (await sql`
+      SELECT id, name, avatar_hue, slug FROM users
+      WHERE role = 'practitioner' AND deleted_at IS NULL
+      ORDER BY name
+    `) as Array<{ id: string; name: string; avatar_hue: AvatarHue; slug: string | null }>;
+    return rows.map((r) => ({ id: r.id, name: r.name, avatarHue: r.avatar_hue, slug: r.slug, photoUrl: headshotFor(r.id) }));
+  }
+  return [...mockStore().users.values()]
+    .filter((u) => u.role === "practitioner" && !u.deletedAt)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((u) => ({ id: u.id, name: u.name, avatarHue: u.avatarHue, slug: u.slug, photoUrl: headshotFor(u.id) }));
+}
+
 /** Public profile lookup — /providers/[slug]. Read-only; slugs are seeded once, not written here. */
 export async function getPractitionerBySlug(slug: string): Promise<PractitionerLite | null> {
   if (hasDb) {

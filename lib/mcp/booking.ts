@@ -1,6 +1,6 @@
 import { DATE_RE, TIME_RE, freeSlots } from "@/lib/booking";
 import { appBaseUrl } from "@/lib/email";
-import { getService, listPractitioners } from "@/lib/repos/services";
+import { getService, listBookablePractitioners } from "@/lib/repos/services";
 
 // The Leuk MCP toolset — WRITE HALF, and the only file in lib/mcp that is
 // allowed anywhere near PHI.
@@ -69,7 +69,7 @@ export async function runGetAvailability(input: {
 
   const slots = await freeSlots(practitionerId, service, date).catch(() => null);
   if (!slots) return { error: `No availability found for practitioner ${practitionerId}. Use an id from list_bookable.` };
-  const practitioner = (await listPractitioners().catch(() => []))
+  const practitioner = (await listBookablePractitioners().catch(() => []))
     .find((p) => p.id === practitionerId);
   return {
     date,

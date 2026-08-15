@@ -1,5 +1,5 @@
 import { listPayers } from "@/lib/repos/policies";
-import { listPractitioners, listServices } from "@/lib/repos/services";
+import { listBookablePractitioners, listServices } from "@/lib/repos/services";
 import { BookClient } from "./book-client";
 
 // Pre-rename blob object name on purpose — the pathname is a storage key, and
@@ -20,7 +20,7 @@ export default async function BookPage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const [services, practitioners, payers] = await Promise.all([listServices(), listPractitioners(), listPayers()]);
+  const [services, practitioners, payers] = await Promise.all([listServices(), listBookablePractitioners(), listPayers()]);
   const locked = practitioners.find((p) => p.id === slug || p.slug === slug) ?? null;
 
   return (

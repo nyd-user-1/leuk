@@ -9,7 +9,7 @@ import {
   searchProviders,
 } from "@/lib/repos/directory";
 import { listPayerFacets, networkParticipationForNpi } from "@/lib/repos/networks";
-import { listAvailability, listPractitioners, listServices } from "@/lib/repos/services";
+import { listBookablePractitioners, listServices } from "@/lib/repos/services";
 import { formatPhone, providerDisplayName, titleCase } from "@/lib/format";
 import type { DirectoryProgram, DirectoryProvider } from "@/lib/types";
 
@@ -251,13 +251,9 @@ export async function runDirectoryFilters() {
  * ANY clinician in New York, this is who you can book HERE, at this practice.
  */
 export async function runListBookable() {
-  const [services, practitioners, rules] = await Promise.all([listServices(), listPractitioners(), listAvailability()]);
-  // "Bookable" means has published hours. Staff without an availability rule
-  // set (an admin account, a new hire) are not offered, whatever their role.
-  const withHours = new Set(rules.map((r) => r.practitionerId));
+  const [services, practitioners] = await Promise.all([listServices(), listBookablePractitioners()]);
   return {
     practitioners: practitioners
-      .filter((p) => withHours.has(p.id))
       .map((p) => ({
         id: p.id,
         name: p.name,
