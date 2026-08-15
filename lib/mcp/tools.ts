@@ -9,7 +9,7 @@ import {
   searchProviders,
 } from "@/lib/repos/directory";
 import { listPayerFacets, networkParticipationForNpi } from "@/lib/repos/networks";
-import { listPractitioners, listServices } from "@/lib/repos/services";
+import { listAvailability, listPractitioners, listServices } from "@/lib/repos/services";
 import { formatPhone, providerDisplayName, titleCase } from "@/lib/format";
 import type { DirectoryProgram, DirectoryProvider } from "@/lib/types";
 
@@ -251,9 +251,19 @@ export async function runDirectoryFilters() {
  * ANY clinician in New York, this is who you can book HERE, at this practice.
  */
 export async function runListBookable() {
-  const [services, practitioners] = await Promise.all([listServices(), listPractitioners()]);
+  const [services, practitioners, rules] = await Promise.all([listServices(), listPractitioners(), listAvailability()]);
+  // "Bookable" means has published hours. Staff without an availability rule
+  // set (an admin account, a new hire) are not offered, whatever their role.
+  const withHours = new Set(rules.map((r) => r.practitionerId));
   return {
-    practitioners: practitioners.map((p) => ({ id: p.id, name: p.name })),
+    practitioners: practitioners
+      .filter((p) => withHours.has(p.id))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        href: p.slug ? `/providers/${p.slug}` : undefined,
+        book_href: `/book/${p.slug ?? p.id}`,
+      })),
     services: services
       .filter((s) => s.active)
       .map((s) => ({
@@ -263,6 +273,6 @@ export async function runListBookable() {
         telehealth: s.telehealth,
         price_usd: s.priceCents / 100,
       })),
-    note: "Pass a practitioner id and a service id to get_availability for open times, then book_appointment.",
+    note: "Pass a practitioner id and a service id to get_availability for open times, then book_appointment. Link the person to book_url if they would rather finish on the booking page.",
   };
 }

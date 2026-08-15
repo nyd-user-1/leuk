@@ -1,6 +1,6 @@
 import { DATE_RE, TIME_RE, freeSlots } from "@/lib/booking";
 import { appBaseUrl } from "@/lib/email";
-import { getService } from "@/lib/repos/services";
+import { getService, listPractitioners } from "@/lib/repos/services";
 
 // The Leuk MCP toolset — WRITE HALF, and the only file in lib/mcp that is
 // allowed anywhere near PHI.
@@ -69,12 +69,17 @@ export async function runGetAvailability(input: {
 
   const slots = await freeSlots(practitionerId, service, date).catch(() => null);
   if (!slots) return { error: `No availability found for practitioner ${practitionerId}. Use an id from list_bookable.` };
+  const practitioner = (await listPractitioners().catch(() => []))
+    .find((p) => p.id === practitionerId);
   return {
     date,
     service: service.name,
     minutes: service.durationMin,
     telehealth: service.telehealth,
     open_times: slots,
+    // The same booking, on Leuk's own page, with everything but the time
+    // pre-filled — for people who would rather click than dictate.
+    book_href: `/book/${practitioner?.slug ?? practitionerId}?service=${serviceId}&date=${date}`,
     note: slots.length
       ? "Times are local to the practice, 24-hour clock. Confirm one with the person before booking it."
       : "Nothing open that day. Try another date.",

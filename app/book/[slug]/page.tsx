@@ -21,7 +21,7 @@ export default async function BookPage({
   const { slug } = await params;
   const sp = await searchParams;
   const [services, practitioners, payers] = await Promise.all([listServices(), listPractitioners(), listPayers()]);
-  const locked = practitioners.find((p) => p.id === slug) ?? null;
+  const locked = practitioners.find((p) => p.id === slug || p.slug === slug) ?? null;
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
