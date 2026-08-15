@@ -118,11 +118,17 @@ function absolutize<T>(value: T, depth = 0): T {
   return out as T;
 }
 
-type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
+type ToolResult = { content: { type: "text"; text: string }[]; structuredContent?: Record<string, unknown>; isError?: boolean };
 
-const ok = (data: unknown): ToolResult => ({
-  content: [{ type: "text", text: JSON.stringify(absolutize(data), null, 1) }],
-});
+const ok = (data: unknown): ToolResult => {
+  const shaped = absolutize(data);
+  return {
+    content: [{ type: "text", text: JSON.stringify(shaped, null, 1) }],
+    // The MCP Apps card reads either; ChatGPT's host renders from
+    // structuredContent specifically. Objects only — arrays are not allowed.
+    ...(shaped && typeof shaped === "object" && !Array.isArray(shaped) ? { structuredContent: shaped as Record<string, unknown> } : {}),
+  };
+};
 
 const fail = (payload: unknown): ToolResult => ({
   content: [{ type: "text", text: JSON.stringify(payload, null, 1) }],
@@ -146,6 +152,19 @@ function tool<A>(run: (args: A) => Promise<unknown>) {
 const BOOK_APP_URI = "ui://leuk/book.html";
 /** RESOURCE_MIME_TYPE from @modelcontextprotocol/ext-apps/server — inlined to avoid its 1.x-SDK types. */
 const BOOK_APP_MIME = "text/html;profile=mcp-app";
+/**
+ * Tool _meta for the booking card. `ui.resourceUri` is the MCP Apps standard
+ * (Claude, ChatGPT, …); "ui/resourceUri" the earlier draft key; the "openai/*"
+ * keys are ChatGPT's documented compatibility aliases plus its status strings.
+ */
+const bookAppMeta = (invoking: string, invoked: string) => ({
+  ui: { resourceUri: BOOK_APP_URI },
+  "ui/resourceUri": BOOK_APP_URI,
+  "openai/outputTemplate": BOOK_APP_URI,
+  "openai/widgetAccessible": true,
+  "openai/toolInvocation/invoking": invoking,
+  "openai/toolInvocation/invoked": invoked,
+});
 
 const limit = z.number().int().min(1).max(25).optional().describe("Rows to return (max 25, default 10).");
 const page = z.number().int().min(1).optional().describe("1-indexed page for paging past the first set.");
@@ -264,7 +283,7 @@ const handler = createMcpHandler(
           "Step 1 of booking. Returns the practice's own practitioners (each with a profile url and a book_url) and bookable services with durations and prices. Distinct from find_providers: that searches every clinician in New York, this is who you can book an appointment with here. Where the host supports it this shows an interactive card the person can book from directly; otherwise link the names.",
         inputSchema: {},
         annotations: read,
-        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
+        _meta: bookAppMeta("Loading who you can book…", "Here is who you can book"),
       },
       tool(runListBookable),
     );
@@ -290,9 +309,7 @@ const handler = createMcpHandler(
           date: z.string().describe("YYYY-MM-DD."),
         },
         annotations: read,
-        // Both keys: `ui.resourceUri` is the current spec, "ui/resourceUri" the
-        // earlier draft some hosts still read. Same as ext-apps' registerAppTool.
-        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
+        _meta: bookAppMeta("Checking open times…", "Open times"),
       },
       tool(runGetAvailability),
     );
@@ -301,10 +318,23 @@ const handler = createMcpHandler(
       "Leuk booking card",
       BOOK_APP_URI,
       { mimeType: BOOK_APP_MIME, description: "Interactive slot picker and booking form for a Leuk practitioner." },
-      async () => ({
-        contents: [{ uri: BOOK_APP_URI, mimeType: BOOK_APP_MIME, text: BOOK_APP_HTML }],
-        _meta: { ui: { prefersBorder: true } },
-      }),
+      async () => {
+        const site = appBaseUrl();
+        return {
+          contents: [{ uri: BOOK_APP_URI, mimeType: BOOK_APP_MIME, text: BOOK_APP_HTML }],
+          _meta: {
+            // MCP Apps standard. The card is self-contained (no scripts, styles or
+            // fetches from anywhere); the only outbound thing it does is ask the
+            // host to open Leuk pages, so that is the only origin declared.
+            ui: { prefersBorder: true, csp: { connectDomains: [], resourceDomains: [] } },
+            // ChatGPT's compatibility aliases (snake_case CSP; redirect_domains
+            // gates openExternal).
+            "openai/widgetDescription": "Leuk booking: pick a clinician and service, choose an open time, and book — right here.",
+            "openai/widgetPrefersBorder": true,
+            "openai/widgetCSP": { connect_domains: [], resource_domains: [], redirect_domains: [site] },
+          },
+        };
+      },
     );
 
     server.registerTool(
@@ -324,7 +354,7 @@ const handler = createMcpHandler(
           phone: z.string().optional().describe("Optional."),
         },
         annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
+        _meta: bookAppMeta("Booking…", "Booked"),
       },
       tool(runBookAppointment),
     );
