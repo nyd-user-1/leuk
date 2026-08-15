@@ -261,17 +261,20 @@ const handler = createMcpHandler(
       {
         title: "What can be booked",
         description:
-          "Step 1 of booking. Returns the practice's own practitioners (each with a profile url and a book_url) and bookable services with durations and prices. Distinct from find_providers: that searches every clinician in New York, this is who you can book an appointment with here. Link the names.",
+          "Step 1 of booking. Returns the practice's own practitioners (each with a profile url and a book_url) and bookable services with durations and prices. Distinct from find_providers: that searches every clinician in New York, this is who you can book an appointment with here. Where the host supports it this shows an interactive card the person can book from directly; otherwise link the names.",
         inputSchema: {},
         annotations: read,
+        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
       },
       tool(runListBookable),
     );
 
     // ── The booking card (MCP Apps) ──────────────────────────────────────────
-    // On hosts that support MCP Apps (Claude.ai, Claude Desktop, …) this tool
-    // renders an interactive card in the chat: the open times as buttons, a
-    // short form, and a Book button that calls book_appointment from the card.
+    // On hosts that support MCP Apps (Claude.ai, Claude Desktop, …) the three
+    // booking tools render ONE interactive card in the chat, landing on the
+    // matching screen: list_bookable → the roster (services + names, ↗ to the
+    // profile), get_availability → open times + a short form + Book,
+    // book_appointment → the receipt. ← → in the card walk back and forward.
     // Hosts without Apps support just see the JSON result, as before. The
     // widget is a single self-contained HTML document — no external scripts,
     // no fetch to Leuk; every call goes back through the host to this server.
@@ -321,6 +324,7 @@ const handler = createMcpHandler(
           phone: z.string().optional().describe("Optional."),
         },
         annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
       },
       tool(runBookAppointment),
     );

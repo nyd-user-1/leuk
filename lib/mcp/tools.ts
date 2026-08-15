@@ -253,6 +253,7 @@ export async function runDirectoryFilters() {
 export async function runListBookable() {
   const [services, practitioners] = await Promise.all([listServices(), listBookablePractitioners()]);
   return {
+    kind: "roster" as const,
     practitioners: practitioners
       .map((p) => ({
         id: p.id,

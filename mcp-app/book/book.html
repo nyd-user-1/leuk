@@ -7,60 +7,100 @@
 <style>
   :root {
     --navy: #1C2440; --teal: #3F8290; --amber: #F0AE55; --amber-tint: #FBE7C4;
-    --bg: #ffffff; --fg: #1C2440; --muted: #6b7280; --line: #e5e7eb; --field: #f9fafb;
+    --bg: #ffffff; --fg: #1C2440; --muted: #6b7280; --line: #e5e7eb; --field: #f9fafb; --hover: #f3f4f6;
     --ok-bg: #ecfdf5; --ok-fg: #047857; --err-bg: #fef2f2; --err-fg: #b91c1c;
   }
   :root[data-theme="dark"] {
-    --bg: #171a24; --fg: #f3f4f6; --muted: #9ca3af; --line: #2c3142; --field: #1f2331;
+    --bg: #171a24; --fg: #f3f4f6; --muted: #9ca3af; --line: #2c3142; --field: #1f2331; --hover: #262b3a;
     --ok-bg: #0b2e23; --ok-fg: #6ee7b7; --err-bg: #3a1212; --err-fg: #fca5a5;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--fg);
     font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
-  .card { padding: 16px 16px 14px; max-width: 520px; }
-  .brand { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+  button { font: inherit; color: inherit; }
+  .card { padding: 14px 16px 14px; max-width: 560px; }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .brand { display: flex; align-items: baseline; gap: 6px; }
   .brand b { font-size: 17px; letter-spacing: -0.01em; text-transform: lowercase; }
   .brand svg { width: 26px; height: auto; }
+  .nav { display: flex; gap: 6px; }
+  .nav button { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
+    width: 30px; height: 30px; cursor: pointer; font-size: 15px; line-height: 1; }
+  .nav button:disabled { opacity: .35; cursor: default; }
   h1 { font-size: 15px; margin: 0; font-weight: 600; }
   .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .hidden { display: none !important; }
+
+  /* roster */
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+  .pill { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 6px 11px;
+    cursor: pointer; font-size: 12.5px; }
+  .pill.sel { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
+  .pill small { opacity: .8; font-weight: 400; }
+  .people { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .person { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+  .person .name { flex: 1; text-align: left; background: none; border: 0; padding: 11px 4px; cursor: pointer;
+    font-weight: 500; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .person .name:hover { color: var(--teal); }
+  .person .name .go { color: var(--muted); font-size: 12px; font-weight: 400; }
+  .person .ext { background: none; border: 1px solid transparent; border-radius: 6px; width: 30px; height: 30px;
+    cursor: pointer; color: var(--muted); font-size: 15px; }
+  .person .ext:hover { color: var(--teal); border-color: var(--line); background: var(--hover); }
+
+  /* slots */
   .datebar { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
-  .datebar button { border: 1px solid var(--line); background: var(--field); color: var(--fg);
-    border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
+  .datebar button { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
+    width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
   .datebar button:disabled { opacity: .4; cursor: default; }
   .datebar .d { font-weight: 600; }
   .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
-  .slot { border: 1px solid var(--line); background: var(--field); color: var(--fg); border-radius: 8px;
+  .slot { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
     padding: 8px 4px; cursor: pointer; font-size: 13px; font-variant-numeric: tabular-nums; }
   .slot:hover { border-color: var(--teal); }
   .slot.sel { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
+  .slot:disabled { cursor: default; opacity: .6; }
   .empty { color: var(--muted); padding: 10px 0; }
+
+  /* form */
   .form { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; display: grid;
     grid-template-columns: 1fr 1fr; gap: 8px; }
   .form .full { grid-column: 1 / -1; }
   input { width: 100%; border: 1px solid var(--line); background: var(--field); color: var(--fg);
     border-radius: 8px; padding: 9px 10px; font: inherit; }
   input:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
-  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin-top: 2px; flex-wrap: wrap; }
   .book { background: var(--amber); color: var(--navy); border: 0; border-radius: 8px; padding: 10px 14px;
-    font-weight: 700; cursor: pointer; font: inherit; }
+    font-weight: 700; cursor: pointer; }
   .book:disabled { opacity: .55; cursor: default; }
-  .link { background: none; border: 0; color: var(--teal); cursor: pointer; font: inherit; padding: 0; text-decoration: underline; }
+  .link { background: none; border: 0; color: var(--teal); cursor: pointer; padding: 0; text-decoration: underline; }
   .msg { margin-top: 12px; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
   .msg.ok { background: var(--ok-bg); color: var(--ok-fg); }
   .msg.err { background: var(--err-bg); color: var(--err-fg); }
   .fine { color: var(--muted); font-size: 12px; margin-top: 10px; }
-  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="brand"><b>leuk</b>
-    <svg viewBox="0 -0.5 28 13.5" aria-hidden="true"><path d="M2 13 A 12 12 0 0 1 26 13" fill="#FBE7C4" stroke="#F0AE55" stroke-width="2.6" stroke-linecap="round"/></svg>
+  <div class="top">
+    <div class="brand"><b>leuk</b>
+      <svg viewBox="0 -0.5 28 13.5" aria-hidden="true"><path d="M2 13 A 12 12 0 0 1 26 13" fill="#FBE7C4" stroke="#F0AE55" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </div>
+    <div class="nav">
+      <button id="back" type="button" aria-label="Back" title="Back">←</button>
+      <button id="fwd" type="button" aria-label="Forward" title="Forward">→</button>
+    </div>
   </div>
-  <h1 id="title">Loading times…</h1>
+  <h1 id="title">Loading…</h1>
   <div class="sub" id="sub"></div>
 
-  <div id="picker">
+  <!-- screen: roster -->
+  <div id="roster" class="hidden">
+    <div class="pills" id="services"></div>
+    <div class="people" id="people"></div>
+  </div>
+
+  <!-- screen: slots (+ form once a time is picked) -->
+  <div id="picker" class="hidden">
     <div class="datebar">
       <button id="prev" type="button" aria-label="Previous day">‹</button>
       <span class="d" id="date"></span>
@@ -70,9 +110,9 @@
     <div class="empty hidden" id="empty">Nothing open that day — try another.</div>
 
     <div id="form" class="hidden form">
-      <input id="first" placeholder="First name" required autocomplete="given-name" />
-      <input id="last" placeholder="Last name" required autocomplete="family-name" />
-      <input id="email" class="full" type="email" placeholder="Email — for the confirmation" required autocomplete="email" />
+      <input id="first" placeholder="First name" autocomplete="given-name" />
+      <input id="last" placeholder="Last name" autocomplete="family-name" />
+      <input id="email" class="full" type="email" placeholder="Email — for the confirmation" autocomplete="email" />
       <input id="phone" class="full" type="tel" placeholder="Phone (optional)" autocomplete="tel" />
       <div class="actions">
         <button class="book" id="book" type="button">Book</button>
@@ -82,7 +122,7 @@
   </div>
 
   <div id="msg" class="msg hidden"></div>
-  <div class="fine" id="fine">Times are the practice's local time. Booking creates a real appointment and emails a confirmation.</div>
+  <div class="fine" id="fine"></div>
 </div>
 <script type="module" src="./book.ts"></script>
 </body>

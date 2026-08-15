@@ -72,6 +72,7 @@ export async function runGetAvailability(input: {
   const practitioner = (await listBookablePractitioners().catch(() => []))
     .find((p) => p.id === practitionerId);
   return {
+    kind: "availability" as const,
     date,
     practitioner_id: practitionerId,
     practitioner_name: practitioner?.name,
@@ -141,6 +142,7 @@ export async function runBookAppointment(input: BookInput) {
     // talking. Everything else is reported as given, since /api/book's messages
     // are already written for a person.
     return {
+      kind: "booking" as const,
       booked: false,
       error: json.error ?? "The booking could not be completed.",
       retry: res.status === 409 ? "Call get_availability again and offer the person a different time." : undefined,
@@ -150,6 +152,7 @@ export async function runBookAppointment(input: BookInput) {
   // Deliberately uniform. No `created` flag, no client id, no indication of
   // whether this person was already known to the practice.
   return {
+    kind: "booking" as const,
     booked: true,
     when: `${date} ${time}`,
     confirmation:
