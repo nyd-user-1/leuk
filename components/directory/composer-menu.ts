@@ -80,32 +80,33 @@ async function searchRecords(q: string, signal: AbortSignal): Promise<MenuItem[]
   return out;
 }
 
-/** Skills for "/" — fetched once per agent and cached, since the catalogue is
- *  reference data that doesn't change between keystrokes. */
+/** Skills for "/" — fetched once and cached, since the catalogue is reference
+ *  data that doesn't change between keystrokes. One entry, not one per agent:
+ *  it no longer varies by who's asking. */
 const skillCache = new Map<string, Command[]>();
+const CATALOGUE = "all";
 
-async function loadSkills(agentId: string): Promise<Command[]> {
-  const hit = skillCache.get(agentId);
+async function loadSkills(): Promise<Command[]> {
+  const hit = skillCache.get(CATALOGUE);
   if (hit) return hit;
-  // Fetch the WHOLE catalogue, not just this agent's. Scoping the menu to the
-  // open agent meant Bev's thread offered four of twenty-seven, which reads as
-  // a bug rather than a boundary. This agent's skills sort first; the rest stay
-  // reachable, prefixed with whose they are.
+  // ALL 27, grouped by what the skill DOES — Assessment, Documentation,
+  // Coding, Compliance. Never by which agent "owns" it.
+  //
+  // The catalogue used to sort the open agent's skills first and prefix the
+  // rest with the owner's name. That ordering was doing no work: "/" inserts
+  // prompt text, so the agent field gated nothing — it just made a clinician
+  // read "· FRIDAY" beside a skill and wonder whether they were allowed to use
+  // it (founder, 2026-08-14). A clinician searches by the task in front of
+  // them, so the task is the only grouping that helps.
   const res = await fetch("/api/agent-skills");
   if (!res.ok) return [];
   const { skills } = (await res.json()) as {
     skills: Array<{ slug: string; agentId: string; group: string; title: string; description: string; prompt: string }>;
   };
-  const own = skills.filter((s) => s.agentId === agentId);
-  const rest = skills.filter((s) => s.agentId !== agentId);
-  const out = [...own, ...rest].map((s) => ({
-    name: s.slug,
-    title: s.title,
-    description: s.description,
-    group: s.agentId === agentId ? s.group : `${s.group} · ${s.agentId}`,
-    prompt: s.prompt,
-  }));
-  skillCache.set(agentId, out);
+  const out = [...skills]
+    .sort((a, b) => a.group.localeCompare(b.group) || a.title.localeCompare(b.title))
+    .map((s) => ({ name: s.slug, title: s.title, description: s.description, group: s.group, prompt: s.prompt }));
+  skillCache.set(CATALOGUE, out);
   return out;
 }
 
@@ -127,7 +128,7 @@ export function useComposerMenu({
   useEffect(() => {
     if (!agentId) return;
     let live = true;
-    void loadSkills(agentId).then((r) => { if (live) setSkills(r); });
+    void loadSkills().then((r) => { if (live) setSkills(r); });
     return () => { live = false; };
   }, [agentId]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -162,6 +163,9 @@ export function useComposerMenu({
           .filter((c) =>
             !q ||
             c.name.toLowerCase().includes(q) ||
+            // The slug is machine-readable; the TITLE is what's on screen, so
+            // typing what you can see has to match.
+            (c.title ?? "").toLowerCase().includes(q) ||
             (c.description ?? "").toLowerCase().includes(q) ||
             (c.group ?? "").toLowerCase().includes(q),
           )

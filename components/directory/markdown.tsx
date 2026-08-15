@@ -82,12 +82,16 @@ function TableBlock({ header, rows }: { header: string[]; rows: string[][] }) {
       >
         <Icon name={copied ? "check" : "copy"} size={13} className={copied ? "text-success" : undefined} />
       </button>
-      <div className="overflow-x-auto rounded-lg border border-border">
+      {/* Scrolls in BOTH axes at a fixed 390px, with the header row stuck to
+          the top — a long answer table shouldn't push the prose that explains
+          it off the screen. Short tables keep their natural height; only the
+          ones that would run past 390px start scrolling. */}
+      <div className="max-h-[390px] overflow-auto rounded-lg border border-border">
         <table className="w-full min-w-[360px] border-collapse text-[13px]">
-          <thead>
-            <tr className="bg-canvas/60">
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-canvas">
               {header.map((h, j) => (
-                <th key={j} className="border-b border-border px-2 py-1.5 text-left font-semibold">
+                <th key={j} className="border-b border-border bg-canvas px-2 py-1.5 text-left font-semibold">
                   {inline(h)}
                 </th>
               ))}

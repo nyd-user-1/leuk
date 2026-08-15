@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { UIMessage } from "ai";
+import dynamic from "next/dynamic";
 import { Markdown } from "@/components/directory/markdown";
 import { RelationshipMap } from "@/components/directory/relationship-map";
 import { ThinkingOrb } from "@/components/directory/thinking-orb";
@@ -16,6 +17,14 @@ import type { OrgGraph } from "@/lib/org-graph";
 // there is no other copy.
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// The whole ProseMirror stack sits behind the pencil, so it stays out of the
+// chat bundle until someone actually opens a draft (same reasoning as the
+// canvas's dynamic import of @xyflow/react).
+const AnswerDocPanel = dynamic(
+  () => import("@/components/agents/answer-doc-panel").then((m) => m.AnswerDocPanel),
+  { ssr: false },
+);
 
 // requireUser() (lib/auth.ts) throws AuthError("Sign in required.", 401) when
 // the 15-minute idle timeout has quietly expired mid-page — useChat surfaces
@@ -137,6 +146,7 @@ function AnswerFooter({
   isLast,
   busy,
   onRegenerate,
+  onEdit,
   hasFollowUps,
   followUpsOpen,
   onToggleFollowUps,
@@ -145,6 +155,7 @@ function AnswerFooter({
   isLast: boolean;
   busy: boolean;
   onRegenerate: () => void;
+  onEdit: () => void;
   hasFollowUps: boolean;
   followUpsOpen: boolean;
   onToggleFollowUps: () => void;
@@ -157,7 +168,10 @@ function AnswerFooter({
       setTimeout(() => setCopied(false), 1500);
     });
   };
-  const btn = "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-canvas hover:text-text";
+  // Teal on hover, not grey: these are the answer's actions, and the kit's
+  // hover affordance everywhere else is the primary wash + primary ink.
+  const btn =
+    "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-primary-wash hover:text-primary";
   return (
     <div className="mt-1.5 flex items-center gap-0.5 text-text-muted">
       {hasFollowUps && (
@@ -179,9 +193,9 @@ function AnswerFooter({
           <Icon name="refresh-cw" size={13} />
         </button>
       )}
-      {/* Stub — wired to nothing yet. */}
+      {/* Opens the answer as an editable markdown document (AnswerDocPanel). */}
       {isLast && (
-        <button type="button" aria-label="Edit" className={btn}>
+        <button type="button" onClick={onEdit} aria-label="Edit as document" className={btn}>
           <Icon name="edit" size={14} />
         </button>
       )}
@@ -217,6 +231,7 @@ export function AssistantMessage({
   onSend,
   onRegenerate,
   onOrbActivate,
+  agentId,
 }: {
   message: UIMessage;
   isCurrent: boolean;
@@ -225,14 +240,21 @@ export function AssistantMessage({
   onSend: (q: string) => void;
   onRegenerate: () => void;
   onOrbActivate: () => void;
+  /** Which agent produced this turn. Only used downstream to decide whether the
+   *  draft may leave the BAA boundary (Slack/Discord). */
+  agentId?: string;
 }) {
   const [open, setOpen] = useState(followUpsDefault);
   useEffect(() => setOpen(followUpsDefault), [followUpsDefault]);
+  const [editing, setEditing] = useState(false);
 
   const settled = !(isStreaming && isCurrent);
   const parts = message.parts;
   const lastTextIdx = parts.reduce((acc, p, i) => (p.type === "text" ? i : acc), -1);
   const bodyTexts: string[] = [];
+  // Canvases rendered in this turn, collected for the document seed — a
+  // markdown draft can't hold React Flow, so answer-doc.ts serialises them.
+  const graphs: OrgGraph[] = [];
   let followUps: string[] = [];
   const rendered: React.ReactNode[] = [];
   let pi = 0;
@@ -290,7 +312,10 @@ export function AssistantMessage({
       if (type === "tool-relationship_map") {
         outputs.forEach((o, oi) => {
           const graph = (o as { graph?: OrgGraph } | undefined)?.graph;
-          if (graph) rendered.push(<RelationshipMap key={`${groupKey}:map:${oi}`} graph={graph} />);
+          if (graph) {
+            graphs.push(graph);
+            rendered.push(<RelationshipMap key={`${groupKey}:map:${oi}`} graph={graph} />);
+          }
         });
       }
       continue;
@@ -308,6 +333,7 @@ export function AssistantMessage({
             isLast={isCurrent}
             busy={isStreaming}
             onRegenerate={onRegenerate}
+            onEdit={() => setEditing(true)}
             hasFollowUps={followUps.length > 0}
             followUpsOpen={open}
             onToggleFollowUps={() => setOpen((o) => !o)}
@@ -333,6 +359,16 @@ export function AssistantMessage({
           </div>
         )}
       </div>
+      {editing && (
+        <AnswerDocPanel
+          open
+          onClose={() => setEditing(false)}
+          messageId={message.id}
+          markdown={bodyTexts.join("\n")}
+          graphs={graphs}
+          source={agentId}
+        />
+      )}
     </div>
   );
 }

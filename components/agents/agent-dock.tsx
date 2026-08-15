@@ -339,6 +339,7 @@ export function AgentDock() {
                 onSend={(q) => sendMessage({ text: q })}
                 onRegenerate={() => regenerate()}
                 onOrbActivate={() => inputRef.current?.focus()}
+                agentId={agent.id}
               />
             ),
           )}

@@ -315,10 +315,12 @@ export function InboxShell({
                     key={t.id}
                     href={`${basePath}/${t.id}`}
                     aria-current={current ? "page" : undefined}
-                    // Washed teal = read/opened. Unread rows stay on white so
-                    // the eye lands on them first; the open one is tinted.
+                    // Unread = white, read = light grey (founder, 2026-08-14 —
+                    // the washed-teal version read as a selection state on
+                    // every row). Teal is reserved for the OPEN thread, which
+                    // is the only row that's actually selected.
                     className={`group block border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-canvas ${
-                      current ? "bg-primary-wash" : unread ? "" : "bg-primary-wash/40"
+                      current ? "bg-primary-wash" : unread ? "bg-surface" : "bg-[#F7F8F9]"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">

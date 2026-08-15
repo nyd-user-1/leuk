@@ -13,7 +13,20 @@ import { EditorState, Plugin, TextSelection, type Transaction } from "prosemirro
 import { EditorView, Decoration, DecorationSet } from "prosemirror-view";
 import { Slice } from "prosemirror-model";
 import { type MarkType, type NodeType, type Attrs } from "prosemirror-model";
-import { schema, defaultMarkdownParser, defaultMarkdownSerializer } from "prosemirror-markdown";
+import {
+  addColumnAfter,
+  addColumnBefore,
+  addRowAfter,
+  addRowBefore,
+  columnResizing,
+  deleteColumn,
+  deleteRow,
+  deleteTable,
+  goToNextCell,
+  isInTable,
+  tableEditing,
+} from "prosemirror-tables";
+import { parser as markdownParser, schema, serializer as markdownSerializer } from "@/lib/markdown/editor-schema";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap, setBlockType, toggleMark, chainCommands, exitCode, wrapIn } from "prosemirror-commands";
 import { history, undo, redo } from "prosemirror-history";
@@ -209,6 +222,31 @@ const SLASH_ITEMS: SlashItem[] = [
     run: (view) => applySlash(view, wrapIn(schema.nodes.blockquote)),
   },
   {
+    key: "table",
+    label: "Table",
+    hint: "3×3",
+    icon: (
+      <svg {...SVG}>
+        <rect x="3" y="4" width="18" height="16" rx="1.5" />
+        <path d="M3 10h18M3 15h18M9 4v16M15 4v16" />
+      </svg>
+    ),
+    run: (view) => {
+      const { state } = view;
+      const cell = (type: NodeType) => type.createAndFill()!;
+      const row = (type: NodeType) =>
+        schema.nodes.table_row.create(null, [cell(type), cell(type), cell(type)]);
+      const table = schema.nodes.table.create(null, [
+        row(schema.nodes.table_header),
+        row(schema.nodes.table_cell),
+        row(schema.nodes.table_cell),
+      ]);
+      const { $from } = state.selection;
+      view.dispatch(state.tr.delete($from.start(), $from.pos).replaceSelectionWith(table));
+      view.focus();
+    },
+  },
+  {
     key: "divider",
     label: "Divider",
     hint: "---",
@@ -255,6 +293,17 @@ const PROSE_CSS = `
 .lim-prose strong { color: #212A47; }
 .lim-prose a { color: #3F8290; text-decoration: underline; }
 .lim-prose .lim-prose-empty::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; }
+
+/* Tables. table-layout:fixed is required, not cosmetic: prosemirror-tables
+   sizes columns through a <colgroup>, and an auto layout ignores it, so
+   drag-resizing a column would do nothing. */
+.lim-prose table { border-collapse: collapse; table-layout: fixed; width: 100%; margin: 0.9em 0; font-size: 13px; overflow: hidden; }
+.lim-prose td, .lim-prose th { border: 1px solid #E6E7EB; padding: 6px 9px; vertical-align: top; position: relative; }
+.lim-prose th { background: #F7F8F9; color: #212A47; font-weight: 600; text-align: left; }
+.lim-prose .selectedCell { background: rgba(63,130,144,0.10); }
+.lim-prose .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgba(63,130,144,0.06); pointer-events: none; }
+.lim-prose .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: 0; width: 4px; background: #3F8290; pointer-events: none; z-index: 20; }
+.lim-prose.resize-cursor { cursor: col-resize; }
 `;
 
 // ---- the component ---------------------------------------------------------
@@ -274,6 +323,8 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
   const viewRef = useRef<EditorView | null>(null);
   const lastEmitted = useRef(value);
   const [slash, setSlash] = useState<SlashState>(null);
+  /** Caret is inside a table — gates the table toolbar. */
+  const [inTable, setInTable] = useState(false);
   const [slashIndex, setSlashIndex] = useState(0);
   const slashRef = useRef<{ open: boolean; index: number; items: SlashItem[] }>({
     open: false,
@@ -328,7 +379,7 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
       insertMarkdown(md: string) {
         const view = viewRef.current;
         if (!view) return;
-        const doc = defaultMarkdownParser.parse(md);
+        const doc = markdownParser.parse(md);
         if (!doc) return;
         const { state } = view;
         const $to = state.selection.$to;
@@ -340,7 +391,7 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
       replaceSelection(md: string) {
         const view = viewRef.current;
         if (!view) return;
-        const doc = defaultMarkdownParser.parse(md);
+        const doc = markdownParser.parse(md);
         if (!doc) return;
         view.dispatch(
           view.state.tr.replaceSelection(new Slice(doc.content, 0, 0)).scrollIntoView(),
@@ -360,7 +411,7 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
     if (!host) return;
     let doc;
     try {
-      doc = defaultMarkdownParser.parse(lastEmitted.current);
+      doc = markdownParser.parse(lastEmitted.current);
     } catch {
       doc = schema.node("doc", null, [schema.node("paragraph")]);
     }
@@ -413,8 +464,11 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
           "Mod-Shift-8": wrapInList(schema.nodes.bullet_list),
           "Mod-Shift-9": wrapInList(schema.nodes.ordered_list),
           Enter: splitListItem(schema.nodes.list_item),
-          Tab: sinkListItem(schema.nodes.list_item),
-          "Shift-Tab": liftListItem(schema.nodes.list_item),
+          // Inside a table Tab walks cells (the universal spreadsheet reflex);
+          // everywhere else it keeps indenting list items. chainCommands runs
+          // goToNextCell first and falls through when the cursor isn't in one.
+          Tab: chainCommands(goToNextCell(1), sinkListItem(schema.nodes.list_item)),
+          "Shift-Tab": chainCommands(goToNextCell(-1), liftListItem(schema.nodes.list_item)),
           "Shift-Enter": chainCommands(exitCode, (state, dispatch) => {
             if (dispatch)
               dispatch(
@@ -431,6 +485,10 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
         history(),
         dropCursor({ color: "#3F8290", width: 2 }),
         gapCursor(),
+        // Tables: drag-to-resize columns, plus cell selection / arrow-key
+        // navigation. columnResizing must come BEFORE tableEditing.
+        columnResizing({}),
+        tableEditing(),
         placeholderPlugin(placeholder),
       ],
     });
@@ -442,11 +500,12 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
         const next = view.state.apply(tr);
         view.updateState(next);
         if (tr.docChanged) {
-          const md = defaultMarkdownSerializer.serialize(next.doc);
+          const md = markdownSerializer.serialize(next.doc);
           lastEmitted.current = md;
           onChangeRef.current(md);
         }
         readSlash(view);
+        setInTable(isInTable(next));
       },
     });
     viewRef.current = view;
@@ -469,7 +528,7 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
     if (!view || value === lastEmitted.current) return;
     let doc;
     try {
-      doc = defaultMarkdownParser.parse(value);
+      doc = markdownParser.parse(value);
     } catch {
       return;
     }
@@ -485,10 +544,51 @@ export const NotesEditor = forwardRef<NotesEditorHandle, Props>(function NotesEd
     setSlash(null);
   };
 
+  // Table controls. prosemirror-tables ships the COMMANDS but no interface, and
+  // a table you can type in but can't add a row to is a table you can't use.
+  // The bar appears only while the caret is inside one, anchored under the
+  // table so it doesn't hover over the text being edited.
+  const runTable = (cmd: (s: EditorState, d?: (tr: Transaction) => void) => boolean) => () => {
+    const view = viewRef.current;
+    if (!view) return;
+    cmd(view.state, view.dispatch);
+    view.focus();
+  };
+  const TABLE_ACTIONS: Array<[string, string, ReturnType<typeof runTable>]> = [
+    ["Row above", "⤒", runTable(addRowBefore)],
+    ["Row below", "⤓", runTable(addRowAfter)],
+    ["Column left", "⇤", runTable(addColumnBefore)],
+    ["Column right", "⇥", runTable(addColumnAfter)],
+    ["Delete row", "−R", runTable(deleteRow)],
+    ["Delete column", "−C", runTable(deleteColumn)],
+    ["Delete table", "✕", runTable(deleteTable)],
+  ];
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <style>{PROSE_CSS}</style>
       <div ref={hostRef} className="min-h-0 flex-1 overflow-y-auto" />
+      {inTable && !readOnly && (
+        <div className="pointer-events-auto absolute bottom-2 right-2 z-20 flex flex-wrap items-center gap-0.5 rounded-card border border-border bg-surface p-1 shadow-menu">
+          {TABLE_ACTIONS.map(([label, glyph, run]) => (
+            <button
+              key={label}
+              type="button"
+              title={label}
+              aria-label={label}
+              // mousedown, not click: click fires after the editor has already
+              // lost the selection, and every one of these commands acts on it.
+              onMouseDown={(e) => {
+                e.preventDefault();
+                run();
+              }}
+              className="flex h-7 min-w-7 items-center justify-center rounded-field px-1.5 font-mono text-[12px] text-text-body transition-colors hover:bg-primary-wash hover:text-primary"
+            >
+              {glyph}
+            </button>
+          ))}
+        </div>
+      )}
       {slash && filtered.length > 0 && (
         <div
           style={{ left: slash.left, top: slash.top }}

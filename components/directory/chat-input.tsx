@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { PlusMenu } from "@/components/directory/plus-menu";
 import { MODEL_OPTIONS } from "@/lib/ai/model-options";
 import { applyInsert, useComposerMenu, type Command } from "@/components/directory/composer-menu";
@@ -42,6 +43,61 @@ const GEAR = (
 // and keeps only its caret. Every typographic property below MUST match the
 // textarea or the two drift apart as you type.
 const TOKEN = /(^\/[\w-]+)|(@[^()\n]+?\s*\((?:NPI|TIN)\s*[0-9]{9,10}\))/g;
+
+// The "@"/"/" menu, portalled to <body> and positioned against the composer.
+//
+// It used to be an absolutely-positioned child of the composer, which meant any
+// ancestor with `overflow` clipped it — the content surface scrolls, and
+// AppPanel is `overflow-hidden`, so the 27-skill list was sheared off at the
+// top of the white panel. A portal escapes both. The trade is that position no
+// longer follows the anchor for free, hence the rect measurement below.
+//
+// Height is whatever room actually exists above the composer, never a fixed
+// max: on a short window that's what stops the list running under the header.
+function TriggerMenuFrame({
+  anchorRef,
+  children,
+}: {
+  anchorRef: RefObject<HTMLDivElement | null>;
+  children: ReactNode;
+}) {
+  const [box, setBox] = useState<{ left: number; bottom: number; width: number; maxH: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = anchorRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setBox({
+        left: r.left,
+        bottom: window.innerHeight - r.top + 8,
+        width: Math.min(r.width, 480),
+        // 16px of breathing room above, and never taller than the list needs.
+        maxH: Math.max(140, Math.min(380, r.top - 16)),
+      });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    // Capture phase: the surface scrolls, not the window, so the listener has
+    // to see scroll events from any ancestor rather than only the document.
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [anchorRef]);
+
+  if (!box || typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      className="fixed z-[60] flex flex-col overflow-hidden rounded-card border border-[var(--border)] bg-[var(--surface)] shadow-menu"
+      style={{ left: box.left, bottom: box.bottom, width: box.width, maxHeight: box.maxH }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+}
 
 function Highlight({ value }: { value: string }) {
   const out: React.ReactNode[] = [];
@@ -142,6 +198,8 @@ export function ChatInput({
   const [value, setValue] = useState("");
   const [caret, setCaret] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  /** The composer shell — the trigger menu anchors to it from a portal. */
+  const shellRef = useRef<HTMLDivElement>(null);
   const menu = useComposerMenu({ value, caret, mentions, commands, agentId });
 
   // Replace the "@…"/"/…" token with the picked item and put the caret after it.
@@ -239,16 +297,24 @@ export function ChatInput({
     <div className="bg-transparent p-1.5 sm:p-4" style={TOKEN_MAP}>
       <div className="max-w-[770px] mx-auto w-full">
         <div
+          ref={shellRef}
+          // Flat grey at rest AND while typing — the filled container is the
+          // affordance, so a teal ring around it just adds a second one.
+          // The border stays in the class list as `transparent` rather than
+          // being dropped: removing it would resize the box by 2px whenever
+          // the send-flash paints one. Focus still shows a grey hairline (a
+          // keyboard user has to be able to find the caret), and the flash on
+          // send is the one moment worth teal.
           className={`relative rounded-2xl sm:rounded-3xl bg-[var(--inp-bg)] border transition-all px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-2.5 hover:shadow-card ${
-            borderFlash ? "border-primary ring-2 ring-primary/25" : "border-border focus-within:border-primary"
+            borderFlash ? "border-primary ring-2 ring-primary/25" : "border-transparent focus-within:border-border"
           }`}
         >
           {menu.open && (
-            <div className="absolute bottom-full left-0 z-50 mb-2 w-[min(30rem,92vw)] overflow-hidden rounded-card border border-[var(--border)] bg-[var(--surface)] shadow-menu">
+            <TriggerMenuFrame anchorRef={shellRef}>
               {/* Sticky header: the catalogue is 27 skills deep, so the menu is
                   a searchable list, not a short popover. Typing after the
                   trigger filters name, description and group. */}
-              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3.5 py-2">
+              <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3.5 py-2">
                 <span className="text-[12px] text-[var(--muted2)]">
                   {menu.hit?.trigger === "/" ? "Skills" : "Records"}
                 </span>
@@ -259,7 +325,9 @@ export function ChatInput({
                   {menu.items.length || ""}
                 </span>
               </div>
-              <div className="max-h-80 overflow-y-auto py-1">
+              {/* The frame owns the height budget now; this just takes what's
+                  left after the sticky header and scrolls inside it. */}
+              <div className="min-h-0 flex-1 overflow-y-auto py-1">
               {menu.items.length === 0 && menu.loading && (
                 <p className="px-3.5 py-2 text-[13px] text-[var(--muted2)]">Searching…</p>
               )}
@@ -297,7 +365,7 @@ export function ChatInput({
                 );
               })}
               </div>
-            </div>
+            </TriggerMenuFrame>
           )}
           <div className="relative">
           <Highlight value={value} />

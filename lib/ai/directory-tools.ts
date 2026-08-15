@@ -46,7 +46,12 @@ export async function runSearchProviders(input: SearchInput) {
     q: input.q, city: input.city, county: input.county, zip: input.zip,
     profession: input.profession, subspecialty: input.subspecialty, gender: input.gender,
     providerType: input.provider_type, insurancePayer: input.insurance_payer,
-    sort: input.sort, page: input.page ?? 1, pageSize: 10,
+    // 10 → 50. Every row here is tokens in the model's context, so this is a
+    // budget, not a display choice: the answer table now scrolls at 390px, and
+    // 50 rows is roughly what a reader will page through before refining the
+    // search. Showing all 765 means the client fetching them itself (see the
+    // relationship_map generative-UI pattern), not a bigger tool payload.
+    sort: input.sort, page: input.page ?? 1, pageSize: 50,
   });
   return {
     total: res.total,

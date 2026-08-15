@@ -185,6 +185,7 @@ export function AgentThreadView({
               onSend={(q) => sendMessage({ text: q })}
               onRegenerate={() => {}}
               onOrbActivate={() => {}}
+              agentId={agent.id}
             />
           ),
         )}
