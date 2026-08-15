@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { appBaseUrl } from "@/lib/email";
 import { runBookAppointment, runGetAvailability } from "@/lib/mcp/booking";
+import { BOOK_APP_HTML } from "@/lib/mcp/app/book-html.generated";
 import {
   runDirectoryFilters,
   runFindPrograms,
@@ -141,6 +142,11 @@ function tool<A>(run: (args: A) => Promise<unknown>) {
 
 // ── Shared schema fragments ──────────────────────────────────────────────────
 
+/** ui:// is the scheme MCP Apps hosts recognise; the path is ours. */
+const BOOK_APP_URI = "ui://leuk/book.html";
+/** RESOURCE_MIME_TYPE from @modelcontextprotocol/ext-apps/server — inlined to avoid its 1.x-SDK types. */
+const BOOK_APP_MIME = "text/html;profile=mcp-app";
+
 const limit = z.number().int().min(1).max(25).optional().describe("Rows to return (max 25, default 10).");
 const page = z.number().int().min(1).optional().describe("1-indexed page for paging past the first set.");
 
@@ -262,20 +268,40 @@ const handler = createMcpHandler(
       tool(runListBookable),
     );
 
+    // ── The booking card (MCP Apps) ──────────────────────────────────────────
+    // On hosts that support MCP Apps (Claude.ai, Claude Desktop, …) this tool
+    // renders an interactive card in the chat: the open times as buttons, a
+    // short form, and a Book button that calls book_appointment from the card.
+    // Hosts without Apps support just see the JSON result, as before. The
+    // widget is a single self-contained HTML document — no external scripts,
+    // no fetch to Leuk; every call goes back through the host to this server.
     server.registerTool(
       "get_availability",
       {
         title: "Open appointment times",
         description:
-          "Step 2 of booking. Real open start times for one practitioner, service and date, plus a pre-filled book_url. Always call this before book_appointment and offer the person actual times — never guess at office hours. Offer the book_url as the click-through alternative to booking in chat.",
+          "Step 2 of booking. Real open start times for one practitioner, service and date, plus a pre-filled book_url. Always call this before book_appointment and offer the person actual times — never guess at office hours. Where the host supports it this shows an interactive booking card; the person can pick a time and book right there, in which case you will be told and must not book again. Otherwise offer the book_url as the click-through alternative.",
         inputSchema: {
           practitioner_id: z.string().describe("From list_bookable."),
           service_id: z.string().describe("From list_bookable."),
           date: z.string().describe("YYYY-MM-DD."),
         },
         annotations: read,
+        // Both keys: `ui.resourceUri` is the current spec, "ui/resourceUri" the
+        // earlier draft some hosts still read. Same as ext-apps' registerAppTool.
+        _meta: { ui: { resourceUri: BOOK_APP_URI }, "ui/resourceUri": BOOK_APP_URI },
       },
       tool(runGetAvailability),
+    );
+
+    server.registerResource(
+      "Leuk booking card",
+      BOOK_APP_URI,
+      { mimeType: BOOK_APP_MIME, description: "Interactive slot picker and booking form for a Leuk practitioner." },
+      async () => ({
+        contents: [{ uri: BOOK_APP_URI, mimeType: BOOK_APP_MIME, text: BOOK_APP_HTML }],
+        _meta: { ui: { prefersBorder: true } },
+      }),
     );
 
     server.registerTool(

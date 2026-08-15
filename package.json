@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3010",
-    "build": "next build",
+    "build": "node scripts/build-mcp-app.mjs && next build",
     "start": "next start -p 3010",
-    "check:boundaries": "node scripts/check-v1-boundary.mjs && node scripts/check-mcp-boundary.mjs"
+    "check:boundaries": "node scripts/check-v1-boundary.mjs && node scripts/check-mcp-boundary.mjs",
+    "build:mcp-app": "node scripts/build-mcp-app.mjs"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^5.0.50",
@@ -15,6 +16,7 @@
     "@anthropic-ai/sdk": "^0.111.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1092.0",
     "@dagrejs/dagre": "^3.0.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@neondatabase/serverless": "^1.1.0",
     "@photonhealth/elements": "^0.23.10",
@@ -55,6 +57,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "playwright-core": "^1.61.1",
     "tailwindcss": "^4",
     "typescript": "^5"

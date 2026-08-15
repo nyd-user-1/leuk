@@ -73,6 +73,9 @@ export async function runGetAvailability(input: {
     .find((p) => p.id === practitionerId);
   return {
     date,
+    practitioner_id: practitionerId,
+    practitioner_name: practitioner?.name,
+    service_id: serviceId,
     service: service.name,
     minutes: service.durationMin,
     telehealth: service.telehealth,
@@ -151,6 +154,6 @@ export async function runBookAppointment(input: BookInput) {
     when: `${date} ${time}`,
     confirmation:
       "Booked. A confirmation email is on its way with the details and, for a first visit, a link to set up the patient portal.",
-    manage_at: `${appBaseUrl()}/portal/appointments`,
+    manage_href: "/portal/appointments",
   };
 }

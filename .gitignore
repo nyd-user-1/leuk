@@ -34,3 +34,4 @@ dev.log
 # shapes into the repo, on the same night a key leaked (NYS-184). The patterns
 # we took from it live in our own routes and docs/reference/stripe-connect-digest.md.
 stripe-sample-code/
+.vercel.legacy/
