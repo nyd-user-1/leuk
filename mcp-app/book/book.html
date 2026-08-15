@@ -40,9 +40,9 @@
   .person:hover { background: var(--hover); }
   .person .who { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
   .person .name { font-weight: 500; font-size: 14px; padding: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .person .ext { background: none; border: 1px solid transparent; border-radius: 6px; width: 28px; height: 28px;
-    cursor: pointer; color: var(--muted); font-size: 15px; flex: none; }
-  .person .ext:hover { color: var(--teal); background: var(--field); border-color: var(--line); }
+  .ext { background: none; border: 1px solid transparent; border-radius: 6px; width: 26px; height: 26px; padding: 0;
+    cursor: pointer; color: var(--muted); font-size: 15px; flex: none; line-height: 1; }
+  .ext:hover { color: var(--teal); background: var(--field); border-color: var(--line); }
   .go { border: 0; background: var(--amber); color: var(--navy); border-radius: 999px; padding: 7px 14px;
     font-weight: 600; font-size: 14px; cursor: pointer; flex: none; }
   .go:hover { filter: brightness(1.05); }
@@ -85,6 +85,37 @@
   .book:disabled { opacity: .55; cursor: default; }
   .link { background: none; border: 0; color: var(--teal); cursor: pointer; padding: 0; text-decoration: underline; }
 
+  /* directory slides — results / provider / programs */
+  .lead { margin: 10px 0 6px; font-size: 13px; color: var(--muted); }
+  .rows { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: flex-start; gap: 8px; padding: 9px 8px; margin: 0 -8px; border-radius: 10px;
+    border-bottom: 1px solid var(--line); }
+  .row:hover { background: var(--hover); }
+  .row .main { flex: 1; min-width: 0; }
+  .row .t { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .row .m { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .row .m a, .row .m .tel { color: var(--fg); }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .tag { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 1px 8px; font-size: 11.5px; color: var(--muted); }
+  .row .side { display: flex; align-items: center; gap: 4px; flex: none; }
+  .mini { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; cursor: pointer; }
+  .mini:hover { background: var(--hover); border-color: var(--teal); }
+  .more { margin-top: 10px; display: flex; justify-content: center; }
+  .strip { margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--field); }
+  .strip .h { font-weight: 600; font-size: 13.5px; margin-bottom: 6px; }
+  .strip .h small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .strip .list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .strip .list button { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  .strip .list button:hover { border-color: var(--amber); background: var(--amber-tint); color: var(--navy); }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 10px 0; font-size: 13.5px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .big { font-size: 20px; font-weight: 700; margin: 6px 0 2px; letter-spacing: -0.01em; }
+  table.ins { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  table.ins th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  table.ins td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .open { color: var(--ok-fg); font-weight: 600; } .closed { color: var(--muted); }
+
   /* slide 5 — booked */
   .receipt { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--field); }
   .receipt .when { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
@@ -108,6 +139,17 @@
   </div>
   <h1 id="title">Loading…</h1>
   <div class="sub" id="sub"></div>
+
+  <!-- directory: results / provider / programs / program -->
+  <div id="s-dir" class="hidden">
+    <div class="lead hidden" id="lead"></div>
+    <div id="dir"></div>
+    <div class="more hidden" id="more"><button class="mini" id="morebtn" type="button">Show more</button></div>
+    <div class="strip hidden" id="strip">
+      <div class="h">Book online now at Leuk <small>Manhattan · telehealth</small></div>
+      <div class="list" id="striplist"></div>
+    </div>
+  </div>
 
   <!-- 1 · providers -->
   <div id="s-people" class="hidden">

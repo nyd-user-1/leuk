@@ -2,7 +2,11 @@
 // (Claude.ai, ChatGPT, Claude Desktop, …) when list_bookable, get_availability
 // or book_appointment runs.
 //
-// Five slides, one card, ← → in the top-right walk them like a tiny browser:
+// One card, several experiences, ← → in the top-right walk them like a tiny
+// browser. Directory tools land on their own slides — find_providers → results
+// (rows with focus tags, Insurance, ↗; "Book online now at Leuk" strip
+// underneath, always), get_provider → one clinician with the insurance table,
+// find_programs / find_resources / get_program → programs. Then booking:
 //   1 people   — available providers (from list_bookable). Name ↗ · Book now.
 //   2 service  — session type.
 //   3 times    — a day of open times, ‹ › to move days.
@@ -45,7 +49,41 @@ type Booking = {
   error?: string;
   retry?: string;
 };
-type ToolData = Roster | Availability | Booking | { error: string };
+type Clinician = {
+  npi: string | null;
+  name: string;
+  profession: string;
+  subspecialty?: string | null;
+  focus?: string[];
+  credential?: string | null;
+  city: string | null;
+  county: string | null;
+  phone: string | null;
+  url?: string;
+};
+type ProvidersResult = {
+  kind: "providers";
+  interpreted_as?: { topic: string; why: string };
+  total: number;
+  page: number;
+  showing: number;
+  query: Record<string, unknown>;
+  providers: Clinician[];
+  bookable_here?: { practitioners: { id: string; name: string }[] };
+};
+type ProviderDetail = Clinician & {
+  kind: "provider";
+  address: string | null;
+  zip: string | null;
+  taxonomy?: string | null;
+  license_state?: string | null;
+  insurance: { payer: string; network: string | null; panel: string | boolean | null; as_of: string | null }[];
+  insurance_caveat: string;
+};
+type Program = { id: string; name: string; agency: string | null; facility: string | null; type: string | null; city: string | null; county: string | null; phone: string | null; url?: string };
+type ProgramsResult = { kind: "programs" | "resources"; total?: number; page?: number; showing: number; programs?: Program[]; resources?: Program[] };
+type ProgramDetail = Program & { kind: "program"; address: string | null; zip: string | null; populations?: string[] | null; source?: string | null };
+type ToolData = Roster | Availability | Booking | ProvidersResult | ProviderDetail | ProgramsResult | ProgramDetail | { error: string };
 
 // What the person has chosen so far — carried across slides.
 type Pick = {
@@ -56,6 +94,10 @@ type Pick = {
 };
 
 type Slide =
+  | { kind: "results"; data: ProvidersResult; rows: Clinician[] }
+  | { kind: "provider"; data: ProviderDetail; bookable?: { id: string; name: string }[] }
+  | { kind: "programs"; data: ProgramsResult }
+  | { kind: "program"; data: ProgramDetail }
   | { kind: "people"; roster: Roster }
   | { kind: "service"; roster: Roster }
   | { kind: "times"; avail: Availability }
@@ -68,6 +110,13 @@ const el = {
   fwd: $<HTMLButtonElement>("fwd"),
   title: $("title"),
   sub: $("sub"),
+  sDir: $("s-dir"),
+  lead: $("lead"),
+  dir: $("dir"),
+  more: $("more"),
+  morebtn: $<HTMLButtonElement>("morebtn"),
+  strip: $("strip"),
+  striplist: $("striplist"),
   sPeople: $("s-people"),
   people: $("people"),
   sService: $("s-service"),
@@ -99,6 +148,8 @@ const history: Slide[] = [];
 let cursor = -1;
 let busy = false;
 let roster: Roster | null = null;
+// The bookable roster as last seen on a search result — feeds the strip.
+let lastBookable: { id: string; name: string }[] | null = null;
 const pick: Pick = {};
 
 const cur = (): Slide | null => history[cursor] ?? null;
@@ -154,6 +205,8 @@ function setMsg(kind: "ok" | "err" | null, text = "") {
 }
 
 function show(which: Slide["kind"] | null) {
+  const dir = which === "results" || which === "provider" || which === "programs" || which === "program";
+  el.sDir.classList.toggle("hidden", !dir);
   el.sPeople.classList.toggle("hidden", which !== "people");
   el.sService.classList.toggle("hidden", which !== "service");
   el.sTimes.classList.toggle("hidden", which !== "times");
@@ -162,6 +215,10 @@ function show(which: Slide["kind"] | null) {
 }
 
 const STEP_LABELS: Record<Slide["kind"], string> = {
+  results: "",
+  provider: "",
+  programs: "",
+  program: "",
   people: "Step 1 of 4 · provider",
   service: "Step 2 of 4 · session type",
   times: "Step 3 of 4 · date & time",
@@ -177,6 +234,12 @@ function render() {
   el.steps.textContent = s ? STEP_LABELS[s.kind] : "";
   if (!s) return;
   show(s.kind);
+
+  if (s.kind === "results" || s.kind === "provider" || s.kind === "programs" || s.kind === "program") {
+    setMsg(null);
+    renderDirectory(s);
+    return;
+  }
 
   if (s.kind === "people") {
     setMsg(null);
@@ -318,9 +381,195 @@ function render() {
   }
 }
 
+// ── Directory slides ─────────────────────────────────────────────────────────
+
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+const telHref = (p: string) => `tel:${p.replace(/[^\d+]/g, "")}`;
+
+function extButton(url: string, label: string) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "ext";
+  b.title = label;
+  b.setAttribute("aria-label", label);
+  b.textContent = "↗";
+  b.addEventListener("click", () => void app.openLink({ url }));
+  return b;
+}
+
+/** "Book online now at Leuk" — the strip under every directory slide. */
+function renderStrip(list?: { id: string; name: string }[]) {
+  const people = list ?? roster?.practitioners ?? lastBookable;
+  el.strip.classList.toggle("hidden", !people || people.length === 0);
+  if (!people?.length) return;
+  el.striplist.replaceChildren(
+    ...people.map((p) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = `${p.name} · Book now`;
+      b.disabled = busy;
+      b.addEventListener("click", () => void startBooking(p));
+      return b;
+    }),
+  );
+}
+
+function clinicianRow(c: Clinician) {
+  const row = document.createElement("div");
+  row.className = "row";
+  const main = document.createElement("div");
+  main.className = "main";
+  const t = document.createElement("div");
+  t.className = "t";
+  t.append(Object.assign(document.createElement("span"), { textContent: c.name }));
+  if (c.url) t.append(extButton(c.url, `Open ${c.name}'s profile in a new tab`));
+  const m = document.createElement("div");
+  m.className = "m";
+  const bits = [c.profession, c.credential, [c.city, c.county].filter(Boolean).join(", ")].filter(Boolean).map(esc);
+  m.innerHTML = bits.join(" · ") + (c.phone ? ` · <a class="tel" href="${telHref(c.phone)}">${esc(c.phone)}</a>` : "");
+  main.append(t, m);
+  if (c.focus?.length) {
+    const tags = document.createElement("div");
+    tags.className = "tags";
+    tags.append(...c.focus.map((f) => Object.assign(document.createElement("span"), { className: "tag", textContent: f })));
+    main.append(tags);
+  }
+  const side = document.createElement("div");
+  side.className = "side";
+  if (c.npi) {
+    const ins = document.createElement("button");
+    ins.type = "button";
+    ins.className = "mini";
+    ins.textContent = "Insurance";
+    ins.disabled = busy;
+    ins.addEventListener("click", () => void openProvider(c.npi!));
+    side.append(ins);
+  }
+  row.append(main, side);
+  return row;
+}
+
+function programRow(p: Program) {
+  const row = document.createElement("div");
+  row.className = "row";
+  const main = document.createElement("div");
+  main.className = "main";
+  const t = document.createElement("div");
+  t.className = "t";
+  t.append(Object.assign(document.createElement("span"), { textContent: p.name }));
+  if (p.url) t.append(extButton(p.url, `Open ${p.name} in a new tab`));
+  const m = document.createElement("div");
+  m.className = "m";
+  const bits = [p.type, p.agency, p.facility, [p.city, p.county].filter(Boolean).join(", ")].filter(Boolean).map(esc);
+  m.innerHTML = bits.join(" · ") + (p.phone ? ` · <a class="tel" href="${telHref(p.phone)}">${esc(p.phone)}</a>` : "");
+  main.append(t, m);
+  row.append(main);
+  return row;
+}
+
+function renderDirectory(s: Extract<Slide, { kind: "results" | "provider" | "programs" | "program" }>) {
+  el.lead.classList.add("hidden");
+  el.more.classList.add("hidden");
+  el.dir.replaceChildren();
+
+  if (s.kind === "results") {
+    const d = s.data;
+    el.title.textContent = "Clinicians";
+    const where = [d.query.city, d.query.county].filter(Boolean).join(", ");
+    el.sub.textContent = `${d.total.toLocaleString()} match${where ? ` · ${where}` : ""} · showing ${s.rows.length}`;
+    if (d.interpreted_as) {
+      el.lead.textContent = `${d.interpreted_as.topic}: ${d.interpreted_as.why}`;
+      el.lead.classList.remove("hidden");
+    }
+    const list = document.createElement("div");
+    list.className = "rows";
+    list.append(...s.rows.map(clinicianRow));
+    el.dir.append(list);
+    if (s.rows.length < d.total) {
+      el.more.classList.remove("hidden");
+      el.morebtn.disabled = busy;
+    }
+    renderStrip(d.bookable_here?.practitioners);
+    return;
+  }
+
+  if (s.kind === "provider") {
+    const d = s.data;
+    el.title.textContent = d.name;
+    el.sub.textContent = [d.profession, d.credential, d.subspecialty].filter(Boolean).join(" · ");
+    const wrap = document.createElement("div");
+    if (d.phone) wrap.innerHTML += `<div class="big"><a class="tel" href="${telHref(d.phone)}" style="color:inherit;text-decoration:none">${esc(d.phone)}</a></div>`;
+    const kv: string[] = [];
+    if (d.address || d.city) kv.push(`<dt>Office</dt><dd>${esc([d.address, [d.city, d.zip].filter(Boolean).join(" ")].filter(Boolean).join(", "))}${d.county ? ` · ${esc(d.county)} County` : ""}</dd>`);
+    if (d.focus?.length) kv.push(`<dt>Focus</dt><dd>${d.focus.map(esc).join(" · ")}</dd>`);
+    if (d.npi) kv.push(`<dt>NPI</dt><dd>${esc(d.npi)}</dd>`);
+    if (kv.length) wrap.innerHTML += `<dl class="kv">${kv.join("")}</dl>`;
+    if (d.insurance?.length) {
+      const rows = d.insurance
+        .map((r) => {
+          const open = r.panel === true || r.panel === "accepting" || r.panel === "open";
+          const closed = r.panel === false || r.panel === "not_accepting" || r.panel === "closed";
+          const panel = open ? '<span class="open">Open</span>' : closed ? '<span class="closed">Closed</span>' : '<span class="closed">—</span>';
+          return `<tr><td>${esc(r.payer)}</td><td>${esc(r.network ?? "")}</td><td>${panel}</td><td>${esc(r.as_of ? String(r.as_of).slice(0, 10) : "")}</td></tr>`;
+        })
+        .join("");
+      wrap.innerHTML += `<table class="ins"><thead><tr><th>Insurer</th><th>Network</th><th>Panel</th><th>As of</th></tr></thead><tbody>${rows}</tbody></table>`;
+      wrap.innerHTML += `<div class="fine">${esc(d.insurance_caveat)}</div>`;
+    } else {
+      wrap.innerHTML += `<div class="fine">No insurer lists this clinician in a published directory we have. Ask the office.</div>`;
+    }
+    if (d.url) {
+      const b = document.createElement("button");
+      b.className = "link";
+      b.type = "button";
+      b.textContent = "Open profile ↗";
+      b.addEventListener("click", () => void app.openLink({ url: d.url! }));
+      wrap.append(b);
+    }
+    el.dir.append(wrap);
+    renderStrip(s.bookable);
+    return;
+  }
+
+  if (s.kind === "programs") {
+    const d = s.data;
+    const items = d.programs ?? d.resources ?? [];
+    el.title.textContent = d.kind === "resources" ? "Community resources" : "Treatment programs";
+    el.sub.textContent = d.total != null ? `${d.total.toLocaleString()} match · showing ${items.length}` : `${items.length} shown`;
+    const list = document.createElement("div");
+    list.className = "rows";
+    list.append(...items.map(programRow));
+    el.dir.append(list);
+    renderStrip();
+    return;
+  }
+
+  // program detail
+  const d = s.data;
+  el.title.textContent = d.name;
+  el.sub.textContent = [d.type, d.agency, d.facility].filter(Boolean).join(" · ");
+  const wrap = document.createElement("div");
+  if (d.phone) wrap.innerHTML += `<div class="big"><a class="tel" href="${telHref(d.phone)}" style="color:inherit;text-decoration:none">${esc(d.phone)}</a></div>`;
+  const kv: string[] = [];
+  if (d.address || d.city) kv.push(`<dt>Where</dt><dd>${esc([d.address, [d.city, d.zip].filter(Boolean).join(" ")].filter(Boolean).join(", "))}${d.county ? ` · ${esc(d.county)} County` : ""}</dd>`);
+  if (d.populations?.length) kv.push(`<dt>Serves</dt><dd>${d.populations.map(esc).join(" · ")}</dd>`);
+  if (d.source) kv.push(`<dt>Source</dt><dd>${esc(d.source)}</dd>`);
+  if (kv.length) wrap.innerHTML += `<dl class="kv">${kv.join("")}</dl>`;
+  if (d.url) {
+    const b = document.createElement("button");
+    b.className = "link";
+    b.type = "button";
+    b.textContent = "Open program page ↗";
+    b.addEventListener("click", () => void app.openLink({ url: d.url! }));
+    wrap.append(b);
+  }
+  el.dir.append(wrap);
+  renderStrip();
+}
+
 // ── Host wiring ──────────────────────────────────────────────────────────────
 
-const app = new App({ name: "Leuk booking", version: "1.2.0" });
+const app = new App({ name: "Leuk", version: "1.3.0" });
 
 const parse = <T,>(result: { content?: Array<{ type: string; text?: string }>; structuredContent?: unknown }): T | null => {
   if (result.structuredContent) return result.structuredContent as T;
@@ -361,6 +610,23 @@ function ingest(data: ToolData) {
   }
   if ("kind" in data && data.kind === "booking") {
     push({ kind: "done", booking: data });
+    return;
+  }
+  if ("kind" in data && data.kind === "providers") {
+    if (data.bookable_here?.practitioners?.length) lastBookable = data.bookable_here.practitioners;
+    push({ kind: "results", data, rows: data.providers });
+    return;
+  }
+  if ("kind" in data && data.kind === "provider") {
+    push({ kind: "provider", data });
+    return;
+  }
+  if ("kind" in data && (data.kind === "programs" || data.kind === "resources")) {
+    push({ kind: "programs", data });
+    return;
+  }
+  if ("kind" in data && data.kind === "program") {
+    push({ kind: "program", data });
     return;
   }
   setMsg("err", (data as { error?: string }).error ?? "Something went wrong. Ask again in the chat.");
@@ -419,8 +685,48 @@ async function loadDate(date: string) {
   });
 }
 
+/** Results → one clinician with insurance detail (a history step). */
+async function openProvider(npi: string) {
+  await withBusy(async () => {
+    const r = await app.callServerTool({ name: "card_get_provider", arguments: { npi } }).catch(() => null);
+    const d = r ? parse<ProviderDetail>(r) : null;
+    if (!d || !("kind" in d)) return setMsg("err", "Could not load that clinician.");
+    setMsg(null);
+    push({ kind: "provider", data: d, bookable: lastBookable ?? undefined });
+  });
+}
+
+/** Results → next page, appended (same slide). */
+async function loadMore() {
+  const s = cur();
+  if (!s || s.kind !== "results") return;
+  await withBusy(async () => {
+    const r = await app
+      .callServerTool({ name: "card_find_providers", arguments: { ...s.data.query, page: (s.data.page ?? 1) + 1 } })
+      .catch(() => null);
+    const d = r ? parse<ProvidersResult>(r) : null;
+    if (!d || d.kind !== "providers") return setMsg("err", "Could not load more.");
+    replace({ kind: "results", data: { ...d, total: d.total }, rows: [...s.rows, ...d.providers] });
+  });
+}
+
+/** Strip → the booking flow for one of Leuk's clinicians (slide 2 onwards). */
+async function startBooking(p: { id: string; name: string }) {
+  await withBusy(async () => {
+    if (!roster) {
+      const r = await app.callServerTool({ name: "card_roster", arguments: {} }).catch(() => null);
+      roster = r ? parse<Roster>(r) : null;
+    }
+    if (!roster) return setMsg("err", "Could not load the booking roster.");
+    const full = roster.practitioners.find((x) => x.id === p.id) ?? p;
+    pick.practitioner = full;
+    push({ kind: "service", roster });
+  });
+}
+
 // ── Controls ─────────────────────────────────────────────────────────────────
 
+el.morebtn.addEventListener("click", () => void loadMore());
 el.back.addEventListener("click", () => {
   if (cursor > 0) {
     cursor--;

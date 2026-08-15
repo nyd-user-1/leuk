@@ -198,6 +198,7 @@ export async function runFindProviders(input: FindProvidersInput) {
   ]);
 
   return {
+    kind: "providers" as const,
     ...(cond
       ? {
           interpreted_as: {
@@ -210,6 +211,8 @@ export async function runFindProviders(input: FindProvidersInput) {
     total: res.total,
     page: res.page,
     showing: res.items.length,
+    // The filters this page was computed with — the card re-sends them to page.
+    query: { q, city: input.city, county: input.county, zip: input.zip, profession, subspecialty, focus, provider_type: providerType, insurance_payer: input.insurance_payer, prefer_accepting: input.prefer_accepting, limit },
     providers: res.items.map(toCard),
     note:
       res.total > res.items.length
@@ -242,6 +245,7 @@ export async function runGetProvider(input: { npi?: string }) {
   const participation = await networkParticipationForNpi(npi);
 
   return {
+    kind: "provider" as const,
     ...toCard(p),
     address: p.address ? titleCase(p.address) : null,
     // NPPES stores ZIP+4 unpunctuated ("112091509"), which reads as a phone
@@ -294,6 +298,7 @@ export async function runFindPrograms(input: {
     pageSize: limit,
   });
   return {
+    kind: "programs" as const,
     total: res.total,
     page: res.page,
     showing: res.items.length,
@@ -307,7 +312,7 @@ export async function runFindResources(input: { q?: string; category?: string; l
     category: input.category,
     limit: cap(input.limit, 10),
   });
-  return { showing: rows.length, resources: rows.map(toProgramCard) };
+  return { kind: "resources" as const, showing: rows.length, resources: rows.map(toProgramCard) };
 }
 
 export async function runGetProgram(input: { id?: string }) {
@@ -315,6 +320,7 @@ export async function runGetProgram(input: { id?: string }) {
   const p = await getProgram(input.id);
   if (!p) return { error: `No program with id ${input.id}.` };
   return {
+    kind: "program" as const,
     ...toProgramCard(p),
     address: p.address ? titleCase(p.address) : null,
     zip: p.zip ? p.zip.slice(0, 5) : null,

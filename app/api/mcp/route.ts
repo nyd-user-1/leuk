@@ -97,6 +97,9 @@ The directory is a reference list; nobody in it can be booked through these tool
 FOCUS AND TOPICS
 Every clinician carries focus tags — what their own registered taxonomy codes say they focus on: Child & Adolescent, Addiction, Cognitive & Behavioral, Geriatric, Forensic, Group Psychotherapy, School, and so on. Show them; filter with focus. Pass the person's words as q too — "anxiety", "my teenager", "medication for depression" — and find_providers maps them to focus tags and license types, returning interpreted_as saying exactly what it did. Repeat that explanation. directory_filters lists focus values and the topics understood.
 
+WHEN THE HOST RENDERS A CARD
+On hosts that support MCP Apps (Claude, ChatGPT, …) find_providers, get_provider, find_programs, find_resources, get_program, list_bookable, get_availability and book_appointment each render an interactive card in the chat — the list with focus tags and Insurance, the clinician with their insurance table, the programs, the booking flow — and every directory card carries a "Book online now at Leuk" strip. Do not retype the card's contents underneath it. Narrate briefly: what was searched, how a topic was interpreted, what to do next.
+
 LINKS
 Most records carry a url (a clinician profile, a program page, a booking page). Render it as a link on the name — a person should be able to click through to Leuk from anything you list. Booking results carry book_url: offer it whenever someone would rather finish on the page than in chat.
 
@@ -210,6 +213,7 @@ const handler = createMcpHandler(
           page,
         },
         annotations: read,
+        _meta: bookAppMeta("Searching the directory…", "Clinicians"),
       },
       tool(runFindProviders),
     );
@@ -222,6 +226,7 @@ const handler = createMcpHandler(
           "Call this after find_providers when someone asks about ONE clinician — especially 'do they take my insurance'. Returns the full record plus every insurer that lists them and whether that payer reports the panel as open. This insurance data is published by the payers and is not in your training data.",
         inputSchema: { npi: z.string().describe("The 10-digit NPI from a find_providers result.") },
         annotations: read,
+        _meta: bookAppMeta("Pulling the record…", "Clinician"),
       },
       tool(runGetProvider),
     );
@@ -240,6 +245,7 @@ const handler = createMcpHandler(
           page,
         },
         annotations: read,
+        _meta: bookAppMeta("Searching programs…", "Programs"),
       },
       tool(runFindPrograms),
     );
@@ -256,6 +262,7 @@ const handler = createMcpHandler(
           limit,
         },
         annotations: read,
+        _meta: bookAppMeta("Searching resources…", "Resources"),
       },
       tool(runFindResources),
     );
@@ -267,6 +274,7 @@ const handler = createMcpHandler(
         description: "Full record for one program or resource, by the id from find_programs or find_resources.",
         inputSchema: { id: z.string() },
         annotations: read,
+        _meta: bookAppMeta("Pulling the program…", "Program"),
       },
       tool(runGetProgram),
     );
@@ -368,6 +376,27 @@ const handler = createMcpHandler(
       tool(runBookAppointment),
     );
 
+    server.registerTool(
+      "card_find_providers",
+      {
+        description: "Card-internal: another page of clinicians with the same filters.",
+        inputSchema: {
+          q: z.string().optional(), city: z.string().optional(), county: z.string().optional(), zip: z.string().optional(),
+          profession: z.string().optional(), subspecialty: z.string().optional(), focus: z.array(z.string()).optional(),
+          provider_type: z.enum(["therapist", "psychiatrist", "prescriber"]).optional(), insurance_payer: z.string().optional(),
+          prefer_accepting: z.boolean().optional(), limit: z.number().int().optional(), page: z.number().int().optional(),
+        },
+        annotations: read,
+        _meta: appOnly,
+      },
+      tool(runFindProviders),
+    );
+    server.registerTool(
+      "card_get_provider",
+      { description: "Card-internal: one clinician's record and insurance participation.", inputSchema: { npi: z.string() }, annotations: read, _meta: appOnly },
+      tool(runGetProvider),
+    );
+
     server.registerResource(
       "Leuk booking card",
       BOOK_APP_URI,
@@ -383,7 +412,7 @@ const handler = createMcpHandler(
             ui: { prefersBorder: true, csp: { connectDomains: [], resourceDomains: [] } },
             // ChatGPT's compatibility aliases (snake_case CSP; redirect_domains
             // gates openExternal).
-            "openai/widgetDescription": "Leuk booking: pick a clinician and service, choose an open time, and book — right here.",
+            "openai/widgetDescription": "Leuk: clinician and program results with insurance detail, and booking — pick a clinician, service and time, and book right here.",
             "openai/widgetPrefersBorder": true,
             "openai/widgetCSP": { connect_domains: [], resource_domains: [], redirect_domains: [site] },
           },
