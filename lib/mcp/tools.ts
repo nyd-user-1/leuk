@@ -215,10 +215,13 @@ export async function runFindProviders(input: FindProvidersInput) {
       res.total > res.items.length
         ? `${res.total.toLocaleString()} match. Ask for the next page, or narrow by city, county or insurance.`
         : undefined,
+    // Names only, deliberately no URLs: given links, a model renders link
+    // cards and sends the person off to a web page. The booking UI is the
+    // card that list_bookable / get_availability render in the chat.
     bookable_here: bookable
       ? {
-          note: "Separate from the directory above: these clinicians can be booked online right now, at Leuk (New York City, telehealth available). Always offer them — call list_bookable or get_availability to book.",
-          practitioners: bookable.practitioners,
+          note: "Separate from the directory above: these clinicians can be booked right now, in this chat, at Leuk (Manhattan, telehealth available). To show them, CALL list_bookable — it renders the booking card. Do not link to booking pages.",
+          practitioners: bookable.practitioners.map((p) => ({ id: p.id, name: p.name })),
           services: bookable.services.map((s) => `${s.name} (${s.minutes} min, $${s.price_usd})`),
         }
       : undefined,

@@ -15,6 +15,11 @@ const bricolage = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: "Leuk",
   description: "Practice management and EHR for healthcare professionals.",
+  metadataBase: new URL(process.env.LEUK_BASE_URL ?? process.env.LEUK_APP_URL ?? "https://leuk.nysgpt.com"),
+  // Link previews (chat hosts, Slack, iMessage) read these; without them a
+  // shared Leuk link shows a bare globe.
+  openGraph: { siteName: "Leuk", type: "website", images: [{ url: "/apple-icon.png", width: 180, height: 180, alt: "Leuk" }] },
+  twitter: { card: "summary", images: ["/apple-icon.png"] },
 };
 
 // viewport-fit=cover lets the app shell own the iPhone safe areas
