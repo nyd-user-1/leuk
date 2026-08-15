@@ -41,6 +41,8 @@ export function GET() {
         "NYC community resources, and payer-published network participation — then book an appointment.",
       version: "1.0.0",
       documentationUrl: `${site}/directory`,
+      iconUrl: `${site}/apple-icon.png`,
+      icons: [{ src: `${site}/apple-icon.png`, mimeType: "image/png", sizes: ["180x180"] }],
       remotes: [
         {
           type: "streamable-http",

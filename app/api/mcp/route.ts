@@ -302,7 +302,10 @@ const handler = createMcpHandler(
       version: "1.0.0",
       title: "Leuk — New York mental-health care",
       websiteUrl: appBaseUrl(),
-      icons: [{ src: `${appBaseUrl()}/favicon.ico`, mimeType: "image/x-icon", sizes: ["any"] }],
+      icons: [
+        { src: `${appBaseUrl()}/apple-icon.png`, mimeType: "image/png", sizes: ["180x180"] },
+        { src: `${appBaseUrl()}/icon.svg`, mimeType: "image/svg+xml", sizes: ["any"] },
+      ],
     } as never,
     instructions: INSTRUCTIONS,
     // Tools-only and stateless — no subscriptions, so nothing ever needs to
