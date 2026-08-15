@@ -80,6 +80,7 @@ export async function runGetAvailability(input: {
     service: service.name,
     minutes: service.durationMin,
     telehealth: service.telehealth,
+    price_usd: service.priceCents / 100,
     open_times: slots,
     // The same booking, on Leuk's own page, with everything but the time
     // pre-filled — for people who would rather click than dictate.

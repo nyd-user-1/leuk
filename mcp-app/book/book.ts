@@ -1,18 +1,21 @@
 // The Leuk booking card — an MCP App rendered inline in the chat by the host
-// (Claude.ai, Claude Desktop, …) when list_bookable, get_availability or
-// book_appointment runs.
+// (Claude.ai, ChatGPT, Claude Desktop, …) when list_bookable, get_availability
+// or book_appointment runs.
 //
-// Three screens, one card:
-//   roster   — who you can book (from list_bookable): service pills + names.
-//              Click a name → their open times. ↗ opens the profile in a tab.
-//   slots    — open times for one practitioner/service/day (from
-//              get_availability), ‹ › to move days; pick a time → the form.
-//   done     — the receipt (after book_appointment, from the card or the model).
-// ← → in the top-right walk a history stack, like a tiny browser.
+// Five slides, one card, ← → in the top-right walk them like a tiny browser:
+//   1 people   — available providers (from list_bookable). Name ↗ · Book now.
+//   2 service  — session type.
+//   3 times    — a day of open times, ‹ › to move days.
+//   4 form     — name, email, phone, Book.
+//   5 done     — "your appointment is set for …" with the practical reminders.
+// A model that calls get_availability directly lands on slide 3; a booking
+// the model makes itself lands on slide 5.
 //
-// It talks to the same MCP server through the host: every button that needs
-// data calls a server tool via the host. Nothing here reaches Leuk directly —
-// no fetch, no cookies, no PHI beyond what the person types into the form.
+// Data the card needs (another day, another clinician, the booking) comes
+// through the host from the app-only twin tools card_roster /
+// card_availability / card_book — NOT the model-facing app tools, because a
+// host renders a fresh card for every app-tool call. Nothing here reaches
+// Leuk directly — no fetch, no cookies, no PHI beyond what the person types.
 
 import { App } from "@modelcontextprotocol/ext-apps";
 
@@ -28,6 +31,7 @@ type Availability = {
   service: string;
   minutes: number;
   telehealth: boolean;
+  price_usd?: number;
   open_times: string[];
   book_url?: string;
   error?: string;
@@ -43,11 +47,20 @@ type Booking = {
 };
 type ToolData = Roster | Availability | Booking | { error: string };
 
-// One entry per screen the person has seen. Enough state to re-render it.
-type Screen =
-  | { kind: "roster"; roster: Roster; serviceId: string }
-  | { kind: "slots"; avail: Availability; time: string }
-  | { kind: "done"; booking: Booking; summary: string };
+// What the person has chosen so far — carried across slides.
+type Pick = {
+  practitioner?: Practitioner;
+  service?: Service;
+  avail?: Availability;
+  time?: string;
+};
+
+type Slide =
+  | { kind: "people"; roster: Roster }
+  | { kind: "service"; roster: Roster }
+  | { kind: "times"; avail: Availability }
+  | { kind: "form" }
+  | { kind: "done"; booking: Booking };
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const el = {
@@ -55,49 +68,49 @@ const el = {
   fwd: $<HTMLButtonElement>("fwd"),
   title: $("title"),
   sub: $("sub"),
-  roster: $("roster"),
-  services: $("services"),
+  sPeople: $("s-people"),
   people: $("people"),
-  picker: $("picker"),
+  sService: $("s-service"),
+  services: $("services"),
+  sTimes: $("s-times"),
   prev: $<HTMLButtonElement>("prev"),
   next: $<HTMLButtonElement>("next"),
   date: $("date"),
   slots: $("slots"),
   empty: $("empty"),
-  form: $("form"),
+  sForm: $("s-form"),
+  summary: $("summary"),
   first: $<HTMLInputElement>("first"),
   last: $<HTMLInputElement>("last"),
   email: $<HTMLInputElement>("email"),
   phone: $<HTMLInputElement>("phone"),
   book: $<HTMLButtonElement>("book"),
   page: $<HTMLButtonElement>("page"),
+  sDone: $("s-done"),
+  receipt: $("receipt"),
   msg: $("msg"),
+  steps: $("steps"),
   fine: $("fine"),
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
 
-const history: Screen[] = [];
-let cursor = -1; // index into history of the screen on display
+const history: Slide[] = [];
+let cursor = -1;
 let busy = false;
-// Remembered across screens so "back to roster → another name" keeps the
-// service, and so the slots screen can re-query without the roster.
 let roster: Roster | null = null;
-let serviceId = "";
-let practitionerId = "";
-let practitionerName = "";
+const pick: Pick = {};
 
-const cur = (): Screen | null => history[cursor] ?? null;
-
-function push(screen: Screen) {
-  history.splice(cursor + 1); // a new screen discards any "forward" branch
-  history.push(screen);
+const cur = (): Slide | null => history[cursor] ?? null;
+function push(slide: Slide) {
+  history.splice(cursor + 1);
+  history.push(slide);
   cursor = history.length - 1;
   render();
 }
-function replace(screen: Screen) {
-  if (cursor < 0) return push(screen);
-  history[cursor] = screen;
+function replace(slide: Slide) {
+  if (cursor < 0) return push(slide);
+  history[cursor] = slide;
   render();
 }
 
@@ -109,24 +122,29 @@ const fmtTime = (hhmm: string) => {
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(m).padStart(2, "0")} ${ap}`;
 };
-const fmtDate = (ymd: string) => {
+const dateOf = (ymd: string) => {
   const [y, m, d] = ymd.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return new Date(y, m - 1, d);
 };
+const fmtDate = (ymd: string) => dateOf(ymd).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+const fmtDateLong = (ymd: string) =>
+  dateOf(ymd).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const ymdOf = (dt: Date) =>
   `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 const shiftDate = (ymd: string, days: number) => {
-  const [y, m, d] = ymd.split("-").map(Number);
-  return ymdOf(new Date(y, m - 1, d + days));
+  const dt = dateOf(ymd);
+  dt.setDate(dt.getDate() + days);
+  return ymdOf(dt);
 };
 const todayYmd = () => ymdOf(new Date());
-/** Tomorrow, skipping to Monday from a Friday/Saturday — a sensible first day to show. */
+/** Tomorrow, skipping the weekend — a sensible first day to show. */
 const firstDayToShow = () => {
   const dt = new Date();
   dt.setDate(dt.getDate() + 1);
   while (dt.getDay() === 0 || dt.getDay() === 6) dt.setDate(dt.getDate() + 1);
   return ymdOf(dt);
 };
+const money = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
 // ── Rendering ────────────────────────────────────────────────────────────────
 
@@ -135,47 +153,45 @@ function setMsg(kind: "ok" | "err" | null, text = "") {
   el.msg.textContent = text;
 }
 
-function show(which: "roster" | "picker" | null) {
-  el.roster.classList.toggle("hidden", which !== "roster");
-  el.picker.classList.toggle("hidden", which !== "picker");
+function show(which: Slide["kind"] | null) {
+  el.sPeople.classList.toggle("hidden", which !== "people");
+  el.sService.classList.toggle("hidden", which !== "service");
+  el.sTimes.classList.toggle("hidden", which !== "times");
+  el.sForm.classList.toggle("hidden", which !== "form");
+  el.sDone.classList.toggle("hidden", which !== "done");
 }
+
+const STEP_LABELS: Record<Slide["kind"], string> = {
+  people: "Step 1 of 4 · provider",
+  service: "Step 2 of 4 · session type",
+  times: "Step 3 of 4 · date & time",
+  form: "Step 4 of 4 · your details",
+  done: "",
+};
 
 function render() {
   const s = cur();
   el.back.disabled = busy || cursor <= 0;
   el.fwd.disabled = busy || cursor >= history.length - 1;
   el.fine.textContent = "";
+  el.steps.textContent = s ? STEP_LABELS[s.kind] : "";
   if (!s) return;
+  show(s.kind);
 
-  if (s.kind === "roster") {
+  if (s.kind === "people") {
     setMsg(null);
-    show("roster");
-    el.title.textContent = "Who you can book";
-    el.sub.textContent = "Pick a service, then a clinician. ↗ opens their profile.";
-    el.services.replaceChildren(
-      ...s.roster.services.map((sv) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "pill" + (sv.id === s.serviceId ? " sel" : "");
-        b.innerHTML = `${sv.name} <small>· ${sv.minutes} min · $${sv.price_usd}</small>`;
-        b.addEventListener("click", () => {
-          serviceId = sv.id;
-          replace({ ...s, serviceId: sv.id });
-        });
-        return b;
-      }),
-    );
+    el.title.textContent = "Available providers";
+    el.sub.textContent = "Manhattan · telehealth available";
     el.people.replaceChildren(
       ...s.roster.practitioners.map((p) => {
         const row = document.createElement("div");
         row.className = "person";
-        const name = document.createElement("button");
-        name.type = "button";
+        const who = document.createElement("div");
+        who.className = "who";
+        const name = document.createElement("span");
         name.className = "name";
-        name.innerHTML = `<span>${p.name}</span><span class="go">see times ›</span>`;
-        name.disabled = busy;
-        name.addEventListener("click", () => void openSlots(p, s.serviceId));
-        row.append(name);
+        name.textContent = p.name;
+        who.append(name);
         if (p.url) {
           const ext = document.createElement("button");
           ext.type = "button";
@@ -184,24 +200,52 @@ function render() {
           ext.setAttribute("aria-label", ext.title);
           ext.textContent = "↗";
           ext.addEventListener("click", () => void app.openLink({ url: p.url! }));
-          row.append(ext);
+          who.append(ext);
         }
+        const go = document.createElement("button");
+        go.type = "button";
+        go.className = "go";
+        go.textContent = "Book now";
+        go.disabled = busy;
+        go.addEventListener("click", () => {
+          pick.practitioner = p;
+          push({ kind: "service", roster: s.roster });
+        });
+        row.append(who, go);
         return row;
       }),
     );
-    el.fine.textContent = "";
     return;
   }
 
-  if (s.kind === "slots") {
+  if (s.kind === "service") {
+    setMsg(null);
+    el.title.textContent = pick.practitioner ? `Book with ${pick.practitioner.name}` : "Session type";
+    el.sub.textContent = "What kind of visit?";
+    el.services.replaceChildren(
+      ...s.roster.services.map((sv) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "pill" + (sv.id === pick.service?.id ? " sel" : "");
+        b.innerHTML = `${sv.name} <small>· ${sv.minutes} min${sv.telehealth ? " · telehealth" : ""}</small>`;
+        b.disabled = busy;
+        b.addEventListener("click", () => {
+          pick.service = sv;
+          void openTimes();
+        });
+        return b;
+      }),
+    );
+    return;
+  }
+
+  if (s.kind === "times") {
     const a = s.avail;
-    show("picker");
-    el.title.textContent = practitionerName ? `Book with ${practitionerName}` : "Book an appointment";
+    el.title.textContent = pick.practitioner ? `Book with ${pick.practitioner.name}` : "Book an appointment";
     el.sub.textContent = a.error ? "" : `${a.service} · ${a.minutes} min${a.telehealth ? " · telehealth" : ""}`;
     if (a.error) {
       setMsg("err", a.error);
       el.slots.replaceChildren();
-      el.form.classList.add("hidden");
       return;
     }
     el.date.textContent = fmtDate(a.date);
@@ -211,35 +255,59 @@ function render() {
       ...a.open_times.map((t) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "slot" + (t === s.time ? " sel" : "");
+        b.className = "slot" + (t === pick.time && pick.avail?.date === a.date ? " sel" : "");
         b.textContent = fmtTime(t);
         b.disabled = busy;
         b.addEventListener("click", () => {
-          replace({ ...s, time: t });
+          pick.avail = a;
+          pick.time = t;
+          push({ kind: "form" });
           el.first.focus();
         });
         return b;
       }),
     );
     el.empty.classList.toggle("hidden", a.open_times.length > 0);
-    el.form.classList.toggle("hidden", !s.time);
-    el.book.textContent = s.time ? `Book ${fmtDate(a.date)} · ${fmtTime(s.time)}` : "Book";
+    el.fine.textContent = "Times are the practice's local time.";
+    return;
+  }
+
+  if (s.kind === "form") {
+    const a = pick.avail!;
+    el.title.textContent = "Your details";
+    el.sub.textContent = "For the confirmation and, on a first visit, your patient-portal invitation.";
+    el.summary.innerHTML = `<b>${pick.practitioner?.name ?? a.practitioner_name ?? "Appointment"}</b> · ${a.service} · ${a.minutes} min${a.telehealth ? " · telehealth" : ""}<br><b>${fmtDate(a.date)} · ${fmtTime(pick.time!)}</b>`;
+    el.book.textContent = `Book ${fmtDate(a.date)} · ${fmtTime(pick.time!)}`;
     el.book.disabled = busy;
     el.page.classList.toggle("hidden", !a.book_url);
-    el.fine.textContent = "Times are the practice's local time. Booking creates a real appointment and emails a confirmation.";
+    el.fine.textContent = "Booking creates a real appointment and emails a confirmation.";
     return;
   }
 
   // done
-  show(null);
-  el.title.textContent = s.booking.booked ? "You're booked" : "Not booked";
-  el.sub.textContent = s.summary;
   const b = s.booking;
-  const when = b.when ? `${fmtDate(b.when.slice(0, 10))} at ${fmtTime(b.when.slice(11, 16))}` : "";
-  setMsg(
-    b.booked ? "ok" : "err",
-    b.booked ? `${when ? when + ". " : ""}${b.confirmation ?? "A confirmation email is on its way."}` : (b.error ?? "The booking could not be completed."),
+  const a = pick.avail;
+  const who = pick.practitioner?.name ?? a?.practitioner_name ?? "your clinician";
+  el.title.textContent = b.booked ? "You're booked" : "Not booked";
+  el.sub.textContent = "";
+  if (!b.booked) {
+    el.receipt.innerHTML = "";
+    setMsg("err", b.error ?? "The booking could not be completed.");
+    return;
+  }
+  setMsg(null);
+  const ymd = b.when?.slice(0, 10) ?? a?.date ?? "";
+  const hhmm = b.when?.slice(11, 16) ?? pick.time ?? "";
+  const when = ymd && hhmm ? `${fmtDateLong(ymd)}, ${fmtTime(hhmm)}` : "";
+  const price = a?.price_usd ?? pick.service?.price_usd;
+  const parts: string[] = [];
+  parts.push(`<div class="when">Your appointment with ${who} is set for ${when}.</div>`);
+  if (a?.telehealth) parts.push(`<p>This is a telehealth visit — the details are in your confirmation email.</p>`);
+  parts.push(
+    `<p>Please remember to bring a copy of your insurance card${price != null ? `, or be prepared to pay the cash rate of ${money(price)}` : ""}.</p>`,
   );
+  parts.push(`<p>${b.confirmation ?? "A confirmation email is on its way."}</p>`);
+  el.receipt.innerHTML = parts.join("");
   if (b.manage_url) {
     const btn = document.createElement("button");
     btn.className = "link";
@@ -252,7 +320,7 @@ function render() {
 
 // ── Host wiring ──────────────────────────────────────────────────────────────
 
-const app = new App({ name: "Leuk booking", version: "1.1.0" });
+const app = new App({ name: "Leuk booking", version: "1.2.0" });
 
 const parse = <T,>(result: { content?: Array<{ type: string; text?: string }>; structuredContent?: unknown }): T | null => {
   if (result.structuredContent) return result.structuredContent as T;
@@ -271,31 +339,28 @@ function applyTheme() {
 }
 app.onhostcontextchanged = applyTheme;
 
-// The host streams the tool's arguments before the result.
 app.ontoolinput = (p) => {
   const a = (p.arguments ?? {}) as Record<string, string>;
-  if (a.practitioner_id) practitionerId = a.practitioner_id;
-  if (a.service_id) serviceId = a.service_id;
   el.title.textContent = a.date ? `Loading times for ${fmtDate(a.date)}…` : "Loading…";
 };
 
-/** Whatever tool the model called, land on the matching screen. */
+/** Whatever tool the model called, land on the matching slide. */
 function ingest(data: ToolData) {
   if ("kind" in data && data.kind === "roster") {
     roster = data;
-    if (!serviceId || !data.services.some((s) => s.id === serviceId)) serviceId = data.services[0]?.id ?? "";
-    push({ kind: "roster", roster: data, serviceId });
+    push({ kind: "people", roster: data });
     return;
   }
   if ("kind" in data && data.kind === "availability") {
-    practitionerId = data.practitioner_id ?? practitionerId;
-    practitionerName = data.practitioner_name ?? practitionerName;
-    serviceId = data.service_id ?? serviceId;
-    push({ kind: "slots", avail: data, time: "" });
+    if (data.practitioner_id) pick.practitioner = { id: data.practitioner_id, name: data.practitioner_name ?? "" };
+    if (data.service_id) {
+      pick.service = { id: data.service_id, name: data.service, minutes: data.minutes, telehealth: data.telehealth, price_usd: data.price_usd ?? 0 };
+    }
+    push({ kind: "times", avail: data });
     return;
   }
   if ("kind" in data && data.kind === "booking") {
-    push({ kind: "done", booking: data, summary: practitionerName ? `with ${practitionerName}` : "" });
+    push({ kind: "done", booking: data });
     return;
   }
   setMsg("err", (data as { error?: string }).error ?? "Something went wrong. Ask again in the chat.");
@@ -310,46 +375,47 @@ app.ontoolresult = (result) => {
   ingest(data);
 };
 
-async function withBusy<T>(fn: () => Promise<T>): Promise<T | undefined> {
+async function withBusy(fn: () => Promise<void>) {
   busy = true;
   render();
   try {
-    return await fn();
+    await fn();
   } finally {
     busy = false;
     render();
   }
 }
 
+// Card-internal calls go to the app-only twins (see route.ts).
 async function fetchAvailability(pid: string, sid: string, date: string): Promise<Availability | null> {
-  const r = await app.callServerTool({
-    name: "get_availability",
-    arguments: { practitioner_id: pid, service_id: sid, date },
-  });
+  const r = await app.callServerTool({ name: "card_availability", arguments: { practitioner_id: pid, service_id: sid, date } });
   return parse<Availability>(r);
 }
 
-/** Roster → a practitioner's times. */
-async function openSlots(p: Practitioner, sid: string) {
+/** Service chosen → the clinician's times. */
+async function openTimes() {
+  const p = pick.practitioner;
+  const sv = pick.service;
+  if (!p || !sv) return;
   await withBusy(async () => {
-    const a = await fetchAvailability(p.id, sid, firstDayToShow()).catch(() => null);
+    const a = await fetchAvailability(p.id, sv.id, firstDayToShow()).catch(() => null);
     if (!a) return setMsg("err", "Could not load times. Try again.");
-    practitionerId = p.id;
-    practitionerName = p.name;
-    serviceId = sid;
-    push({ kind: "slots", avail: a, time: "" });
+    setMsg(null);
+    push({ kind: "times", avail: a });
   });
 }
 
-/** Slots → another day (stays on the same screen; not a history step). */
+/** Another day — same slide, not a history step. */
 async function loadDate(date: string) {
   const s = cur();
-  if (!s || s.kind !== "slots" || !practitionerId || !serviceId) return;
+  const p = pick.practitioner;
+  const sv = pick.service;
+  if (!s || s.kind !== "times" || !p || !sv) return;
   await withBusy(async () => {
-    const a = await fetchAvailability(practitionerId, serviceId, date).catch(() => null);
+    const a = await fetchAvailability(p.id, sv.id, date).catch(() => null);
     if (!a) return setMsg("err", "Could not load that day.");
     setMsg(null);
-    replace({ kind: "slots", avail: a, time: "" });
+    replace({ kind: "times", avail: a });
   });
 }
 
@@ -369,24 +435,26 @@ el.fwd.addEventListener("click", () => {
 });
 el.prev.addEventListener("click", () => {
   const s = cur();
-  if (s?.kind === "slots") void loadDate(shiftDate(s.avail.date, -1));
+  if (s?.kind === "times") void loadDate(shiftDate(s.avail.date, -1));
 });
 el.next.addEventListener("click", () => {
   const s = cur();
-  if (s?.kind === "slots") void loadDate(shiftDate(s.avail.date, 1));
+  if (s?.kind === "times") void loadDate(shiftDate(s.avail.date, 1));
 });
 el.page.addEventListener("click", () => {
-  const s = cur();
-  if (s?.kind !== "slots" || !s.avail.book_url) return;
-  const url = s.avail.book_url;
-  void app.openLink({ url: s.time ? `${url}${url.includes("?") ? "&" : "?"}time=${s.time}` : url });
+  const url = pick.avail?.book_url;
+  if (!url) return;
+  void app.openLink({ url: pick.time ? `${url}${url.includes("?") ? "&" : "?"}time=${pick.time}` : url });
 });
 
 // A plain button, not a <form> submit: sandboxed frames block form submission
 // unless the host grants allow-forms, and we cannot assume it does.
 el.book.addEventListener("click", async () => {
-  const s = cur();
-  if (!s || s.kind !== "slots" || !s.time || busy) return;
+  const a = pick.avail;
+  const time = pick.time;
+  const p = pick.practitioner;
+  const sv = pick.service;
+  if (!a || !time || !p || !sv || busy) return;
   const first = el.first.value.trim();
   const last = el.last.value.trim();
   const email = el.email.value.trim();
@@ -401,19 +469,16 @@ el.book.addEventListener("click", async () => {
     return;
   }
   setMsg(null);
-  const { date } = s.avail;
-  const time = s.time;
-  const serviceName = s.avail.service;
   await withBusy(async () => {
     let b: Booking | null = null;
     try {
       b = parse<Booking>(
         await app.callServerTool({
-          name: "book_appointment",
+          name: "card_book",
           arguments: {
-            practitioner_id: practitionerId,
-            service_id: serviceId,
-            date,
+            practitioner_id: p.id,
+            service_id: sv.id,
+            date: a.date,
             time,
             first_name: first,
             last_name: last,
@@ -429,16 +494,19 @@ el.book.addEventListener("click", async () => {
     if (!b.booked) {
       setMsg("err", b.error ?? "The booking could not be completed.");
       if (b.retry) {
-        const a = await fetchAvailability(practitionerId, serviceId, date).catch(() => null);
-        if (a) replace({ kind: "slots", avail: a, time: "" });
+        const fresh = await fetchAvailability(p.id, sv.id, a.date).catch(() => null);
+        if (fresh) {
+          pick.time = undefined;
+          cursor--; // back to the times slide
+          replace({ kind: "times", avail: fresh });
+        }
       }
       return;
     }
-    push({ kind: "done", booking: b, summary: `${serviceName} with ${practitionerName}` });
+    push({ kind: "done", booking: b });
     // Tell the conversation. The model does not see calls the card makes, so
-    // post a message as the person — the host shows it in the thread and the
-    // model acknowledges it — with a context note as the fallback.
-    const line = `I booked ${serviceName} with ${practitionerName} on ${fmtDate(date)} at ${fmtTime(time)} using the booking card, as ${first} ${last}. It's confirmed and the email is on its way — no need to book it again.`;
+    // post a message as the person; the host shows it and the model responds.
+    const line = `I booked ${a.service} with ${p.name} on ${fmtDate(a.date)} at ${fmtTime(time)} using the booking card, as ${first} ${last}. It's confirmed and the email is on its way — no need to book it again.`;
     try {
       await app.sendMessage({ role: "user", content: [{ type: "text", text: line }] });
     } catch {

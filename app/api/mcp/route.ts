@@ -322,6 +322,52 @@ const handler = createMcpHandler(
       tool(runGetAvailability),
     );
 
+    // ── App-only twins ───────────────────────────────────────────────────────
+    // When the card itself needs data (next day, another clinician, the
+    // booking), it must not call the model-facing app tools: hosts render a
+    // NEW card for every app-tool call, so one click would spawn a second
+    // card under the first. These twins run the same code with no UI
+    // resource, and `visibility: ["app"]` keeps them out of the model's list.
+    const appOnly = {
+      ui: { visibility: ["app"] },
+      "openai/widgetAccessible": true,
+      "openai/visibility": "private",
+    };
+    server.registerTool(
+      "card_roster",
+      { description: "Card-internal: the bookable roster.", inputSchema: {}, annotations: read, _meta: appOnly },
+      tool(runListBookable),
+    );
+    server.registerTool(
+      "card_availability",
+      {
+        description: "Card-internal: open times for a practitioner, service and date.",
+        inputSchema: { practitioner_id: z.string(), service_id: z.string(), date: z.string() },
+        annotations: read,
+        _meta: appOnly,
+      },
+      tool(runGetAvailability),
+    );
+    server.registerTool(
+      "card_book",
+      {
+        description: "Card-internal: book the appointment the person filled in on the card.",
+        inputSchema: {
+          practitioner_id: z.string(),
+          service_id: z.string(),
+          date: z.string(),
+          time: z.string(),
+          first_name: z.string(),
+          last_name: z.string(),
+          email: z.string(),
+          phone: z.string().optional(),
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+        _meta: appOnly,
+      },
+      tool(runBookAppointment),
+    );
+
     server.registerResource(
       "Leuk booking card",
       BOOK_APP_URI,

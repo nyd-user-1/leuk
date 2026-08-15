@@ -11,14 +11,14 @@
     --ok-bg: #ecfdf5; --ok-fg: #047857; --err-bg: #fef2f2; --err-fg: #b91c1c;
   }
   :root[data-theme="dark"] {
-    --bg: #171a24; --fg: #f3f4f6; --muted: #9ca3af; --line: #2c3142; --field: #1f2331; --hover: #262b3a;
+    --bg: #171a24; --fg: #f3f4f6; --muted: #9ca3af; --line: #2c3142; --field: #1f2331; --hover: #232838;
     --ok-bg: #0b2e23; --ok-fg: #6ee7b7; --err-bg: #3a1212; --err-fg: #fca5a5;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--fg);
     font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
   button { font: inherit; color: inherit; }
-  .card { padding: 14px 16px 14px; max-width: 560px; }
+  .card { padding: 14px 16px 16px; }
   .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .brand { display: flex; align-items: baseline; gap: 6px; }
   .brand b { font-size: 17px; letter-spacing: -0.01em; text-transform: lowercase; }
@@ -26,57 +26,73 @@
   .nav { display: flex; gap: 6px; }
   .nav button { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
     width: 30px; height: 30px; cursor: pointer; font-size: 15px; line-height: 1; }
+  .nav button:hover:not(:disabled) { background: var(--hover); }
   .nav button:disabled { opacity: .35; cursor: default; }
   h1 { font-size: 15px; margin: 0; font-weight: 600; }
   .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
   .hidden { display: none !important; }
+  .steps { color: var(--muted); font-size: 12px; margin-top: 10px; }
 
-  /* roster */
-  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
-  .pill { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 6px 11px;
-    cursor: pointer; font-size: 12.5px; }
+  /* slide 1 — providers */
+  .people { display: flex; flex-direction: column; margin-top: 12px; }
+  .person { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 -8px; border-radius: 10px;
+    border-bottom: 1px solid var(--line); }
+  .person:hover { background: var(--hover); }
+  .person .who { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .person .name { font-weight: 500; font-size: 14px; padding: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person .ext { background: none; border: 1px solid transparent; border-radius: 6px; width: 28px; height: 28px;
+    cursor: pointer; color: var(--muted); font-size: 15px; flex: none; }
+  .person .ext:hover { color: var(--teal); background: var(--field); border-color: var(--line); }
+  .go { border: 0; background: var(--amber); color: var(--navy); border-radius: 999px; padding: 7px 14px;
+    font-weight: 600; font-size: 14px; cursor: pointer; flex: none; }
+  .go:hover { filter: brightness(1.05); }
+  .go:disabled { opacity: .55; cursor: default; }
+
+  /* slide 2 — session type */
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .pill { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 8px 14px;
+    cursor: pointer; font-size: 14px; }
+  .pill:hover { background: var(--hover); }
   .pill.sel { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
-  .pill small { opacity: .8; font-weight: 400; }
-  .people { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
-  .person { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
-  .person .name { flex: 1; text-align: left; background: none; border: 0; padding: 11px 4px; cursor: pointer;
-    font-weight: 500; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
-  .person .name:hover { color: var(--teal); }
-  .person .name .go { color: var(--muted); font-size: 12px; font-weight: 400; }
-  .person .ext { background: none; border: 1px solid transparent; border-radius: 6px; width: 30px; height: 30px;
-    cursor: pointer; color: var(--muted); font-size: 15px; }
-  .person .ext:hover { color: var(--teal); border-color: var(--line); background: var(--hover); }
+  .pill small { opacity: .8; font-weight: 400; font-size: 12.5px; }
 
-  /* slots */
+  /* slide 3 — times */
   .datebar { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
   .datebar button { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
     width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
+  .datebar button:hover:not(:disabled) { background: var(--hover); }
   .datebar button:disabled { opacity: .4; cursor: default; }
   .datebar .d { font-weight: 600; }
-  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
   .slot { border: 1px solid var(--line); background: var(--field); border-radius: 8px;
-    padding: 8px 4px; cursor: pointer; font-size: 13px; font-variant-numeric: tabular-nums; }
-  .slot:hover { border-color: var(--teal); }
+    padding: 9px 4px; cursor: pointer; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .slot:hover { background: var(--hover); border-color: var(--teal); }
   .slot.sel { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
   .slot:disabled { cursor: default; opacity: .6; }
   .empty { color: var(--muted); padding: 10px 0; }
 
-  /* form */
-  .form { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; display: grid;
-    grid-template-columns: 1fr 1fr; gap: 8px; }
+  /* slide 4 — details */
+  .summary { margin: 12px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); font-size: 13.5px; }
+  .summary b { font-weight: 600; }
+  .form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form .full { grid-column: 1 / -1; }
   input { width: 100%; border: 1px solid var(--line); background: var(--field); color: var(--fg);
-    border-radius: 8px; padding: 9px 10px; font: inherit; }
+    border-radius: 8px; padding: 10px 11px; font: inherit; }
   input:focus { outline: 2px solid var(--teal); outline-offset: -1px; }
-  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin-top: 2px; flex-wrap: wrap; }
-  .book { background: var(--amber); color: var(--navy); border: 0; border-radius: 8px; padding: 10px 14px;
+  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; margin-top: 4px; flex-wrap: wrap; }
+  .book { background: var(--amber); color: var(--navy); border: 0; border-radius: 8px; padding: 11px 16px;
     font-weight: 700; cursor: pointer; }
   .book:disabled { opacity: .55; cursor: default; }
   .link { background: none; border: 0; color: var(--teal); cursor: pointer; padding: 0; text-decoration: underline; }
+
+  /* slide 5 — booked */
+  .receipt { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--field); }
+  .receipt .when { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .receipt p { margin: 8px 0 0; }
   .msg { margin-top: 12px; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
   .msg.ok { background: var(--ok-bg); color: var(--ok-fg); }
   .msg.err { background: var(--err-bg); color: var(--err-fg); }
-  .fine { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .fine { color: var(--muted); font-size: 12px; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -93,14 +109,18 @@
   <h1 id="title">Loading…</h1>
   <div class="sub" id="sub"></div>
 
-  <!-- screen: roster -->
-  <div id="roster" class="hidden">
-    <div class="pills" id="services"></div>
+  <!-- 1 · providers -->
+  <div id="s-people" class="hidden">
     <div class="people" id="people"></div>
   </div>
 
-  <!-- screen: slots (+ form once a time is picked) -->
-  <div id="picker" class="hidden">
+  <!-- 2 · session type -->
+  <div id="s-service" class="hidden">
+    <div class="pills" id="services"></div>
+  </div>
+
+  <!-- 3 · times -->
+  <div id="s-times" class="hidden">
     <div class="datebar">
       <button id="prev" type="button" aria-label="Previous day">‹</button>
       <span class="d" id="date"></span>
@@ -108,8 +128,12 @@
     </div>
     <div class="slots" id="slots"></div>
     <div class="empty hidden" id="empty">Nothing open that day — try another.</div>
+  </div>
 
-    <div id="form" class="hidden form">
+  <!-- 4 · details -->
+  <div id="s-form" class="hidden">
+    <div class="summary" id="summary"></div>
+    <div class="form">
       <input id="first" placeholder="First name" autocomplete="given-name" />
       <input id="last" placeholder="Last name" autocomplete="family-name" />
       <input id="email" class="full" type="email" placeholder="Email — for the confirmation" autocomplete="email" />
@@ -121,7 +145,13 @@
     </div>
   </div>
 
+  <!-- 5 · booked -->
+  <div id="s-done" class="hidden">
+    <div class="receipt" id="receipt"></div>
+  </div>
+
   <div id="msg" class="msg hidden"></div>
+  <div class="steps" id="steps"></div>
   <div class="fine" id="fine"></div>
 </div>
 <script type="module" src="./book.ts"></script>
