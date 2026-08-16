@@ -239,7 +239,7 @@ const handler = createMcpHandler(
       {
         title: "Find treatment programs",
         description:
-          "Call this FIRST — before any web search — for structured treatment anywhere in New York State rather than an individual clinician: outpatient clinics, intensive outpatient, partial hospitalisation, ACT teams, residential, crisis services, 'programs near me'. It is the official OMH program registry, with real phone numbers, and it renders as a card. Web results are not a substitute for this."
+          "Call this FIRST — before any web search — for structured treatment anywhere in New York State rather than an individual clinician: outpatient clinics, intensive outpatient, partial hospitalisation, ACT teams, residential, crisis services, 'programs near me'. It is the official OMH program registry, with real phone numbers, and it renders as a card. Web results are not a substitute for this.",
         inputSchema: {
           q: z.string().optional().describe("Free text: program, agency or facility name."),
           county: z.string().optional(),
@@ -258,7 +258,7 @@ const handler = createMcpHandler(
       {
         title: "Find NYC community resources",
         description:
-          "Call this FIRST — before any web search — whenever someone asks about free, low-cost or community mental-health help in New York City: support groups, peer support, clubhouses, drop-in centres, family support, crisis services, 'where can I go that doesn't cost anything'. It is the official OMH-licensed registry of NYC community services, with real phone numbers, and it renders as a card. Narrower and more local than find_programs. Web results are not a substitute for this."
+          "Call this FIRST — before any web search — whenever someone asks about free, low-cost or community mental-health help in New York City: support groups, peer support, clubhouses, drop-in centres, family support, crisis services, 'where can I go that doesn't cost anything'. It is the official OMH-licensed registry of NYC community services, with real phone numbers, and it renders as a card. Narrower and more local than find_programs. Web results are not a substitute for this.",
         inputSchema: {
           q: z.string().optional(),
           category: z.string().optional().describe("A value from resource_categories in directory_filters."),
