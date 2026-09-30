@@ -281,3 +281,71 @@ RULING: (lead, 15:02 ET) Step 1b received; the Trash stays as it is until the fo
 ## Step 1c — the new Humana API catalog (read-only, no spend)
 
 The portal that replaced the price transparency page on 2026-09-09 is new to us. Map it: every API it lists, with purpose, base URL, auth (open, registration, OAuth, JWT), documentation link, and status. Say for each whether it carries anything Leuk wants: plan data, rates or fee schedules, provider directory or Plan-Net, payer-to-payer, prior authorization, formulary. Then answer two questions plainly. First, is the FHIR Plan-Net directory we harvested in July (`payer_sources` row "Humana", status live) still at the same base URL and still open, or did it move with the portal; probe it with one GET. Second, is there any price transparency or rate endpoint at all, under any name. Read-only GETs against the catalog and one probe of the directory; no registration, no fighting the bot challenge. Report under Reports, then stop and wait.
+
+### 14:59 ET — Step 1c: Humana's new API catalog lists six FHIR products and no rate endpoint
+
+Done per the 14:52 ruling. The scoped commit `497e9fe` on the current branch
+holds only the two docs, with no push. The memory `humana-no-tic-rate-files.md`
+is written and indexed.
+
+**The catalog.** The portal is "Humana Developer Exchange". Its public catalog
+feed `developers.humana.com/api/v1/apicatalog/public` is open JSON and lists
+**six products, all FHIR, all production**.
+
+| product | API name | classification | carries for Leuk |
+|---|---|---|---|
+| Provider Directory FHIR API | `provider-directory-fhir-v1` | public ("Provider Finder") | **directory/Plan-Net**, the one we harvested |
+| Drug Formulary FHIR API | `drug-formulary-fhir-v1` | public | formulary |
+| FHIRPriorAuthorization | `CI-MedAuth-CoverageRequirementsDiscovery-v2` | private | prior auth, whether a code needs PA |
+| Patient Access API | `Patientaccessfhir-v1` | private, contracted | member data, not for Leuk |
+| Payer-to-Payer Data Exchange | `PayertoPayer-v2` | private | payer-to-payer, not for Leuk |
+| Provider Access | `ProviderAccess-v1` | private | provider access to attributed members' data; relevant only as a provider-side integration |
+
+- **Auth.** The docs live at `developers.humana.com/docs-external/`, on the
+  FHIR APIs and OAuth pages.
+- **Public products.** The docs call these "Public / Non-Registered Use". They
+  now issue credentials through "Get Instant Access": name and email typed into
+  a form on the product page. I did not do that, because it is a registration.
+- **Private products.** These need a portal account, a cart subscription and
+  approval. They use OAuth 2.0 authorization code against `auth.humana.com`
+  realms; only the QA host appears in the docs.
+- **Base URLs.** Product-detail and spec endpoints return 400 or 404 without a
+  session, so the per-API base URLs and specs are not readable anonymously.
+- **Plan data and fee schedules.** Neither exists in the catalog.
+
+**Question 1: is the July directory still at the same open base URL?**
+Unproven, and probably not open any more.
+
+- `payer_sources` still records `https://fhir.humana.com/api/` with
+  auth `none` and status `live`.
+- `fhir.humana.com` now resolves to the same Akamai edge
+  (`e13482.ksd.akamaiedge.net`) as the new portal, whose pages carry Akamai
+  Shape bot scripts.
+- The single allowed probe, `GET /api/PractitionerRole?_count=1` with a FHIR
+  Accept header, **hung for 30 s with zero bytes**. That pattern is a bot
+  tarpit or a dead origin, not an open API. July's notes say this host
+  answered single, unchained queries.
+- I did not retry. Together with the catalog now issuing credentials for the
+  "public" directory, the likely reading is that the directory moved behind
+  the portal's key issuance.
+- Confirming needs either a second probe or an instant-access key. Both are
+  beyond this step's authority.
+- Until then, `payer_sources.status = live` for Humana should be treated as
+  unverified.
+
+**Question 2: is there any price transparency or rate endpoint, under any name?**
+**No.**
+
+- None of the six products carries rates, fee schedules or negotiated prices.
+- The portal config's feature flags and resources mention no price
+  transparency, MRF or rate route.
+- The docs' full-text index has no mention of price transparency,
+  machine-readable files, negotiated rates or fee schedules.
+- The only directory term in the docs is "provider finder".
+- This agrees with Gate 1. Humana has nothing TiC-covered to publish, and the
+  old listing is gone.
+
+**Spend: $0.** Every call was a read-only GET. There was no registration and
+no challenge was fought. There was one directory probe.
+
+QUESTION: Should someone request an instant-access key for the Humana Provider Directory API to confirm the move and keep the directory refreshable? It needs a name and an email typed into Humana's form, which makes it the founder's call. Until then the Humana row stays at its July data.
