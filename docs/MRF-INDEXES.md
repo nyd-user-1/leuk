@@ -22,6 +22,7 @@ the Schema 2.0 note at the bottom._
 | MetroPlus | Azure blob date-probe (page is stale) | stable Azure blob | no | monthly QHP+GoldCare pair |
 | EmblemHealth | listing site → GetFile | stable GetFile | no (product-level) | `emblem.txt` |
 | Fidelis/Centene | centene.com page | stable CDN | no (product-level) | `fidelis.txt` |
+| Humana | **none** (listing dead since 2025-01; bucket deleted) | — | no | — (no commercial book exists) |
 
 ---
 
@@ -280,6 +281,38 @@ the Schema 2.0 note at the bottom._
   files off the page, bump dates. Fidelis-ES pretty-prints items (CRLF) — the
   scanner's opener needle handles it.
 - **Plan/EIN book: no** — product-level. (Medicaid book is out of TiC scope.)
+
+## Humana — no TiC book exists (verified 2026-09-30)
+
+- **Index**: none. The old listing
+  `developers.humana.com/syntheticdata/healthplan-price-transparency`
+  (reached from `/Cost-Transparency`) served a DataTables feed
+  (`/syntheticdata/Resource/GetData`, 15,668 per-employer `_index.json.gz`
+  ToCs as of 2024-06) through **2024-12-30**; it 302'd to a 404 on
+  2025-01-30 and 502'd from 2025-02 to 2026-07 (Wayback captures). The
+  portal was replaced by an Angular API catalog on 2026-09-09; every old
+  path now falls to the SPA catch-all, and `/api/v1/*` is a blanket 401.
+  `www.humana.com/legal/*` sits behind a JS bot challenge and the portal
+  carries Akamai Shape — not fought, not needed.
+- **File URLs**: were stable GCS objects,
+  `storage.googleapis.com/cms-humana-price-transparency-prd/prod/<month>/inn/<name>`
+  (via a `Resource/DownloadPCTFile` 302). **The bucket is deleted**
+  (`NoSuchBucket`, 2026-09-30).
+- **Why**: Humana exited Employer Group Commercial Medical (announced
+  2023-02-23). Its own Q1 2025 earnings supplement shows commercial
+  fully-insured 0 (from 109.7k) and commercial ASO 0 (from 77.7k); the
+  FY2025 10-K lists only Medicare, Medicaid, military and specialty
+  (dental/vision, TiC-exempt excepted benefits). Humana left the ACA
+  individual market after 2017. Nothing Humana sells is TiC-covered.
+- **Our Humana FHIR directory is not commercial either**: of 86,339
+  participation rows, 73,574 sit on Medicare/Medicaid/military networks;
+  the "Employer HMO"/"National Employer HMO-Home27" names are group
+  Medicare Advantage (plan-year 2027 suffixes), and the rest are CarePlus,
+  Healthy Horizons (Medicaid), Honor/USAA MA and similar.
+- **Mint**: nothing to mint. Re-check only if Humana re-enters commercial
+  group or individual medical.
+- **Plan/EIN book: no** (the 2024 ToCs carried employer names in filenames,
+  mostly GA/FL/TX/CO small groups; gone with the bucket).
 
 ---
 
