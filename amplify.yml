@@ -13,10 +13,13 @@ frontend:
       commands:
         - npm ci --no-audit --no-fund
         - |
+          # The image has no jq; node reads the secret's JSON.
           aws secretsmanager get-secret-value --secret-id leuk/env --query SecretString --output text \
-            | jq -r 'to_entries[] | select(.key | IN("VERCEL_OIDC_TOKEN","LEUK_BEDROCK_API_KEY","LEUK_APP_URL","LEUK_BASE_URL") | not) | "\(.key)=\(.value)"' > .env.production
+            | node -e 'const skip=new Set(["VERCEL_OIDC_TOKEN","LEUK_BEDROCK_API_KEY","ANTHROPIC_API_KEY","LEUK_APP_URL","LEUK_BASE_URL"]);let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{for(const [k,v] of Object.entries(JSON.parse(s)))if(!skip.has(k))console.log(k+"="+v)})' > .env.production
           printf 'LEUK_APP_URL=%s\nLEUK_BASE_URL=%s\n' "$LEUK_SITE_URL" "$LEUK_SITE_URL" >> .env.production
           echo "env names: $(cut -d= -f1 .env.production | tr '\n' ' ')"
+          # A deploy with no database would serve the built-in sample data.
+          grep -q '^DATABASE_URL=' .env.production || { echo "DATABASE_URL missing"; exit 1; }
     build:
       commands:
         - npm run build
