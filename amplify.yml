@@ -1,0 +1,33 @@
+# Leuk on AWS Amplify Hosting (2026-10-01; before that, a Fargate service).
+#
+# The branch is password-protected at the edge, so no crawler reaches a page
+# and nothing wakes a database. The app's settings live in one Secrets Manager
+# secret (leuk/env), which the app's role may read; they are written into
+# .env.production here because Amplify hands console variables to the compile
+# step only. The Bedrock bearer key and the Vercel token are deliberately not
+# carried, and the vercel.json crons do not run here.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --no-audit --no-fund
+        - |
+          aws secretsmanager get-secret-value --secret-id leuk/env --query SecretString --output text \
+            | jq -r 'to_entries[] | select(.key | IN("VERCEL_OIDC_TOKEN","LEUK_BEDROCK_API_KEY","LEUK_APP_URL","LEUK_BASE_URL") | not) | "\(.key)=\(.value)"' > .env.production
+          printf 'LEUK_APP_URL=%s\nLEUK_BASE_URL=%s\n' "$LEUK_SITE_URL" "$LEUK_SITE_URL" >> .env.production
+          echo "env names: $(cut -d= -f1 .env.production | tr '\n' ' ')"
+    build:
+      commands:
+        - npm run build
+        - |
+          find .next/server -name '*.map' -delete
+          rm -rf .next/cache
+          echo "output size: $(du -sm .next | cut -f1)M"
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*

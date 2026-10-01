@@ -35,7 +35,8 @@ const CSP = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // The container image needs the standalone server; Amplify packages .next itself.
+  output: process.env.AWS_APP_ID ? undefined : "standalone",
   // Bundle the admin-only Operations PDFs (served off-disk by the
   // /api/library/operations route) into that function's trace on Vercel.
   outputFileTracingIncludes: {
