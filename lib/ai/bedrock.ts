@@ -41,28 +41,33 @@ import {
 export function bedrockCredentials():
   | { region: string; apiKey: string }
   | { region: string; accessKeyId: string; secretAccessKey: string }
-  | null {
-  const region = process.env.LEUK_BEDROCK_REGION ?? process.env.LEUK_SES_REGION;
-  if (!region) return null;
+  | { region: string; role: true } {
+  const region = process.env.LEUK_BEDROCK_REGION ?? process.env.LEUK_SES_REGION ?? "us-east-1";
   const apiKey = process.env.LEUK_BEDROCK_API_KEY;
   if (apiKey) return { region, apiKey };
   const accessKeyId = process.env.LEUK_AWS_ACCESS_KEY_ID;
   const secretAccessKey = process.env.LEUK_AWS_SECRET_ACCESS_KEY;
   if (accessKeyId && secretAccessKey) return { region, accessKeyId, secretAccessKey };
-  return null;
+  // No stored secret: the role the app runs under (the Amplify compute role)
+  // signs the call. This is the standard on AWS; the two shapes above remain
+  // for a laptop.
+  return { region, role: true };
 }
 
 let client: BedrockRuntimeClient | null = null;
 function bedrock(): BedrockRuntimeClient | null {
   if (client) return client;
   const creds = bedrockCredentials();
-  if (!creds) return null;
   // Bearer-token auth ("apiKey" shape): the httpBearerAuth scheme is selected
   // when a token identity is supplied (no SigV4 signing, no IAM user needed).
+  // The role shape passes no credentials, so the SDK's default chain finds the
+  // role's.
   client = new BedrockRuntimeClient(
     "apiKey" in creds
       ? { region: creds.region, token: { token: creds.apiKey } }
-      : { region: creds.region, credentials: { accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey } },
+      : "role" in creds
+        ? { region: creds.region }
+        : { region: creds.region, credentials: { accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey } },
   );
   return client;
 }

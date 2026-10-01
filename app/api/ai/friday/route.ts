@@ -1,4 +1,5 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
@@ -53,11 +54,12 @@ let bedrockProvider: ReturnType<typeof createAmazonBedrock> | null = null;
 function bedrock() {
   if (bedrockProvider) return bedrockProvider;
   const creds = bedrockCredentials();
-  if (!creds) return null;
   bedrockProvider = createAmazonBedrock(
     "apiKey" in creds
       ? { region: creds.region, apiKey: creds.apiKey }
-      : { region: creds.region, accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey },
+      : "role" in creds
+        ? { region: creds.region, credentialProvider: fromNodeProviderChain() }
+        : { region: creds.region, accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey },
   );
   return bedrockProvider;
 }

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { bedrockConfigured, clinicalComplete } from "@/lib/ai/bedrock";
 import { hasDb, sql } from "@/lib/db";
 import { platformInventory, type DictionaryGroup } from "@/lib/repos/admin";
 
@@ -19,9 +19,11 @@ import { platformInventory, type DictionaryGroup } from "@/lib/repos/admin";
 //     not worth that risk.
 //  2. NEVER THROW. No key, no network, a bad response — every path returns a
 //     BriefingResult the card can render. The dashboard must not depend on
-//     Anthropic being up.
+//     the model being up.
+//
+// The model is Claude on Bedrock, through the same client every other AI call
+// in the app uses (lib/ai/bedrock.ts); nothing here calls a first-party API.
 
-const MODEL = "claude-sonnet-5";
 const CACHE_MS = 12 * 60 * 60_000;
 
 export type BriefingResult =
@@ -106,8 +108,7 @@ export async function platformBriefing(mode: "auto" | "cached" | "fresh" = "auto
   }
   if (mode !== "fresh" && memo && Date.now() - memo.at < CACHE_MS) return memo.data;
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return { state: "off", reason: "AI briefing off — add ANTHROPIC_API_KEY to .env.local" };
+  if (!bedrockConfigured()) return { state: "off", reason: "AI briefing off — LEUK_BEDROCK_MODEL_ID is not set." };
 
   try {
     const [{ groups }, deltaRows] = await Promise.all([
@@ -117,43 +118,20 @@ export async function platformBriefing(mode: "auto" | "cached" | "fresh" = "auto
 
     const facts = buildFacts(groups, deltaRows[0] ?? null);
 
-    const client = new Anthropic({ apiKey: key });
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 512,
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted — a silent
-      // change from 4.6. This is a 150-word summary of numbers already
-      // computed; thinking would buy nothing and cost latency on a page load.
-      thinking: { type: "disabled" },
-      output_config: { effort: "low" },
+    const { text } = await clinicalComplete({
       system: SYSTEM,
-      messages: [{ role: "user", content: `Here is tonight's inventory.\n${facts}` }],
+      user: `Here is tonight's inventory.\n${facts}`,
+      maxTokens: 512,
     });
-
-    if (response.stop_reason === "refusal") {
-      return { state: "error", reason: "The model declined to answer." };
-    }
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("")
-      .trim();
     if (!text) return { state: "error", reason: "The model returned nothing." };
 
     const data: BriefingResult = { state: "ok", text, generatedAt: new Date().toISOString() };
     memo = { at: Date.now(), data };
     return data;
-  } catch (err) {
+  } catch {
     // Never throw: a briefing is a nice-to-have, the dashboard is not.
     // Cache the failure briefly so a down API doesn't get hit once per view.
-    const reason =
-      err instanceof Anthropic.AuthenticationError
-        ? "ANTHROPIC_API_KEY was rejected."
-        : err instanceof Anthropic.RateLimitError
-          ? "Rate limited — the briefing will refresh later."
-          : err instanceof Anthropic.APIError
-            ? `The API returned ${err.status}.`
-            : "Could not reach the API.";
+    const reason = "Could not reach the model.";
     const data: BriefingResult = { state: "error", reason };
     memo = { at: Date.now() - CACHE_MS + 60_000, data };
     return data;
