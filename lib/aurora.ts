@@ -95,9 +95,21 @@ export type DataApiConfig = { resourceArn: string; secretArn: string; database: 
 
 /* ------------------------------------------------------------ values */
 
-// A Postgres array literal, inlined rather than bound: the Data API has no
-// array parameter, and a bound text parameter is typed, so `= ANY($1)` would
-// refuse it. An unknown-typed literal is coerced by the column beside it.
+// How a value reaches the statement. The Neon driver sends every parameter
+// untyped and lets Postgres infer its type from the column beside it. The
+// Data API cannot: a bound string arrives as varchar, and a varchar is refused
+// by a uuid, enum, timestamp, integer or jsonb column. So values are written
+// into the statement as quoted, untyped literals, which Postgres infers exactly
+// as it did the driver's parameters. Quoting is the standard one (the server
+// runs with standard_conforming_strings on): a quote is doubled, nothing else
+// is special, and a NUL cannot be stored and is dropped. Only a very long
+// string is bound instead, to stay under the Data API's statement size limit;
+// such a value is document text bound for a text column.
+const BIND_OVER = 30_000
+
+const quote = (text: string): string => `'${text.replace(/\0/g, '').replace(/'/g, "''")}'`
+
+// A Postgres array literal: the Data API has no array parameter.
 function arrayLiteral(values: unknown[]): string {
   const items = values.map((v) => {
     if (v === null || v === undefined) return 'NULL'
@@ -105,26 +117,33 @@ function arrayLiteral(values: unknown[]): string {
     if (typeof v === 'boolean') return v ? 't' : 'f'
     return `"${String(v).replace(/(["\\])/g, '\\$1')}"`
   })
-  return `'{${items.join(',')}}'`
+  return quote(`{${items.join(',')}}`)
 }
 
-function parameter(name: string, value: unknown): SqlParameter {
-  if (value === null || value === undefined) return { name, value: { isNull: true } }
-  if (value instanceof Date) return { name, value: { stringValue: value.toISOString() }, typeHint: 'TIMESTAMP' }
+const isScalarArray = (value: unknown): value is unknown[] =>
+  Array.isArray(value) && !(value.length && typeof value[0] === 'object' && value[0] !== null)
+
+/** The untyped literal for a value, or null when it must be bound instead. */
+function literal(value: unknown): string | null {
+  if (value === null || value === undefined) return 'NULL'
+  if (value instanceof Date) return quote(value.toISOString())
+  if (isScalarArray(value)) return arrayLiteral(value)
   switch (typeof value) {
     case 'number':
-      return Number.isInteger(value) ? { name, value: { longValue: value } } : { name, value: { doubleValue: value } }
-    case 'boolean':
-      return { name, value: { booleanValue: value } }
     case 'bigint':
-      return { name, value: { longValue: Number(value) } }
+      return quote(String(value))
+    case 'boolean':
+      return value ? "'true'" : "'false'"
     case 'object':
-      // A plain object or array of objects bound where the SQL casts `::jsonb`.
-      return { name, value: { stringValue: JSON.stringify(value) } }
-    default:
-      return { name, value: { stringValue: String(value) } }
+      return quote(JSON.stringify(value))
+    default: {
+      const text = String(value)
+      return text.length > BIND_OVER ? null : quote(text)
+    }
   }
 }
+
+const bound = (name: string, value: unknown): SqlParameter => ({ name, value: { stringValue: String(value).replace(/\0/g, '') } })
 
 /** The statement and its bound parameters, from a template's parts and values. */
 function fromTemplate(strings: readonly string[], values: unknown[]): { text: string; parameters: SqlParameter[] } {
@@ -139,27 +158,32 @@ function fromTemplate(strings: readonly string[], values: unknown[]): { text: st
       // A statement composed into another, the way the Neon driver allows:
       // its text goes in, its parameters renumbered behind the ones so far.
       const base = parameters.length
-      text += value.text.replace(/:p(\d+)\b/g, (_, n: string) => `:p${base + Number(n)}`)
-      value.parameters.forEach((p, k) => parameters.push({ ...p, name: `p${base + k}` }))
-    } else if (Array.isArray(value) && !(value.length && typeof value[0] === 'object' && value[0] !== null)) text += arrayLiteral(value)
-    else {
-      const name = `p${parameters.length}`
-      parameters.push(parameter(name, value))
-      text += `:${name}`
+      text += value.text.replace(/:zqp(\d+)\b/g, (_, n: string) => `:zqp${base + Number(n)}`)
+      value.parameters.forEach((p, k) => parameters.push({ ...p, name: `zqp${base + k}` }))
+    } else {
+      const inline = literal(value)
+      if (inline !== null) text += inline
+      else {
+        const name = `zqp${parameters.length}`
+        parameters.push(bound(name, value))
+        text += `:${name}`
+      }
     }
   })
   return { text, parameters }
 }
 
-/** `$1 … $n` placeholders to the Data API's `:p0 … :pN`, arrays inlined. */
+/** `$1 … $n` placeholders, each replaced by its value's literal (or a bound name). */
 function fromPositional(text: string, params: unknown[]): { text: string; parameters: SqlParameter[] } {
   const parameters: SqlParameter[] = []
-  const inline = new Map<number, string>()
-  params.forEach((value, i) => {
-    if (Array.isArray(value) && !(value.length && typeof value[0] === 'object' && value[0] !== null)) inline.set(i + 1, arrayLiteral(value))
-    else parameters.push(parameter(`p${i}`, value))
+  const replacement = params.map((value) => {
+    const inline = literal(value)
+    if (inline !== null) return inline
+    const name = `zqp${parameters.length}`
+    parameters.push(bound(name, value))
+    return `:${name}`
   })
-  const rewritten = text.replace(/\$(\d+)/g, (_, n: string) => inline.get(Number(n)) ?? `:p${Number(n) - 1}`)
+  const rewritten = text.replace(/\$(\d+)/g, (whole, n: string) => replacement[Number(n) - 1] ?? whole)
   return { text: rewritten, parameters }
 }
 
