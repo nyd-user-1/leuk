@@ -16,10 +16,15 @@ frontend:
         # of the command itself: Amplify skips a command that begins with one.
         - |
           aws secretsmanager get-secret-value --secret-id leuk/env --query SecretString --output text \
-            | node -e 'const skip=new Set(["VERCEL_OIDC_TOKEN","LEUK_BEDROCK_API_KEY","ANTHROPIC_API_KEY","LEUK_APP_URL","LEUK_BASE_URL"]);let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{for(const [k,v] of Object.entries(JSON.parse(s)))if(!skip.has(k))console.log(k+"="+v)})' > .env.production
+            | node -e 'const skip=new Set(["VERCEL_OIDC_TOKEN","LEUK_BEDROCK_API_KEY","ANTHROPIC_API_KEY","LEUK_APP_URL","LEUK_BASE_URL","DATABASE_URL","DATABASE_URL_PHI"]);let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{for(const [k,v] of Object.entries(JSON.parse(s)))if(!skip.has(k))console.log(k+"="+v)})' > .env.production
           printf 'LEUK_APP_URL=%s\nLEUK_BASE_URL=%s\n' "$LEUK_SITE_URL" "$LEUK_SITE_URL" >> .env.production
+          for name in AURORA_CLUSTER_ARN AURORA_SECRET_ARN AURORA_DATABASE AURORA_PHI_CLUSTER_ARN AURORA_PHI_SECRET_ARN AURORA_PHI_DATABASE; do
+            value="$(printenv "$name" || true)"
+            if [ -n "$value" ]; then printf '%s=%s\n' "$name" "$value" >> .env.production; fi
+          done
           echo "env names: $(cut -d= -f1 .env.production | tr '\n' ' ')"
-          grep -q '^DATABASE_URL=' .env.production || { echo "DATABASE_URL missing"; exit 1; }
+          grep -q '^AURORA_CLUSTER_ARN=' .env.production || { echo "AURORA_CLUSTER_ARN missing"; exit 1; }
+          grep -q '^AURORA_PHI_CLUSTER_ARN=' .env.production || { echo "AURORA_PHI_CLUSTER_ARN missing"; exit 1; }
     build:
       commands:
         - npm run build

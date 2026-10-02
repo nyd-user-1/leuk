@@ -15,6 +15,7 @@
     "@ai-sdk/react": "^4.0.37",
     "@anthropic-ai/sdk": "^0.111.0",
     "@aws-sdk/client-bedrock-runtime": "^3.1092.0",
+    "@aws-sdk/client-rds-data": "^3.1145.0",
     "@aws-sdk/credential-providers": "^3.1145.0",
     "@dagrejs/dagre": "^3.0.0",
     "@modelcontextprotocol/ext-apps": "^1.7.5",
